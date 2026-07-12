@@ -6,12 +6,22 @@ All included business data is fictional demo data. Images are generated geometri
 
 ## Run Locally
 
+If `pnpm` is already installed:
+
 ```bash
 pnpm install
 pnpm dev
 ```
 
-Open `http://localhost:3000`.
+If `pnpm` is not on your terminal path but you are using the bundled Codex runtime:
+
+```bash
+cd "/Users/kevinchiam/Documents/Design Directory"
+PATH="$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin:$PATH" pnpm install
+PATH="$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin:$PATH" pnpm dev
+```
+
+Open `http://localhost:3000` and keep the terminal process running.
 
 ## Quality Checks
 
@@ -19,6 +29,7 @@ Open `http://localhost:3000`.
 pnpm lint
 pnpm typecheck
 pnpm test
+pnpm build
 pnpm e2e
 ```
 
@@ -40,7 +51,7 @@ The migration creates:
 - `business-portfolios`
 - `project-references`
 
-Allowed files are JPG, PNG, WebP and PDF where appropriate, with bucket-level size limits.
+Allowed files are JPG, PNG, WebP, PDF and short video formats where appropriate, with bucket-level size limits.
 
 ## Word-of-Mouth Recommendations
 
@@ -64,7 +75,18 @@ The app keeps database access out of presentational components. UI components re
 
 ## Deployment
 
-Deploy to Vercel with the environment variables from `.env.example`. Never expose `SUPABASE_SERVICE_ROLE_KEY` to browser code.
+1. Push the repository to GitHub or import the local project into Vercel.
+2. Set the Vercel framework preset to Next.js.
+3. Use the default build command: `pnpm build`.
+4. Set the install command to `pnpm install`.
+5. Add the environment variables from `.env.example`.
+6. Keep `SUPABASE_SERVICE_ROLE_KEY` server-only. Never expose it to browser code.
+7. Apply Supabase migrations in order:
+   - `supabase/migrations/0001_initial_schema.sql`
+   - `supabase/migrations/0002_business_recommendations.sql`
+   - `supabase/migrations/0003_media_uploads.sql`
+8. Run `supabase/seed/seed.sql` only for demo data.
+9. Deploy.
 
 ## Known Limitations
 

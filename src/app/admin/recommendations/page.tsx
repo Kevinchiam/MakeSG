@@ -11,7 +11,7 @@ export default function AdminRecommendationsPage() {
   return (
     <section className="container-shell py-12">
       <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Moderation</p>
-      <h1 className="mt-2 font-serif text-5xl font-semibold">Business recommendations</h1>
+      <h1 className="mt-2 break-words font-serif text-4xl font-semibold sm:text-5xl">Business recommendations</h1>
       <p className="mt-4 max-w-2xl text-[#6d675d]">
         Review word-of-mouth submissions before they appear publicly. Recommendations are not ratings; they are moderated trust signals tied to first-hand experience.
       </p>

@@ -16,7 +16,7 @@ export function BusinessCard({ business }: { business: Business }) {
 
   return (
     <article className="group flex h-full flex-col border border-[#ded8cc] bg-white">
-      <Link href={`/businesses/${business.slug}`} className="block overflow-hidden">
+      <Link href={`/businesses/${business.slug}`} className="block overflow-hidden" aria-label={`Open ${business.name} profile`}>
         <Image
           src={business.heroImage}
           alt=""
