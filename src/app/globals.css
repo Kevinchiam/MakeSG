@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fbfaf7;
+  --foreground: #211f1b;
+  --muted: #6d675d;
+  --line: #ded8cc;
+  --surface: #ffffff;
+  --surface-warm: #f3eee5;
+  --ink: #211f1b;
+  --clay: #9c4f35;
+  --moss: #536343;
+  --steel: #315c6b;
+  --gold: #b9852f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-newsreader);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+a,
+button,
+input,
+textarea,
+select {
+  outline-color: var(--steel);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: #315c6b;
+  color: #ffffff;
+}
+
+.editorial-grid {
+  background-image:
+    linear-gradient(to right, rgba(49, 92, 107, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(49, 92, 107, 0.08) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.container-shell {
+  width: min(1180px, calc(100% - 32px));
+  margin-inline: auto;
+}
