@@ -33,3 +33,32 @@ values
   ('Kaki Bukit Precision Works','kaki-bukit-precision-works','Fictional demo machining workshop.','Fictional demo data for local development only.','https://example.com','hello@example.com','Kaki Bukit',1800,28,'manufacturer',true,true,false,true,'verified','published',true,true),
   ('Tai Seng Interactive Lab','tai-seng-interactive-lab','Fictional demo creative technology studio.','Fictional demo data for local development only.','https://example.com','hello@example.com','Tai Seng',3500,35,'studio',true,false,true,true,'claimed','published',true,true)
 on conflict (slug) do nothing;
+
+insert into business_recommendations (
+  business_id,
+  recommender_name,
+  recommender_role,
+  relationship,
+  project_context,
+  recommended_for,
+  comment,
+  permission_to_contact,
+  permission_to_publish_name,
+  status
+)
+select
+  b.id,
+  'Fictional demo recommender',
+  'Creative producer',
+  'client',
+  'Prototype and launch display',
+  array['Clear communication', 'Reliable timelines'],
+  'Fictional demo recommendation: the provider explained options clearly and handled the production process with care.',
+  true,
+  false,
+  'approved'
+from businesses b
+where b.slug = 'ubi-formworks-studio'
+and not exists (
+  select 1 from business_recommendations br where br.business_id = b.id and br.recommender_name = 'Fictional demo recommender'
+);

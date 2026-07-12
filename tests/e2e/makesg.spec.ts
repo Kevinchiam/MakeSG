@@ -41,3 +41,17 @@ test("admin approves a listing", async ({ page }) => {
   await page.getByRole("button", { name: /Approve/ }).click();
   await expect(page.getByText("Current status: published")).toBeVisible();
 });
+
+test("submits a business recommendation", async ({ page }) => {
+  await page.goto("/recommend-business?business=ubi-formworks-studio");
+  await page.getByLabel("Your name").fill("Alicia Tan");
+  await page.getByLabel("Role or context").fill("Exhibition designer");
+  await page.getByLabel("Email for admin verification").fill("alicia@example.com");
+  await page.getByLabel("Project context").fill("Museum plinth prototype");
+  await page.getByLabel("Clear communication").check();
+  await page
+    .getByLabel("What made the experience good?")
+    .fill("They gave clear material advice, communicated timelines carefully, and made the install feel well-managed.");
+  await page.getByRole("button", { name: /Submit recommendation/ }).click();
+  await expect(page.getByText("Recommendation received")).toBeVisible();
+});

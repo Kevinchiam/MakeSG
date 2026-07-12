@@ -38,6 +38,23 @@ export const enquirySchema = z.object({
   message: z.string().min(20, "Write a useful note for the provider."),
 });
 
+export const businessRecommendationSchema = z.object({
+  businessId: z.string().min(1, "Choose a business."),
+  businessName: z.string().optional(),
+  recommenderName: z.string().min(2, "Add your name."),
+  recommenderRole: z.string().optional(),
+  recommenderEmail: z.string().email("Use a valid email.").optional().or(z.literal("")),
+  relationship: z.enum(["client", "collaborator", "supplier", "peer", "other"]),
+  projectContext: z.string().min(8, "Share what kind of project you worked on."),
+  recommendedFor: z.array(z.string()).min(1, "Choose at least one strength."),
+  comment: z
+    .string()
+    .min(30, "Share a little more about the experience.")
+    .max(500, "Keep recommendations concise."),
+  permissionToContact: z.boolean().default(false),
+  permissionToPublishName: z.boolean().default(false),
+});
+
 export const signInSchema = z.object({
   email: z.string().email("Enter a valid email address."),
 });

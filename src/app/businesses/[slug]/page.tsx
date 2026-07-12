@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ExternalLink, MapPin } from "lucide-react";
+import { ExternalLink, MapPin, MessageCircleHeart } from "lucide-react";
 import { EnquiryForm } from "@/components/business/enquiry-form";
 import { MaterialTag } from "@/components/business/material-tag";
 import { SaveBusinessButton } from "@/components/business/save-business-button";
 import { VerificationBadge } from "@/components/business/verification-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { businesses, services } from "@/lib/data";
+import { businesses, getApprovedRecommendationsForBusiness, services } from "@/lib/data";
 import { formatCurrency } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -29,6 +29,7 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
   const business = businesses.find((item) => item.slug === slug);
   if (!business) notFound();
   const serviceLabels = business.services.map((slug) => services.find((service) => service.slug === slug)?.name ?? slug);
+  const wordOfMouth = getApprovedRecommendationsForBusiness(business.id);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -54,9 +55,17 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
                 <VerificationBadge status={business.verificationStatus} />
                 <Badge>{business.businessType}</Badge>
                 <Badge>{business.claimed ? "Claimed profile" : "Claim this profile"}</Badge>
+                {wordOfMouth.length ? <Badge className="border-[#536343] bg-[#eef2e8] text-[#39462d]">{wordOfMouth.length} word-of-mouth recommendation{wordOfMouth.length === 1 ? "" : "s"}</Badge> : null}
               </div>
             </div>
-            <SaveBusinessButton businessId={business.id} />
+            <div className="flex flex-wrap gap-2">
+              <SaveBusinessButton businessId={business.id} />
+              <Button asChild variant="secondary">
+                <Link href={`/recommend-business?business=${business.slug}`}>
+                  <MessageCircleHeart className="h-4 w-4" /> Recommend
+                </Link>
+              </Button>
+            </div>
           </div>
           <p className="mt-6 max-w-3xl text-xl leading-8 text-[#4f493f]">{business.shortDescription}</p>
           <div className="mt-8 grid gap-8 border-y border-[#ded8cc] py-8 md:grid-cols-2">
@@ -69,6 +78,43 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
             <h2 className="font-serif text-3xl font-semibold">About</h2>
             <p className="leading-8 text-[#4f493f]">{business.description}</p>
           </article>
+          <section className="mt-10">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Word of mouth</p>
+                <h2 className="mt-1 font-serif text-3xl font-semibold">Recommended by the community</h2>
+              </div>
+              <Button asChild variant="secondary">
+                <Link href={`/recommend-business?business=${business.slug}`}>Recommend this business</Link>
+              </Button>
+            </div>
+            {wordOfMouth.length ? (
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
+                {wordOfMouth.map((recommendation) => (
+                  <article key={recommendation.id} className="border border-[#ded8cc] bg-white p-5">
+                    <div className="flex items-center gap-2 text-[#536343]">
+                      <MessageCircleHeart className="h-4 w-4" aria-hidden />
+                      <p className="text-sm font-semibold">{recommendation.projectContext}</p>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-[#4f493f]">“{recommendation.comment}”</p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {recommendation.recommendedFor.slice(0, 3).map((item) => (
+                        <Badge key={item}>{item}</Badge>
+                      ))}
+                    </div>
+                    <p className="mt-4 text-xs text-[#6d675d]">
+                      Recommended by {recommendation.permissionToPublishName ? recommendation.recommenderName : "a verified contributor"}
+                      {recommendation.recommenderRole && recommendation.permissionToPublishName ? `, ${recommendation.recommenderRole}` : ""}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-4 border border-dashed border-[#ded8cc] bg-white p-5 text-sm text-[#6d675d]">
+                No approved recommendations yet. If you have worked with this provider and had a good experience, you can recommend them for moderation.
+              </p>
+            )}
+          </section>
           <section className="mt-10">
             <h2 className="font-serif text-3xl font-semibold">Portfolio</h2>
             {business.portfolio.length ? (

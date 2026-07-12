@@ -42,6 +42,12 @@ The migration creates:
 
 Allowed files are JPG, PNG, WebP and PDF where appropriate, with bucket-level size limits.
 
+## Word-of-Mouth Recommendations
+
+People can recommend a business they have worked with at `/recommend-business` or from a business profile. Recommendations are submitted for moderation before public display, avoiding public ratings while still surfacing reliable first-hand sources.
+
+Apply `supabase/migrations/0002_business_recommendations.sql` after the initial schema to create the `business_recommendations` table and RLS policies.
+
 ## Admin Account
 
 Create a user through Supabase Auth, then update their profile:
@@ -62,11 +68,13 @@ Deploy to Vercel with the environment variables from `.env.example`. Never expos
 
 - Current UI uses local mock repositories so it can run without Supabase credentials.
 - Enquiry and save actions are local interactive placeholders until wired to server actions.
+- Business recommendations are local interactive placeholders until wired to server actions.
 - Public reviews, live chat, payments and AI recommendations are intentionally excluded.
 
 ## Roadmap
 
 - Replace mock data with Supabase repository functions.
 - Add server actions for projects, enquiries, saved businesses and moderation.
+- Persist business recommendations through Supabase server actions and admin moderation.
 - Add richer portfolio management and image transformations.
 - Add rate limiting middleware for enquiry endpoints.

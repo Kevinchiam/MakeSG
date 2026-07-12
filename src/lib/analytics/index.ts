@@ -8,7 +8,9 @@ export type AnalyticsEvent =
   | "enquiry_started"
   | "enquiry_submitted"
   | "provider_signup_started"
-  | "business_submitted";
+  | "business_submitted"
+  | "business_recommendation_submitted"
+  | "business_recommendation_approved";
 
 export function track(event: AnalyticsEvent, properties: Record<string, unknown> = {}) {
   if (process.env.NODE_ENV !== "production") {

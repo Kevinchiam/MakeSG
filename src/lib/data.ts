@@ -1,4 +1,4 @@
-import type { Business, Material, Project, Service } from "@/lib/types";
+import type { Business, BusinessRecommendation, Material, Project, Service } from "@/lib/types";
 
 export const services: Service[] = [
   ["woodworking", "Woodworking", "Fabrication for timber furniture, objects and fit-outs.", "Fabrication"],
@@ -500,3 +500,70 @@ export const projects: Project[] = [
     status: "draft",
   },
 ];
+
+export const businessRecommendations: BusinessRecommendation[] = [
+  {
+    id: "rec_ubi_1",
+    businessId: "biz_ubi_formworks",
+    recommenderName: "Alicia Tan",
+    recommenderRole: "Exhibition designer",
+    relationship: "client",
+    projectContext: "Museum handling table and plinth prototypes",
+    recommendedFor: ["Clear fabrication advice", "Careful CNC routing", "Reliable installation support"],
+    comment:
+      "They helped us refine a loose drawing into something buildable, flagged material issues early, and kept the install calm.",
+    permissionToContact: true,
+    permissionToPublishName: true,
+    status: "approved",
+    createdAt: "2026-05-18",
+  },
+  {
+    id: "rec_kaki_1",
+    businessId: "biz_kaki_precision",
+    recommenderName: "Marcus Lee",
+    recommenderRole: "Product founder",
+    relationship: "client",
+    projectContext: "Machined aluminium enclosure prototype",
+    recommendedFor: ["Practical tolerance advice", "Good prototype communication"],
+    comment:
+      "The team translated our CAD into a workable prototype and explained the machining trade-offs without making the process feel opaque.",
+    permissionToContact: true,
+    permissionToPublishName: true,
+    status: "approved",
+    createdAt: "2026-04-29",
+  },
+  {
+    id: "rec_tai_seng_1",
+    businessId: "biz_tai_seng_interactive",
+    recommenderName: "Nadia Rahim",
+    relationship: "collaborator",
+    projectContext: "Interactive lighting proof of concept",
+    recommendedFor: ["Thoughtful prototyping", "Fast sensor tests"],
+    comment:
+      "They were generous with technical options and helped the creative team understand what could be proven quickly before committing to a full build.",
+    permissionToContact: false,
+    permissionToPublishName: false,
+    status: "approved",
+    createdAt: "2026-03-11",
+  },
+  {
+    id: "rec_pending_1",
+    businessId: "biz_gelang_print_room",
+    recommenderName: "Demo recommender",
+    relationship: "client",
+    projectContext: "Packaging mockup sprint",
+    recommendedFor: ["Responsive quoting"],
+    comment:
+      "Pending demo recommendation for admin moderation. This would not appear publicly until approved.",
+    permissionToContact: true,
+    permissionToPublishName: false,
+    status: "pending",
+    createdAt: "2026-07-01",
+  },
+];
+
+export function getApprovedRecommendationsForBusiness(businessId: string) {
+  return businessRecommendations.filter(
+    (recommendation) => recommendation.businessId === businessId && recommendation.status === "approved",
+  );
+}

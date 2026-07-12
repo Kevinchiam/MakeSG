@@ -6,6 +6,7 @@ const nav = [
   ["Explore", "/explore"],
   ["Services", "/services"],
   ["Businesses", "/businesses"],
+  ["Recommend", "/recommend-business"],
   ["For businesses", "/for-businesses"],
   ["About", "/about"],
 ];

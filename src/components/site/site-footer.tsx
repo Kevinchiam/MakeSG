@@ -15,6 +15,7 @@ export function SiteFooter() {
           <div className="mt-4 grid gap-2 text-sm">
             <Link href="/services">Services</Link>
             <Link href="/businesses">Businesses</Link>
+            <Link href="/recommend-business">Recommend a business</Link>
             <Link href="/projects/new">Submit a project</Link>
           </div>
         </div>

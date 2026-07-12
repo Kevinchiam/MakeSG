@@ -1,13 +1,15 @@
 import Link from "next/link";
-import { businesses } from "@/lib/data";
+import { businessRecommendations, businesses } from "@/lib/data";
 
 export default function AdminPage() {
   const pending = businesses.filter((b) => b.publicationStatus === "pending").length;
+  const pendingRecommendations = businessRecommendations.filter((recommendation) => recommendation.status === "pending").length;
   return (
     <section className="container-shell py-12">
       <h1 className="font-serif text-5xl font-semibold">Admin</h1>
-      <div className="mt-8 grid gap-4 md:grid-cols-3">
+      <div className="mt-8 grid gap-4 md:grid-cols-4">
         <AdminLink href="/admin/businesses" title="Businesses" text={`${pending} pending, ${businesses.length} total demo listings`} />
+        <AdminLink href="/admin/recommendations" title="Recommendations" text={`${pendingRecommendations} pending word-of-mouth submissions`} />
         <AdminLink href="/admin/services" title="Services" text="Edit service categories and descriptions" />
         <AdminLink href="/admin/reports" title="Reports" text="Review reported content" />
       </div>

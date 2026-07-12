@@ -1,17 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, Clock, MapPin } from "lucide-react";
+import { ArrowUpRight, Clock, MapPin, MessageCircleHeart } from "lucide-react";
 import { MaterialTag } from "@/components/business/material-tag";
 import { SaveBusinessButton } from "@/components/business/save-business-button";
 import { VerificationBadge } from "@/components/business/verification-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { services } from "@/lib/data";
+import { getApprovedRecommendationsForBusiness, services } from "@/lib/data";
 import type { Business } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 
 export function BusinessCard({ business }: { business: Business }) {
   const topServices = business.services.slice(0, 3).map((slug) => services.find((service) => service.slug === slug)?.name ?? slug);
+  const recommendationCount = getApprovedRecommendationsForBusiness(business.id).length;
 
   return (
     <article className="group flex h-full flex-col border border-[#ded8cc] bg-white">
@@ -49,6 +50,11 @@ export function BusinessCard({ business }: { business: Business }) {
           <span className="inline-flex items-center gap-2">
             <Clock className="h-4 w-4" aria-hidden /> From {formatCurrency(business.minimumBudget)} · {business.typicalLeadTime} days
           </span>
+          {recommendationCount ? (
+            <span className="inline-flex items-center gap-2 text-[#536343]">
+              <MessageCircleHeart className="h-4 w-4" aria-hidden /> Recommended by {recommendationCount} maker{recommendationCount === 1 ? "" : "s"}
+            </span>
+          ) : null}
         </div>
         <div className="flex flex-wrap gap-2">
           {business.materials.slice(0, 3).map((material) => (

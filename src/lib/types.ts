@@ -10,6 +10,7 @@ export type PublicationStatus = "draft" | "pending" | "published" | "rejected" |
 export type VerificationStatus = "unverified" | "claimed" | "verified";
 export type ProjectType = "physical" | "digital" | "both";
 export type ProjectScale = "one-off" | "prototype" | "small-batch" | "production" | "installation";
+export type BusinessRecommendationStatus = "pending" | "approved" | "rejected";
 
 export type Service = {
   id: string;
@@ -67,6 +68,22 @@ export type Business = {
   portfolio: PortfolioItem[];
   heroImage: string;
   demoNotice: string;
+};
+
+export type BusinessRecommendation = {
+  id: string;
+  businessId: string;
+  recommenderName: string;
+  recommenderRole?: string;
+  recommenderEmail?: string;
+  relationship: "client" | "collaborator" | "supplier" | "peer" | "other";
+  projectContext: string;
+  recommendedFor: string[];
+  comment: string;
+  permissionToContact: boolean;
+  permissionToPublishName: boolean;
+  status: BusinessRecommendationStatus;
+  createdAt: string;
 };
 
 export type Project = {

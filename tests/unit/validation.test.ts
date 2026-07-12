@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { businessSchema, projectSchema } from "@/lib/validation";
+import { businessRecommendationSchema, businessSchema, projectSchema } from "@/lib/validation";
 
 describe("form validation", () => {
   it("accepts a complete project brief", () => {
@@ -30,5 +30,21 @@ describe("form validation", () => {
       materials: [],
     });
     expect(result.success).toBe(false);
+  });
+
+  it("accepts a specific word-of-mouth recommendation", () => {
+    const result = businessRecommendationSchema.safeParse({
+      businessId: "biz_ubi_formworks",
+      recommenderName: "Alicia",
+      recommenderEmail: "alicia@example.com",
+      relationship: "client",
+      projectContext: "Exhibition plinth prototype",
+      recommendedFor: ["Clear communication"],
+      comment: "They were clear about materials, timelines and install details throughout the project.",
+      permissionToContact: true,
+      permissionToPublishName: false,
+    });
+
+    expect(result.success).toBe(true);
   });
 });
