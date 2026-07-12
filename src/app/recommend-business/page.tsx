@@ -21,7 +21,7 @@ export default async function RecommendBusinessPage({
       <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Word of mouth</p>
       <h1 className="mt-2 font-serif text-5xl font-semibold">Recommend a business you trust</h1>
       <p className="mt-4 max-w-2xl text-[#6d675d]">
-        Help future makers find reliable sources through moderated recommendations from people with first-hand experience.
+        Help future makers find reliable sources through moderated recommendations from people with first-hand experience. Photos or short videos make the recommendation more tangible.
       </p>
       <div className="mt-10">
         <RecommendBusinessForm initialBusinessId={business?.id} />

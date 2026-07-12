@@ -48,6 +48,8 @@ People can recommend a business they have worked with at `/recommend-business` o
 
 Apply `supabase/migrations/0002_business_recommendations.sql` after the initial schema to create the `business_recommendations` table and RLS policies.
 
+Apply `supabase/migrations/0003_media_uploads.sql` to allow photo/video uploads for provider portfolios and business recommendations. The MVP UI previews selected files locally; server actions should upload them to Supabase Storage when persistence is wired.
+
 ## Admin Account
 
 Create a user through Supabase Auth, then update their profile:

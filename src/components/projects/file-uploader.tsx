@@ -1,15 +1,36 @@
 "use client";
 
-import { FileUp, X } from "lucide-react";
-import { useState } from "react";
+import { FileText, FileUp, ImageIcon, Video, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 
-const allowed = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
-const maxSize = 8 * 1024 * 1024;
+const imageTypes = ["image/jpeg", "image/png", "image/webp"];
+const videoTypes = ["video/mp4", "video/quicktime", "video/webm"];
+const pdfTypes = ["application/pdf"];
 
-export function FileUploader() {
+type FileUploaderProps = {
+  label?: string;
+  description?: string;
+  accept?: "references" | "media";
+  maxSizeMb?: number;
+};
+
+export function FileUploader({
+  label = "Upload reference files",
+  description,
+  accept = "references",
+  maxSizeMb = accept === "media" ? 40 : 8,
+}: FileUploaderProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const allowed = accept === "media" ? [...imageTypes, ...videoTypes] : [...imageTypes, ...pdfTypes];
+  const acceptAttribute =
+    accept === "media" ? ".jpg,.jpeg,.png,.webp,.mp4,.mov,.webm" : ".jpg,.jpeg,.png,.webp,.pdf";
+  const helperText =
+    description ??
+    (accept === "media"
+      ? `JPG, PNG, WebP, MP4, MOV or WebM up to ${maxSizeMb}MB each`
+      : `JPG, PNG, WebP or PDF up to ${maxSizeMb}MB each`);
 
   function onFiles(nextFiles: FileList | null) {
     setError(null);
@@ -17,11 +38,11 @@ export function FileUploader() {
     const valid: File[] = [];
     for (const file of Array.from(nextFiles)) {
       if (!allowed.includes(file.type)) {
-        setError("Upload JPG, PNG, WebP or PDF files only.");
+        setError(accept === "media" ? "Upload JPG, PNG, WebP, MP4, MOV or WebM files only." : "Upload JPG, PNG, WebP or PDF files only.");
         continue;
       }
-      if (file.size > maxSize) {
-        setError("Each file must be 8MB or smaller.");
+      if (file.size > maxSizeMb * 1024 * 1024) {
+        setError(`Each file must be ${maxSizeMb}MB or smaller.`);
         continue;
       }
       valid.push(file);
@@ -33,23 +54,53 @@ export function FileUploader() {
     <div className="grid gap-3">
       <label className="flex cursor-pointer flex-col items-center justify-center border border-dashed border-[#bdb3a4] bg-white p-8 text-center">
         <FileUp className="mb-3 h-8 w-8 text-[#315c6b]" aria-hidden />
-        <span className="font-medium">Upload reference files</span>
-        <span className="mt-1 text-sm text-[#6d675d]">JPG, PNG, WebP or PDF up to 8MB each</span>
-        <input className="sr-only" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf" multiple onChange={(event) => onFiles(event.target.files)} />
+        <span className="font-medium">{label}</span>
+        <span className="mt-1 text-sm text-[#6d675d]">{helperText}</span>
+        <input className="sr-only" type="file" accept={acceptAttribute} multiple onChange={(event) => onFiles(event.target.files)} />
       </label>
       {error ? <p className="text-sm text-[#9c4f35]" role="alert">{error}</p> : null}
       {files.length ? (
-        <ul className="grid gap-2">
+        <ul className="grid gap-3 sm:grid-cols-2">
           {files.map((file) => (
-            <li key={`${file.name}-${file.size}`} className="flex items-center justify-between border border-[#ded8cc] bg-white px-3 py-2 text-sm">
-              <span>{file.name}</span>
-              <Button type="button" variant="ghost" onClick={() => setFiles((current) => current.filter((item) => item !== file))} aria-label={`Remove ${file.name}`}>
-                <X className="h-4 w-4" />
-              </Button>
+            <li key={`${file.name}-${file.size}`} className="border border-[#ded8cc] bg-white p-3 text-sm">
+              <MediaPreview file={file} />
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <span className="min-w-0 truncate">{file.name}</span>
+                <Button type="button" variant="ghost" onClick={() => setFiles((current) => current.filter((item) => item !== file))} aria-label={`Remove ${file.name}`}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </li>
           ))}
         </ul>
       ) : null}
+    </div>
+  );
+}
+
+function MediaPreview({ file }: { file: File }) {
+  const url = useMemo(() => URL.createObjectURL(file), [file]);
+
+  useEffect(() => {
+    return () => URL.revokeObjectURL(url);
+  }, [url]);
+
+  if (imageTypes.includes(file.type)) {
+    return (
+      <div className="overflow-hidden bg-[#f3eee5]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={url} alt="" className="aspect-video w-full object-cover" />
+      </div>
+    );
+  }
+
+  if (videoTypes.includes(file.type)) {
+    return <video src={url} controls muted className="aspect-video w-full bg-black object-cover" />;
+  }
+
+  return (
+    <div className="flex aspect-video items-center justify-center bg-[#f3eee5] text-[#6d675d]">
+      {file.type === "application/pdf" ? <FileText className="h-8 w-8" aria-hidden /> : file.type.startsWith("image/") ? <ImageIcon className="h-8 w-8" aria-hidden /> : <Video className="h-8 w-8" aria-hidden />}
     </div>
   );
 }

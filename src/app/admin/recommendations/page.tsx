@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { MessageCircleHeart } from "lucide-react";
 import { AdminStatusControls } from "@/components/admin/admin-status-controls";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,20 @@ export default function AdminRecommendationsPage() {
                   <Badge>{recommendation.status}</Badge>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-[#4f493f]">“{recommendation.comment}”</p>
+                {recommendation.mediaUrls?.length ? (
+                  <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                    {recommendation.mediaUrls.map((mediaUrl) => (
+                      <Image
+                        key={mediaUrl}
+                        src={mediaUrl}
+                        alt=""
+                        width={360}
+                        height={220}
+                        className="aspect-video border border-[#ded8cc] object-cover"
+                      />
+                    ))}
+                  </div>
+                ) : null}
                 <dl className="mt-4 grid gap-2 text-sm text-[#6d675d] md:grid-cols-2">
                   <div><dt className="font-semibold text-[#211f1b]">Recommended by</dt><dd>{recommendation.recommenderName}</dd></div>
                   <div><dt className="font-semibold text-[#211f1b]">Project</dt><dd>{recommendation.projectContext}</dd></div>

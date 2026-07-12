@@ -80,6 +80,7 @@ export type BusinessRecommendation = {
   projectContext: string;
   recommendedFor: string[];
   comment: string;
+  mediaUrls?: string[];
   permissionToContact: boolean;
   permissionToPublishName: boolean;
   status: BusinessRecommendationStatus;

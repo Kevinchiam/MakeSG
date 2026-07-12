@@ -512,6 +512,7 @@ export const businessRecommendations: BusinessRecommendation[] = [
     recommendedFor: ["Clear fabrication advice", "Careful CNC routing", "Reliable installation support"],
     comment:
       "They helped us refine a loose drawing into something buildable, flagged material issues early, and kept the install calm.",
+    mediaUrls: [image("portfolio-wood-1")],
     permissionToContact: true,
     permissionToPublishName: true,
     status: "approved",
@@ -527,6 +528,7 @@ export const businessRecommendations: BusinessRecommendation[] = [
     recommendedFor: ["Practical tolerance advice", "Good prototype communication"],
     comment:
       "The team translated our CAD into a workable prototype and explained the machining trade-offs without making the process feel opaque.",
+    mediaUrls: [image("portfolio-metal-1")],
     permissionToContact: true,
     permissionToPublishName: true,
     status: "approved",
@@ -541,6 +543,7 @@ export const businessRecommendations: BusinessRecommendation[] = [
     recommendedFor: ["Thoughtful prototyping", "Fast sensor tests"],
     comment:
       "They were generous with technical options and helped the creative team understand what could be proven quickly before committing to a full build.",
+    mediaUrls: [image("portfolio-tech-1")],
     permissionToContact: false,
     permissionToPublishName: false,
     status: "approved",
@@ -555,6 +558,7 @@ export const businessRecommendations: BusinessRecommendation[] = [
     recommendedFor: ["Responsive quoting"],
     comment:
       "Pending demo recommendation for admin moderation. This would not appear publicly until approved.",
+    mediaUrls: [],
     permissionToContact: true,
     permissionToPublishName: false,
     status: "pending",

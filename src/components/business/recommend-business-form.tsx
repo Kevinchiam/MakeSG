@@ -5,6 +5,7 @@ import { Send, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
+import { FileUploader } from "@/components/projects/file-uploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -130,6 +131,12 @@ export function RecommendBusinessForm({ initialBusinessId }: { initialBusinessId
         <Textarea {...form.register("comment")} placeholder="Keep it specific: what they helped with, how they communicated, and why you would trust them again." />
       </Field>
       {form.formState.errors.comment ? <p className="text-sm text-[#9c4f35]">{form.formState.errors.comment.message}</p> : null}
+
+      <FileUploader
+        accept="media"
+        label="Add photos or a short video"
+        description="Show the finished piece, prototype, installation or process. JPG, PNG, WebP, MP4, MOV or WebM up to 40MB each."
+      />
 
       <div className="grid gap-2 text-sm">
         <label className="flex gap-2">

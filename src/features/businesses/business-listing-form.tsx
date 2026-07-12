@@ -5,6 +5,7 @@ import { Send } from "lucide-react";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
+import { FileUploader } from "@/components/projects/file-uploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,6 +50,11 @@ export function BusinessListingForm() {
       </div>
       <Checklist label="Services" items={services.map((s) => s.slug)} labels={Object.fromEntries(services.map((s) => [s.slug, s.name]))} selected={selectedServices} onChange={(next) => form.setValue("services", next)} />
       <Checklist label="Materials" items={materials.map((m) => m.name)} selected={selectedMaterials} onChange={(next) => form.setValue("materials", next)} />
+      <FileUploader
+        accept="media"
+        label="Upload portfolio photos or videos"
+        description="Add tangible examples of your work: prototypes, finished pieces, installations or process clips."
+      />
       <Button type="submit"><Send className="h-4 w-4" /> Submit for approval</Button>
     </form>
   );

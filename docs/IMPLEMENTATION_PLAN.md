@@ -24,3 +24,4 @@ Profiles belong to Supabase auth users. Businesses optionally belong to provider
 - Authentication UI is magic-link and Google OAuth-ready, with Supabase clients scaffolded but not requiring credentials for local mock-data browsing.
 - Recommendations are intentionally rules-based and explainable, not AI-generated.
 - Word-of-mouth business recommendations are moderated trust signals, not public star ratings or open reviews.
+- Recommendation and provider-onboarding media supports photos and short videos so users can inspect tangible work examples before enquiring.

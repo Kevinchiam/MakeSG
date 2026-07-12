@@ -97,6 +97,20 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
                       <p className="text-sm font-semibold">{recommendation.projectContext}</p>
                     </div>
                     <p className="mt-3 text-sm leading-6 text-[#4f493f]">“{recommendation.comment}”</p>
+                    {recommendation.mediaUrls?.length ? (
+                      <div className="mt-4 grid grid-cols-2 gap-2">
+                        {recommendation.mediaUrls.slice(0, 2).map((mediaUrl) => (
+                          <Image
+                            key={mediaUrl}
+                            src={mediaUrl}
+                            alt=""
+                            width={420}
+                            height={260}
+                            className="aspect-video border border-[#ded8cc] object-cover"
+                          />
+                        ))}
+                      </div>
+                    ) : null}
                     <div className="mt-4 flex flex-wrap gap-2">
                       {recommendation.recommendedFor.slice(0, 3).map((item) => (
                         <Badge key={item}>{item}</Badge>
