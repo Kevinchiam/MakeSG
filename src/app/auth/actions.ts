@@ -26,21 +26,17 @@ export async function requestSignIn(formData: FormData) {
     redirect("/sign-in?error=invalid-email");
   }
 
-  try {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email: parsed.data.email,
-      options: {
-        shouldCreateUser: false,
-        emailRedirectTo: `${appUrl()}/auth/callback?next=/dashboard`,
-      },
-    });
+  const supabase = await getConfiguredSupabase("/sign-in");
+  const { error } = await supabase.auth.signInWithOtp({
+    email: parsed.data.email,
+    options: {
+      shouldCreateUser: false,
+      emailRedirectTo: `${appUrl()}/auth/callback?next=/dashboard`,
+    },
+  });
 
-    if (error) {
-      redirect(`/sign-in?error=${encoded(error.message)}`);
-    }
-  } catch {
-    redirect("/sign-in?error=auth-not-configured");
+  if (error) {
+    redirect(`/sign-in?error=${encoded(error.message)}`);
   }
 
   redirect(`/sign-in?sent=1&email=${encoded(parsed.data.email)}`);
@@ -56,25 +52,32 @@ export async function requestSignUp(formData: FormData) {
     redirect("/sign-up?error=invalid-form");
   }
 
-  try {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email: parsed.data.email,
-      options: {
-        shouldCreateUser: true,
-        emailRedirectTo: `${appUrl()}/auth/callback?next=/dashboard`,
-        data: {
-          account_type: parsed.data.accountType,
-        },
+  const supabase = await getConfiguredSupabase("/sign-up");
+  const { error } = await supabase.auth.signInWithOtp({
+    email: parsed.data.email,
+    options: {
+      shouldCreateUser: true,
+      emailRedirectTo: `${appUrl()}/auth/callback?next=/dashboard`,
+      data: {
+        account_type: parsed.data.accountType,
       },
-    });
+    },
+  });
 
-    if (error) {
-      redirect(`/sign-up?error=${encoded(error.message)}`);
-    }
-  } catch {
-    redirect("/sign-up?error=auth-not-configured");
+  if (error) {
+    redirect(`/sign-up?error=${encoded(error.message)}`);
   }
 
   redirect(`/sign-up?sent=1&email=${encoded(parsed.data.email)}`);
+}
+
+async function getConfiguredSupabase(errorPath: "/sign-in" | "/sign-up") {
+  try {
+    return await createClient();
+  } catch {
+    if (errorPath === "/sign-up") {
+      redirect("/sign-up?error=auth-not-configured");
+    }
+    redirect("/sign-in?error=auth-not-configured");
+  }
 }
