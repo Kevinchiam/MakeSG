@@ -9,12 +9,15 @@ import { SaveBusinessButton } from "@/components/business/save-business-button";
 import { VerificationBadge } from "@/components/business/verification-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { businesses, getApprovedRecommendationsForBusiness, services } from "@/lib/data";
+import { getApprovedRecommendationsForBusiness, services } from "@/lib/data";
+import { getPublishedBusinessBySlug } from "@/lib/public-businesses";
 import { formatCurrency } from "@/lib/utils";
+
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const business = businesses.find((item) => item.slug === slug);
+  const business = await getPublishedBusinessBySlug(slug);
   if (!business) return { title: "Business not found" };
   return {
     title: business.name,
@@ -26,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BusinessProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const business = businesses.find((item) => item.slug === slug);
+  const business = await getPublishedBusinessBySlug(slug);
   if (!business) notFound();
   const serviceLabels = business.services.map((slug) => services.find((service) => service.slug === slug)?.name ?? slug);
   const wordOfMouth = getApprovedRecommendationsForBusiness(business.id);

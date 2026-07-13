@@ -12,7 +12,7 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
     <section className="container-shell max-w-3xl py-12">
       <h1 className="font-serif text-5xl font-semibold">{business.name}</h1>
       <p className="mt-4 text-[#6d675d]">{business.shortDescription}</p>
-      <div className="mt-8"><AdminStatusControls initialStatus={business.publicationStatus} /></div>
+      <div className="mt-8"><AdminStatusControls businessId={business.id} source={business.source} initialStatus={business.publicationStatus} /></div>
     </section>
   );
 }
