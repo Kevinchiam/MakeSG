@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { AdminStatusControls } from "@/components/admin/admin-status-controls";
 import { getAdminBusiness } from "@/lib/business-submissions";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminBusinessPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const business = await getAdminBusiness(id);

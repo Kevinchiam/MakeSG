@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getAdminBusinesses } from "@/lib/business-submissions";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminBusinessesPage() {
   const businesses = await getAdminBusinesses();
   const pendingCount = businesses.filter((business) => business.publicationStatus === "pending").length;
