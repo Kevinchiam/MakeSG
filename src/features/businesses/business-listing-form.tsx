@@ -9,6 +9,7 @@ import { FileUploader } from "@/components/projects/file-uploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { submitBusinessForApproval } from "@/features/businesses/actions";
 import { materials, services } from "@/lib/data";
 import { businessSchema } from "@/lib/validation";
 
@@ -18,6 +19,8 @@ type BusinessOutput = z.output<typeof businessSchema>;
 export function BusinessListingForm() {
   const [submitted, setSubmitted] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<BusinessInput, unknown, BusinessOutput>({
     resolver: zodResolver(businessSchema),
     defaultValues: { services: [], materials: [], businessType: "studio" },
@@ -39,14 +42,32 @@ export function BusinessListingForm() {
     <form
       className="grid gap-5 border border-[#ded8cc] bg-white p-6"
       onSubmit={form.handleSubmit(
-        (data) => {
+        async (data) => {
+          setIsSubmitting(true);
+          setSubmitError(null);
           window.localStorage.setItem("makesg-last-business-listing", JSON.stringify({ ...data, publicationStatus: "pending" }));
+          const result = await submitBusinessForApproval(data);
+          setIsSubmitting(false);
+
+          if (!result.ok) {
+            setSubmitError(result.message);
+            return;
+          }
+
           setSubmitted(true);
         },
-        () => setSubmitAttempted(true),
+        () => {
+          setSubmitAttempted(true);
+          setSubmitError(null);
+        },
       )}
     >
       <h2 className="font-serif text-3xl font-semibold">Business listing</h2>
+      {submitError ? (
+        <p className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24]" role="alert">
+          {submitError}
+        </p>
+      ) : null}
       {submitAttempted ? (
         <p className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24]" role="alert">
           Check the highlighted fields below. The full description needs more detail, the website must include https://, and at least one service is required.
@@ -70,7 +91,7 @@ export function BusinessListingForm() {
         label="Upload portfolio photos or videos"
         description="Add tangible examples of your work: prototypes, finished pieces, installations or process clips."
       />
-      <Button type="submit"><Send className="h-4 w-4" /> Submit for approval</Button>
+      <Button type="submit" disabled={isSubmitting}><Send className="h-4 w-4" /> {isSubmitting ? "Submitting..." : "Submit for approval"}</Button>
     </form>
   );
 }
