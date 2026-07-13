@@ -17,6 +17,7 @@ type BusinessOutput = z.output<typeof businessSchema>;
 
 export function BusinessListingForm() {
   const [submitted, setSubmitted] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const form = useForm<BusinessInput, unknown, BusinessOutput>({
     resolver: zodResolver(businessSchema),
     defaultValues: { services: [], materials: [], businessType: "studio" },
@@ -35,8 +36,22 @@ export function BusinessListingForm() {
   }
 
   return (
-    <form className="grid gap-5 border border-[#ded8cc] bg-white p-6" onSubmit={form.handleSubmit(() => setSubmitted(true))}>
+    <form
+      className="grid gap-5 border border-[#ded8cc] bg-white p-6"
+      onSubmit={form.handleSubmit(
+        (data) => {
+          window.localStorage.setItem("makesg-last-business-listing", JSON.stringify({ ...data, publicationStatus: "pending" }));
+          setSubmitted(true);
+        },
+        () => setSubmitAttempted(true),
+      )}
+    >
       <h2 className="font-serif text-3xl font-semibold">Business listing</h2>
+      {submitAttempted ? (
+        <p className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24]" role="alert">
+          Check the highlighted fields below. The full description needs more detail, the website must include https://, and at least one service is required.
+        </p>
+      ) : null}
       <Field label="Business name" error={form.formState.errors.name?.message}><Input {...form.register("name")} /></Field>
       <Field label="Short summary" error={form.formState.errors.shortDescription?.message}><Input {...form.register("shortDescription")} /></Field>
       <Field label="Full description" error={form.formState.errors.description?.message}><Textarea {...form.register("description")} /></Field>
