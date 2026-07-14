@@ -22,6 +22,7 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
   const [submitted, setSubmitted] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [otherError, setOtherError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [portfolioFiles, setPortfolioFiles] = useState<File[]>([]);
   const [otherChecked, setOtherChecked] = useState(false);
@@ -68,12 +69,13 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
           }
 
           if (otherChecked && !data.otherService?.trim()) {
-            setSubmitError("Describe the other service, or uncheck Other.");
+            setOtherError("Describe the other service, or uncheck Other.");
             return;
           }
 
           setIsSubmitting(true);
           setSubmitError(null);
+          setOtherError(null);
           try {
             const formData = new FormData();
             formData.set("name", data.name);
@@ -99,7 +101,7 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
 
             setSubmitted(true);
           } catch {
-            setSubmitError("The submission did not complete. If you uploaded large photos or videos, remove one file or use smaller files, then try again. You can also check Admin > Businesses before resubmitting.");
+            setSubmitError("The submission did not complete. If you uploaded large photos or videos, remove one file or use smaller files, then try again.");
           } finally {
             setIsSubmitting(false);
           }
@@ -207,23 +209,25 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
             checked={otherChecked}
             onChange={(event) => {
               setOtherChecked(event.target.checked);
+              setOtherError(null);
               if (!event.target.checked) form.setValue("otherService", "", { shouldValidate: true });
             }}
           />
           Other
         </label>
         {otherChecked ? (
-          <Field label="Describe other service" error={form.formState.errors.otherService?.message}>
+          <Field label="Describe other service" error={form.formState.errors.otherService?.message ?? otherError ?? undefined}>
             <Input {...form.register("otherService")} placeholder="e.g. prop styling, glass blowing, mural painting" />
           </Field>
         ) : null}
       </fieldset>
       <FileUploader
         accept="media"
+        maxTotalSizeMb={10}
         value={portfolioFiles}
         onFilesChange={setPortfolioFiles}
         label="Upload portfolio photos or videos"
-        description="Photos and videos are stored in Supabase and shown on your listing after admin approval."
+        description="Photos and videos are stored in Supabase and shown after admin approval. Uploads must be 10MB total or smaller."
       />
       <Button type="submit" disabled={isSubmitting || Boolean(duplicateSuggestion)}><Send className="h-4 w-4" /> {isSubmitting ? "Submitting..." : "Submit for approval"}</Button>
     </form>

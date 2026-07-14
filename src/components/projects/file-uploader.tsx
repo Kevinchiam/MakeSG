@@ -13,6 +13,7 @@ type FileUploaderProps = {
   description?: string;
   accept?: "references" | "media";
   maxSizeMb?: number;
+  maxTotalSizeMb?: number;
   value?: File[];
   onFilesChange?: (files: File[]) => void;
 };
@@ -22,6 +23,7 @@ export function FileUploader({
   description,
   accept = "references",
   maxSizeMb = accept === "media" ? 40 : 8,
+  maxTotalSizeMb,
   value,
   onFilesChange,
 }: FileUploaderProps) {
@@ -34,7 +36,7 @@ export function FileUploader({
   const helperText =
     description ??
     (accept === "media"
-      ? `JPG, PNG, WebP, MP4, MOV or WebM up to ${maxSizeMb}MB each`
+      ? `JPG, PNG, WebP, MP4, MOV or WebM${maxTotalSizeMb ? ` up to ${maxTotalSizeMb}MB total` : ` up to ${maxSizeMb}MB each`}`
       : `JPG, PNG, WebP or PDF up to ${maxSizeMb}MB each`);
 
   function onFiles(nextFiles: FileList | null) {
@@ -52,7 +54,12 @@ export function FileUploader({
       }
       valid.push(file);
     }
-    setFiles([...files, ...valid]);
+    const next = [...files, ...valid];
+    if (maxTotalSizeMb && totalSizeMb(next) > maxTotalSizeMb) {
+      setError(`Uploads must be ${maxTotalSizeMb}MB total or smaller. Remove a file or upload smaller files.`);
+      return;
+    }
+    setFiles(next);
   }
 
   function setFiles(nextFiles: File[]) {
@@ -89,6 +96,10 @@ export function FileUploader({
       ) : null}
     </div>
   );
+}
+
+function totalSizeMb(files: File[]) {
+  return files.reduce((total, file) => total + file.size, 0) / 1024 / 1024;
 }
 
 function MediaPreview({ file }: { file: File }) {

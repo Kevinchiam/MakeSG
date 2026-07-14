@@ -61,6 +61,10 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
 
   const data = parsed.data;
   const portfolioFiles = input instanceof FormData ? validPortfolioFiles(input.getAll("portfolioFiles")) : [];
+  const totalPortfolioSizeMb = portfolioFiles.reduce((total, file) => total + file.size, 0) / 1024 / 1024;
+  if (totalPortfolioSizeMb > 10) {
+    return { ok: false, message: "Portfolio uploads must be 10MB total or smaller." };
+  }
   const slugBase = createSlug(data.name) || "business";
   const slug = `${slugBase}-${Date.now().toString(36)}`;
 
