@@ -28,8 +28,11 @@ export const businessSchema = z.object({
   minimumBudget: z.coerce.number().min(0),
   typicalLeadTime: z.coerce.number().min(1),
   businessType: z.enum(["independent", "studio", "workshop", "consultancy", "manufacturer", "supplier"]),
-  services: z.array(z.string()).min(1, "Select at least one service."),
-  materials: z.array(z.string()).default([]),
+  services: z.array(z.string()).default([]),
+  otherService: z.string().trim().optional().or(z.literal("")),
+}).refine((data) => data.services.length > 0 || Boolean(data.otherService?.trim()), {
+  message: "Select at least one service, or describe another service.",
+  path: ["services"],
 });
 
 export const enquirySchema = z.object({

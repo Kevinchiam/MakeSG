@@ -11,7 +11,7 @@ import type { Business } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 
 export function BusinessCard({ business }: { business: Business }) {
-  const topServices = business.services.slice(0, 3).map((slug) => services.find((service) => service.slug === slug)?.name ?? slug);
+  const topServices = business.services.slice(0, 3).map((slug) => services.find((service) => service.slug === slug)?.name ?? formatServiceSlug(slug));
   const recommendationCount = getApprovedRecommendationsForBusiness(business.id).length;
 
   return (
@@ -72,4 +72,13 @@ export function BusinessCard({ business }: { business: Business }) {
       </div>
     </article>
   );
+}
+
+function formatServiceSlug(slug: string) {
+  return slug
+    .replace(/^other-/, "")
+    .split("-")
+    .filter(Boolean)
+    .map((word) => word[0]?.toUpperCase() + word.slice(1))
+    .join(" ");
 }

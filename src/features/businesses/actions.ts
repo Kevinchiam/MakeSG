@@ -1,5 +1,6 @@
 "use server";
 
+import { services as knownServices } from "@/lib/data";
 import { createSlug } from "@/lib/slug";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { businessSchema } from "@/lib/validation";
@@ -9,13 +10,14 @@ type SubmitBusinessResult =
   | { ok: false; message: string };
 
 export async function submitBusinessForApproval(input: unknown): Promise<SubmitBusinessResult> {
-  const parsed = businessSchema.safeParse(input);
+  const formInput = input instanceof FormData ? formDataToBusinessInput(input) : input;
+  const parsed = businessSchema.safeParse(formInput);
 
   if (!parsed.success) {
     return { ok: false, message: "Check the highlighted fields and try again." };
   }
 
-  let supabase;
+  let supabase: ReturnType<typeof createAdminClient>;
   try {
     supabase = createAdminClient();
   } catch {
@@ -23,6 +25,7 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
   }
 
   const data = parsed.data;
+  const portfolioFiles = input instanceof FormData ? validPortfolioFiles(input.getAll("portfolioFiles")) : [];
   const slugBase = createSlug(data.name) || "business";
   const slug = `${slugBase}-${Date.now().toString(36)}`;
 
@@ -51,8 +54,24 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
     return { ok: false, message: businessError?.message ?? "Could not submit this listing." };
   }
 
-  if (data.services.length > 0) {
-    const { data: serviceRows } = await supabase.from("services").select("id, slug").in("slug", data.services);
+  const serviceSlugs = [...data.services];
+  if (data.otherService?.trim()) {
+    const otherSlug = `other-${createSlug(data.otherService)}`;
+    serviceSlugs.push(otherSlug);
+    await supabase.from("services").upsert(
+      {
+        slug: otherSlug,
+        name: data.otherService.trim(),
+        description: "Community-submitted service.",
+        service_group: "Other",
+      },
+      { onConflict: "slug" },
+    );
+  }
+
+  if (serviceSlugs.length > 0) {
+    await upsertKnownServices(serviceSlugs);
+    const { data: serviceRows } = await supabase.from("services").select("id, slug").in("slug", serviceSlugs);
     const joins = (serviceRows ?? []).map((service) => ({
       business_id: business.id,
       service_id: service.id,
@@ -63,18 +82,71 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
     }
   }
 
-  if (data.materials.length > 0) {
-    const materialSlugs = data.materials.map((name) => createSlug(name));
-    const { data: materialRows } = await supabase.from("materials").select("id, slug").in("slug", materialSlugs);
-    const joins = (materialRows ?? []).map((material) => ({
-      business_id: business.id,
-      material_id: material.id,
-    }));
+  const uploadedItems = [];
+  for (const [index, file] of portfolioFiles.entries()) {
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload";
+    const path = `${business.id}/${Date.now()}-${index}.${extension}`;
+    const { error: uploadError } = await supabase.storage.from("business-portfolios").upload(path, file, {
+      contentType: file.type,
+      upsert: false,
+    });
 
-    if (joins.length > 0) {
-      await supabase.from("business_materials").insert(joins);
+    if (uploadError) continue;
+
+    const { data: publicUrlData } = supabase.storage.from("business-portfolios").getPublicUrl(path);
+    uploadedItems.push({
+      business_id: business.id,
+      title: file.name.replace(/\.[^/.]+$/, ""),
+      description: file.type.startsWith("video/") ? "Submitted portfolio video." : "Submitted portfolio photo.",
+      image_url: publicUrlData.publicUrl,
+      tags: [file.type],
+      sort_order: index,
+    });
+  }
+
+  if (uploadedItems.length > 0) {
+    await supabase.from("portfolio_items").insert(uploadedItems);
+    const firstImage = uploadedItems.find((item) => item.tags[0]?.startsWith("image/"));
+    if (firstImage) {
+      await supabase.from("businesses").update({ hero_image_url: firstImage.image_url }).eq("id", business.id);
     }
   }
 
   return { ok: true, id: business.id };
+
+  async function upsertKnownServices(slugs: string[]) {
+    const selectedServices = knownServices
+      .filter((service) => slugs.includes(service.slug))
+      .map((service) => ({
+        slug: service.slug,
+        name: service.name,
+        description: service.description,
+        service_group: service.group,
+      }));
+
+    if (selectedServices.length > 0) {
+      await supabase.from("services").upsert(selectedServices, { onConflict: "slug" });
+    }
+  }
+}
+
+function formDataToBusinessInput(formData: FormData) {
+  return {
+    name: formData.get("name"),
+    shortDescription: formData.get("shortDescription"),
+    description: formData.get("description"),
+    websiteUrl: formData.get("websiteUrl"),
+    publicEmail: formData.get("publicEmail"),
+    location: formData.get("location"),
+    minimumBudget: formData.get("minimumBudget"),
+    typicalLeadTime: formData.get("typicalLeadTime"),
+    businessType: formData.get("businessType"),
+    services: formData.getAll("services").filter((value): value is string => typeof value === "string"),
+    otherService: formData.get("otherService"),
+  };
+}
+
+function validPortfolioFiles(values: FormDataEntryValue[]) {
+  const allowed = ["image/jpeg", "image/png", "image/webp", "video/mp4", "video/quicktime", "video/webm"];
+  return values.filter((value): value is File => value instanceof File && value.size > 0 && allowed.includes(value.type));
 }

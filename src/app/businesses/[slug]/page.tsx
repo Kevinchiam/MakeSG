@@ -31,7 +31,7 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
   const { slug } = await params;
   const business = await getPublishedBusinessBySlug(slug);
   if (!business) notFound();
-  const serviceLabels = business.services.map((slug) => services.find((service) => service.slug === slug)?.name ?? slug);
+  const serviceLabels = business.services.map((slug) => services.find((service) => service.slug === slug)?.name ?? formatServiceSlug(slug));
   const wordOfMouth = getApprovedRecommendationsForBusiness(business.id);
 
   const jsonLd = {
@@ -138,7 +138,11 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
               <div className="mt-5 grid gap-5 md:grid-cols-3">
                 {business.portfolio.map((item) => (
                   <article key={item.id} className="border border-[#ded8cc] bg-white">
-                    <Image src={item.imageUrl} alt="" width={700} height={460} className="aspect-[4/3] object-cover" />
+                    {item.tags.some((tag) => tag.startsWith("video/")) ? (
+                      <video src={item.imageUrl} controls className="aspect-[4/3] w-full bg-black object-cover" />
+                    ) : (
+                      <Image src={item.imageUrl} alt="" width={700} height={460} className="aspect-[4/3] object-cover" />
+                    )}
                     <div className="p-4">
                       <h3 className="font-semibold">{item.title}</h3>
                       <p className="mt-2 text-sm leading-6 text-[#6d675d]">{item.description}</p>
@@ -169,6 +173,15 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
       </div>
     </section>
   );
+}
+
+function formatServiceSlug(slug: string) {
+  return slug
+    .replace(/^other-/, "")
+    .split("-")
+    .filter(Boolean)
+    .map((word) => word[0]?.toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 function Info({ title, items, material }: { title: string; items: string[]; material?: boolean }) {

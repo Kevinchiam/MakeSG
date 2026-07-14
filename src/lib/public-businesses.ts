@@ -24,6 +24,14 @@ type PublishedBusinessRow = {
   featured: boolean;
   claimed: boolean;
   hero_image_url: string | null;
+  business_services?: { services: { slug: string } | { slug: string }[] | null }[];
+  portfolio_items?: {
+    id: string;
+    title: string;
+    description: string | null;
+    image_url: string | null;
+    tags: string[] | null;
+  }[];
 };
 
 const fallbackImage = "/demo/bukit-merah-photo.svg";
@@ -36,14 +44,14 @@ export async function getPublishedBusinesses(): Promise<Business[]> {
     const { data, error } = await supabase
       .from("businesses")
       .select(
-        "id, name, slug, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, accepts_prototypes, accepts_production, offers_onsite_service, offers_remote_service, verification_status, publication_status, featured, claimed, hero_image_url",
+        "id, name, slug, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, accepts_prototypes, accepts_production, offers_onsite_service, offers_remote_service, verification_status, publication_status, featured, claimed, hero_image_url, business_services(services(slug)), portfolio_items(id, title, description, image_url, tags)",
       )
       .eq("publication_status", "published")
       .order("updated_at", { ascending: false });
 
     if (error) return publishedDemoBusinesses;
 
-    const submittedBusinesses = ((data ?? []) as PublishedBusinessRow[]).map(rowToBusiness);
+    const submittedBusinesses = ((data ?? []) as unknown as PublishedBusinessRow[]).map(rowToBusiness);
     return [...submittedBusinesses, ...publishedDemoBusinesses];
   } catch {
     return publishedDemoBusinesses;
@@ -59,14 +67,14 @@ export async function getPublishedBusinessBySlug(slug: string) {
     const { data, error } = await supabase
       .from("businesses")
       .select(
-        "id, name, slug, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, accepts_prototypes, accepts_production, offers_onsite_service, offers_remote_service, verification_status, publication_status, featured, claimed, hero_image_url",
+        "id, name, slug, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, accepts_prototypes, accepts_production, offers_onsite_service, offers_remote_service, verification_status, publication_status, featured, claimed, hero_image_url, business_services(services(slug)), portfolio_items(id, title, description, image_url, tags)",
       )
       .eq("slug", slug)
       .eq("publication_status", "published")
       .single();
 
     if (error || !data) return null;
-    return rowToBusiness(data as PublishedBusinessRow);
+    return rowToBusiness(data as unknown as PublishedBusinessRow);
   } catch {
     return null;
   }
@@ -96,11 +104,21 @@ function rowToBusiness(row: PublishedBusinessRow): Business {
     publicationStatus: row.publication_status,
     featured: row.featured,
     claimed: row.claimed,
-    services: [],
+    services: row.business_services?.flatMap((join) => {
+      if (!join.services) return [];
+      if (Array.isArray(join.services)) return join.services.map((service) => service.slug);
+      return [join.services.slug];
+    }) ?? [],
     materials: [],
     processes: [],
     projectTypes: [],
-    portfolio: [],
+    portfolio: row.portfolio_items?.filter((item) => Boolean(item.image_url)).map((item) => ({
+      id: item.id,
+      title: item.title,
+      description: item.description ?? "",
+      tags: item.tags ?? [],
+      imageUrl: item.image_url ?? "",
+    })) ?? [],
     heroImage: row.hero_image_url ?? fallbackImage,
     demoNotice: "Community-submitted provider.",
   };

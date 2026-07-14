@@ -13,6 +13,8 @@ type FileUploaderProps = {
   description?: string;
   accept?: "references" | "media";
   maxSizeMb?: number;
+  value?: File[];
+  onFilesChange?: (files: File[]) => void;
 };
 
 export function FileUploader({
@@ -20,9 +22,12 @@ export function FileUploader({
   description,
   accept = "references",
   maxSizeMb = accept === "media" ? 40 : 8,
+  value,
+  onFilesChange,
 }: FileUploaderProps) {
-  const [files, setFiles] = useState<File[]>([]);
+  const [internalFiles, setInternalFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const files = value ?? internalFiles;
   const allowed = accept === "media" ? [...imageTypes, ...videoTypes] : [...imageTypes, ...pdfTypes];
   const acceptAttribute =
     accept === "media" ? ".jpg,.jpeg,.png,.webp,.mp4,.mov,.webm" : ".jpg,.jpeg,.png,.webp,.pdf";
@@ -47,7 +52,15 @@ export function FileUploader({
       }
       valid.push(file);
     }
-    setFiles((current) => [...current, ...valid]);
+    setFiles([...files, ...valid]);
+  }
+
+  function setFiles(nextFiles: File[]) {
+    if (onFilesChange) {
+      onFilesChange(nextFiles);
+      return;
+    }
+    setInternalFiles(nextFiles);
   }
 
   return (
@@ -66,7 +79,7 @@ export function FileUploader({
               <MediaPreview file={file} />
               <div className="mt-3 flex items-center justify-between gap-3">
                 <span className="min-w-0 truncate">{file.name}</span>
-                <Button type="button" variant="ghost" onClick={() => setFiles((current) => current.filter((item) => item !== file))} aria-label={`Remove ${file.name}`}>
+                <Button type="button" variant="ghost" onClick={() => setFiles(files.filter((item) => item !== file))} aria-label={`Remove ${file.name}`}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
