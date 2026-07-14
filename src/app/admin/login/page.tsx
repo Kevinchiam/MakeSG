@@ -14,6 +14,9 @@ type AdminLoginPageProps = {
 
 export default async function AdminLoginPage({ searchParams }: AdminLoginPageProps) {
   const params = await searchParams;
+  const errorMessage = params.error === "not-configured"
+    ? "Admin login is not configured. Add ADMIN_SESSION_TOKEN in Vercel."
+    : "Check the admin username and password.";
 
   return (
     <section className="container-shell max-w-md py-12">
@@ -22,7 +25,7 @@ export default async function AdminLoginPage({ searchParams }: AdminLoginPagePro
         <input type="hidden" name="next" value={params.next ?? "/admin"} />
         {params.error ? (
           <p className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm text-[#8a3c24]" role="alert">
-            Check the admin username and password.
+            {errorMessage}
           </p>
         ) : null}
         <label className="grid gap-1.5 text-sm font-medium">

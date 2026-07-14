@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 function adminSessionToken() {
-  return process.env.ADMIN_SESSION_TOKEN ?? "makesg-admin-session";
+  return process.env.ADMIN_SESSION_TOKEN;
 }
 
 export function middleware(request: NextRequest) {
@@ -12,7 +12,8 @@ export function middleware(request: NextRequest) {
   }
 
   const token = request.cookies.get("makesg_admin")?.value;
-  if (token === adminSessionToken()) {
+  const expectedToken = adminSessionToken();
+  if (expectedToken && token === expectedToken) {
     return NextResponse.next();
   }
 

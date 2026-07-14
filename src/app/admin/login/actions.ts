@@ -12,7 +12,7 @@ function adminPassword() {
 }
 
 function adminSessionToken() {
-  return process.env.ADMIN_SESSION_TOKEN ?? "makesg-admin-session";
+  return process.env.ADMIN_SESSION_TOKEN;
 }
 
 export async function loginAdmin(formData: FormData) {
@@ -24,8 +24,13 @@ export async function loginAdmin(formData: FormData) {
     redirect(`/admin/login?error=invalid&next=${encodeURIComponent(next)}`);
   }
 
+  const sessionToken = adminSessionToken();
+  if (!sessionToken) {
+    redirect(`/admin/login?error=not-configured&next=${encodeURIComponent(next)}`);
+  }
+
   const cookieStore = await cookies();
-  cookieStore.set("makesg_admin", adminSessionToken(), {
+  cookieStore.set("makesg_admin", sessionToken, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
