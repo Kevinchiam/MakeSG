@@ -59,30 +59,35 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
 
           setIsSubmitting(true);
           setSubmitError(null);
-          const formData = new FormData();
-          formData.set("name", data.name);
-          formData.set("shortDescription", data.shortDescription);
-          formData.set("description", data.description);
-          formData.set("websiteUrl", data.websiteUrl);
-          formData.set("publicEmail", data.publicEmail);
-          formData.set("location", data.location);
-          formData.set("minimumBudget", String(data.minimumBudget));
-          formData.set("typicalLeadTime", String(data.typicalLeadTime));
-          formData.set("businessType", data.businessType);
-          selectedServices.forEach((service) => formData.append("services", service));
-          if (otherChecked && data.otherService) formData.set("otherService", data.otherService);
-          portfolioFiles.forEach((file) => formData.append("portfolioFiles", file));
+          try {
+            const formData = new FormData();
+            formData.set("name", data.name);
+            formData.set("shortDescription", data.shortDescription);
+            formData.set("description", data.description);
+            formData.set("websiteUrl", data.websiteUrl);
+            formData.set("publicEmail", data.publicEmail);
+            formData.set("location", data.location);
+            formData.set("minimumBudget", String(data.minimumBudget));
+            formData.set("typicalLeadTime", String(data.typicalLeadTime));
+            formData.set("businessType", data.businessType);
+            selectedServices.forEach((service) => formData.append("services", service));
+            if (otherChecked && data.otherService) formData.set("otherService", data.otherService);
+            portfolioFiles.forEach((file) => formData.append("portfolioFiles", file));
 
-          window.localStorage.setItem("makesg-last-business-listing", JSON.stringify({ ...data, publicationStatus: "pending" }));
-          const result = await submitBusinessForApproval(formData);
-          setIsSubmitting(false);
+            window.localStorage.setItem("makesg-last-business-listing", JSON.stringify({ ...data, publicationStatus: "pending" }));
+            const result = await submitBusinessForApproval(formData);
 
-          if (!result.ok) {
-            setSubmitError(result.message);
-            return;
+            if (!result.ok) {
+              setSubmitError(result.message);
+              return;
+            }
+
+            setSubmitted(true);
+          } catch {
+            setSubmitError("The submission did not complete. If you uploaded large photos or videos, remove one file or use smaller files, then try again. You can also check Admin > Businesses before resubmitting.");
+          } finally {
+            setIsSubmitting(false);
           }
-
-          setSubmitted(true);
         },
         () => {
           setSubmitAttempted(true);
@@ -99,6 +104,11 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
       {submitAttempted ? (
         <p className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24]" role="alert">
           Check the highlighted fields below. The full description needs more detail, the website must include https://, and at least one service is required.
+        </p>
+      ) : null}
+      {isSubmitting ? (
+        <p className="border border-[#ded8cc] bg-[#f8f5ee] p-3 text-sm leading-6 text-[#5f594f]" role="status">
+          Uploading portfolio files and saving the listing. This can take a little longer for large photos or videos.
         </p>
       ) : null}
       <Field label="Business name" error={form.formState.errors.name?.message}><Input {...form.register("name")} /></Field>
