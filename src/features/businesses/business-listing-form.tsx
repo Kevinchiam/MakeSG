@@ -9,26 +9,34 @@ import { FileUploader } from "@/components/projects/file-uploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { submitBusinessForApproval } from "@/features/businesses/actions";
+import { endorseBusiness, submitBusinessForApproval } from "@/features/businesses/actions";
 import { services } from "@/lib/data";
 import { businessSchema } from "@/lib/validation";
+import type { ExistingBusinessSuggestion } from "@/lib/business-submissions";
 
 type BusinessInput = z.input<typeof businessSchema>;
 type BusinessOutput = z.output<typeof businessSchema>;
 
-export function BusinessListingForm() {
+export function BusinessListingForm({ existingBusinesses = [] }: { existingBusinesses?: ExistingBusinessSuggestion[] }) {
   const [submitted, setSubmitted] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [portfolioFiles, setPortfolioFiles] = useState<File[]>([]);
   const [otherChecked, setOtherChecked] = useState(false);
+  const [endorsedBusinessId, setEndorsedBusinessId] = useState<string | null>(null);
+  const [endorseError, setEndorseError] = useState<string | null>(null);
+  const [isEndorsing, setIsEndorsing] = useState(false);
   const form = useForm<BusinessInput, unknown, BusinessOutput>({
     resolver: zodResolver(businessSchema),
     defaultValues: { services: [], businessType: "studio", otherService: "" },
   });
   const watched = useWatch({ control: form.control }) as BusinessInput;
   const selectedServices = watched.services ?? [];
+  const normalizedName = normalizeBusinessName(watched.name ?? "");
+  const duplicateSuggestion = normalizedName.length >= 3
+    ? existingBusinesses.find((business) => normalizeBusinessName(business.name) === normalizedName)
+    : undefined;
 
   if (submitted) {
     return (
@@ -44,6 +52,11 @@ export function BusinessListingForm() {
       className="grid gap-5 border border-[#ded8cc] bg-white p-6"
       onSubmit={form.handleSubmit(
         async (data) => {
+          if (duplicateSuggestion) {
+            setSubmitError("This business already exists. Endorse the existing listing instead of creating a duplicate.");
+            return;
+          }
+
           setIsSubmitting(true);
           setSubmitError(null);
           const formData = new FormData();
@@ -89,6 +102,45 @@ export function BusinessListingForm() {
         </p>
       ) : null}
       <Field label="Business name" error={form.formState.errors.name?.message}><Input {...form.register("name")} /></Field>
+      {duplicateSuggestion ? (
+        <div className="grid gap-3 border border-[#b9d3bf] bg-[#f1f8f2] p-4 text-sm text-[#39462d]" role="status">
+          <div>
+            <p className="font-semibold">Do you mean {duplicateSuggestion.name}?</p>
+            <p className="mt-1 leading-6">
+              This looks like an existing listing. To avoid duplicates, endorse the business instead.
+            </p>
+            <p className="mt-1 text-xs">
+              {duplicateSuggestion.endorsementCount} endorsement{duplicateSuggestion.endorsementCount === 1 ? "" : "s"} so far.
+            </p>
+          </div>
+          {endorsedBusinessId === duplicateSuggestion.id ? (
+            <p className="font-semibold">Thanks. Your endorsement has been recorded.</p>
+          ) : (
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={isEndorsing || duplicateSuggestion.source !== "supabase"}
+              onClick={async () => {
+                setIsEndorsing(true);
+                setEndorseError(null);
+                const result = await endorseBusiness(duplicateSuggestion.id);
+                setIsEndorsing(false);
+
+                if (!result.ok) {
+                  setEndorseError(result.message);
+                  return;
+                }
+
+                setEndorsedBusinessId(duplicateSuggestion.id);
+              }}
+            >
+              {isEndorsing ? "Endorsing..." : "Endorse this business"}
+            </Button>
+          )}
+          {duplicateSuggestion.source !== "supabase" ? <p className="text-xs">Demo businesses cannot receive live endorsements.</p> : null}
+          {endorseError ? <p className="text-[#9c4f35]">{endorseError}</p> : null}
+        </div>
+      ) : null}
       <Field label="Short summary" error={form.formState.errors.shortDescription?.message}><Input {...form.register("shortDescription")} /></Field>
       <Field label="Full description" error={form.formState.errors.description?.message}><Textarea {...form.register("description")} /></Field>
       <div className="grid gap-4 md:grid-cols-2">
@@ -145,9 +197,13 @@ export function BusinessListingForm() {
         label="Upload portfolio photos or videos"
         description="Photos and videos are stored in Supabase and shown on your listing after admin approval."
       />
-      <Button type="submit" disabled={isSubmitting}><Send className="h-4 w-4" /> {isSubmitting ? "Submitting..." : "Submit for approval"}</Button>
+      <Button type="submit" disabled={isSubmitting || Boolean(duplicateSuggestion)}><Send className="h-4 w-4" /> {isSubmitting ? "Submitting..." : "Submit for approval"}</Button>
     </form>
   );
+}
+
+function normalizeBusinessName(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 function Field({ label, hint, error, children }: { label: string; hint?: string; error?: string; children: React.ReactNode }) {

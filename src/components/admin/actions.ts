@@ -20,3 +20,16 @@ export async function updateBusinessPublicationStatus(businessId: string, status
   revalidatePath("/businesses");
   return { ok: true };
 }
+
+export async function deleteBusinessEntry(businessId: string) {
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("businesses").delete().eq("id", businessId);
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  revalidatePath("/admin/businesses");
+  revalidatePath("/businesses");
+  return { ok: true };
+}

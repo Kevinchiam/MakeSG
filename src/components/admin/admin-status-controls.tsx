@@ -1,8 +1,8 @@
 "use client";
 
-import { Check, EyeOff, Star, X } from "lucide-react";
+import { Check, EyeOff, Star, Trash2, X } from "lucide-react";
 import { useState } from "react";
-import { updateBusinessPublicationStatus } from "@/components/admin/actions";
+import { deleteBusinessEntry, updateBusinessPublicationStatus } from "@/components/admin/actions";
 import { Button } from "@/components/ui/button";
 import type { PublicationStatus } from "@/lib/types";
 
@@ -20,6 +20,7 @@ export function AdminStatusControls({
   const [status, setStatus] = useState(initialStatus);
   const [message, setMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   async function setPublicationStatus(nextStatus: PublicationStatus) {
     setStatus(nextStatus);
@@ -42,6 +43,29 @@ export function AdminStatusControls({
     setMessage(nextStatus === "published" ? "Published. This provider can now appear in the public directory." : "Status updated.");
   }
 
+  async function deleteEntry() {
+    setMessage(null);
+
+    if (source !== "supabase" || !businessId) {
+      setMessage("Demo listings cannot be deleted.");
+      return;
+    }
+
+    const confirmed = window.confirm("Delete this business listing? This cannot be undone.");
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    const result = await deleteBusinessEntry(businessId);
+    setIsDeleting(false);
+
+    if (!result.ok) {
+      setMessage(result.message ?? "Could not delete this listing.");
+      return;
+    }
+
+    window.location.href = "/admin/businesses";
+  }
+
   return (
     <div className="grid gap-3 border border-[#ded8cc] bg-white p-4">
       <p className="text-sm font-semibold">Current status: {status}</p>
@@ -58,6 +82,9 @@ export function AdminStatusControls({
         </Button>
         <Button type="button" variant="secondary" disabled={isSaving} onClick={() => setPublicationStatus("suspended")}>
           <EyeOff className="h-4 w-4" /> Unpublish
+        </Button>
+        <Button type="button" variant="danger" disabled={isDeleting} onClick={deleteEntry}>
+          <Trash2 className="h-4 w-4" /> {isDeleting ? "Deleting..." : "Delete"}
         </Button>
       </div>
     </div>

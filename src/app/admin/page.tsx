@@ -6,7 +6,10 @@ export default function AdminPage() {
   const pendingRecommendations = businessRecommendations.filter((recommendation) => recommendation.status === "pending").length;
   return (
     <section className="container-shell py-12">
-      <h1 className="font-serif text-5xl font-semibold">Admin</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="font-serif text-5xl font-semibold">Admin</h1>
+        <Link href="/admin/logout" className="text-sm underline">Log out</Link>
+      </div>
       <div className="mt-8 grid gap-4 md:grid-cols-4">
         <AdminLink href="/admin/businesses" title="Businesses" text={`${pending} pending, ${businesses.length} total demo listings`} />
         <AdminLink href="/admin/recommendations" title="Recommendations" text={`${pendingRecommendations} pending word-of-mouth submissions`} />

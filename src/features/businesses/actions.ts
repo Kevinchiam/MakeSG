@@ -9,6 +9,41 @@ type SubmitBusinessResult =
   | { ok: true; id: string }
   | { ok: false; message: string };
 
+type EndorseBusinessResult =
+  | { ok: true; endorsementCount: number }
+  | { ok: false; message: string };
+
+export async function endorseBusiness(businessId: string): Promise<EndorseBusinessResult> {
+  let supabase: ReturnType<typeof createAdminClient>;
+  try {
+    supabase = createAdminClient();
+  } catch {
+    return { ok: false, message: "Supabase is not configured for endorsements yet." };
+  }
+
+  const { data, error } = await supabase
+    .from("businesses")
+    .select("endorsement_count")
+    .eq("id", businessId)
+    .single();
+
+  if (error || !data) {
+    return { ok: false, message: error?.message ?? "Could not find that business." };
+  }
+
+  const endorsementCount = Number(data.endorsement_count ?? 0) + 1;
+  const { error: updateError } = await supabase
+    .from("businesses")
+    .update({ endorsement_count: endorsementCount, updated_at: new Date().toISOString() })
+    .eq("id", businessId);
+
+  if (updateError) {
+    return { ok: false, message: updateError.message };
+  }
+
+  return { ok: true, endorsementCount };
+}
+
 export async function submitBusinessForApproval(input: unknown): Promise<SubmitBusinessResult> {
   const formInput = input instanceof FormData ? formDataToBusinessInput(input) : input;
   const parsed = businessSchema.safeParse(formInput);

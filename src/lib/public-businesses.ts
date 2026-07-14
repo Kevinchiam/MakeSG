@@ -23,6 +23,7 @@ type PublishedBusinessRow = {
   publication_status: PublicationStatus;
   featured: boolean;
   claimed: boolean;
+  endorsement_count?: number | null;
   hero_image_url: string | null;
   business_services?: { services: { slug: string } | { slug: string }[] | null }[];
   portfolio_items?: {
@@ -44,7 +45,7 @@ export async function getPublishedBusinesses(): Promise<Business[]> {
     const { data, error } = await supabase
       .from("businesses")
       .select(
-        "id, name, slug, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, accepts_prototypes, accepts_production, offers_onsite_service, offers_remote_service, verification_status, publication_status, featured, claimed, hero_image_url, business_services(services(slug)), portfolio_items(id, title, description, image_url, tags)",
+        "id, name, slug, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, accepts_prototypes, accepts_production, offers_onsite_service, offers_remote_service, verification_status, publication_status, featured, claimed, endorsement_count, hero_image_url, business_services(services(slug)), portfolio_items(id, title, description, image_url, tags)",
       )
       .eq("publication_status", "published")
       .order("updated_at", { ascending: false });
@@ -67,7 +68,7 @@ export async function getPublishedBusinessBySlug(slug: string) {
     const { data, error } = await supabase
       .from("businesses")
       .select(
-        "id, name, slug, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, accepts_prototypes, accepts_production, offers_onsite_service, offers_remote_service, verification_status, publication_status, featured, claimed, hero_image_url, business_services(services(slug)), portfolio_items(id, title, description, image_url, tags)",
+        "id, name, slug, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, accepts_prototypes, accepts_production, offers_onsite_service, offers_remote_service, verification_status, publication_status, featured, claimed, endorsement_count, hero_image_url, business_services(services(slug)), portfolio_items(id, title, description, image_url, tags)",
       )
       .eq("slug", slug)
       .eq("publication_status", "published")
@@ -104,6 +105,7 @@ function rowToBusiness(row: PublishedBusinessRow): Business {
     publicationStatus: row.publication_status,
     featured: row.featured,
     claimed: row.claimed,
+    endorsementCount: row.endorsement_count ?? 0,
     services: row.business_services?.flatMap((join) => {
       if (!join.services) return [];
       if (Array.isArray(join.services)) return join.services.map((service) => service.slug);

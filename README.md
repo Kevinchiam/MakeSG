@@ -38,7 +38,7 @@ pnpm e2e
 1. Create a Supabase project.
 2. Copy `.env.example` to `.env.local`.
 3. Fill `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-4. Apply `supabase/migrations/0001_initial_schema.sql`.
+4. Apply the Supabase migrations in order from `supabase/migrations`.
 5. Run `supabase/seed/seed.sql` for demo service, material and business records.
 6. Enable email magic links in Supabase Auth.
 7. For Google OAuth, create OAuth credentials, add the Supabase callback URL in Google Cloud, then add the client ID and secret in Supabase Auth providers.
@@ -59,15 +59,21 @@ People can recommend a business they have worked with at `/recommend-business` o
 
 Apply `supabase/migrations/0002_business_recommendations.sql` after the initial schema to create the `business_recommendations` table and RLS policies.
 
-Apply `supabase/migrations/0003_media_uploads.sql` to allow photo/video uploads for provider portfolios and business recommendations. The MVP UI previews selected files locally; server actions should upload them to Supabase Storage when persistence is wired.
+Apply `supabase/migrations/0003_media_uploads.sql` to allow photo/video uploads for provider portfolios and business recommendations.
+
+Apply `supabase/migrations/0004_endorsements.sql` to add endorsement counts used for duplicate-prevention and lightweight community trust signals.
 
 ## Admin Account
 
-Create a user through Supabase Auth, then update their profile:
+Admin pages are protected by a simple admin login. Set these environment variables in production:
 
-```sql
-update profiles set account_type = 'admin' where user_id = '<auth-user-id>';
+```bash
+ADMIN_USERNAME=Admin
+ADMIN_PASSWORD=MakeSG
+ADMIN_SESSION_TOKEN=<long-random-secret>
 ```
+
+If unset, the default username is `Admin` and the default password is `MakeSG`. Change these before sharing the site widely.
 
 ## Architecture
 
@@ -85,12 +91,13 @@ The app keeps database access out of presentational components. UI components re
    - `supabase/migrations/0001_initial_schema.sql`
    - `supabase/migrations/0002_business_recommendations.sql`
    - `supabase/migrations/0003_media_uploads.sql`
+   - `supabase/migrations/0004_endorsements.sql`
 8. Run `supabase/seed/seed.sql` only for demo data.
 9. Deploy.
 
 ## Known Limitations
 
-- Current UI uses local mock repositories so it can run without Supabase credentials.
+- Demo listings are still bundled so the site can run without Supabase credentials.
 - Enquiry and save actions are local interactive placeholders until wired to server actions.
 - Business recommendations are local interactive placeholders until wired to server actions.
 - Public reviews, live chat, payments and AI recommendations are intentionally excluded.

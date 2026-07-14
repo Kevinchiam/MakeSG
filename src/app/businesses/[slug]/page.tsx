@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ExternalLink, MapPin, MessageCircleHeart } from "lucide-react";
+import { ExternalLink, MapPin, MessageCircleHeart, ThumbsUp } from "lucide-react";
 import { EnquiryForm } from "@/components/business/enquiry-form";
 import { MaterialTag } from "@/components/business/material-tag";
 import { SaveBusinessButton } from "@/components/business/save-business-button";
@@ -58,6 +58,7 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
                 <VerificationBadge status={business.verificationStatus} />
                 <Badge>{business.businessType}</Badge>
                 <Badge>{business.claimed ? "Claimed profile" : "Claim this profile"}</Badge>
+                {business.endorsementCount ? <Badge className="border-[#536343] bg-[#eef2e8] text-[#39462d]"><ThumbsUp className="h-3.5 w-3.5" /> {business.endorsementCount} endorsement{business.endorsementCount === 1 ? "" : "s"}</Badge> : null}
                 {wordOfMouth.length ? <Badge className="border-[#536343] bg-[#eef2e8] text-[#39462d]">{wordOfMouth.length} word-of-mouth recommendation{wordOfMouth.length === 1 ? "" : "s"}</Badge> : null}
               </div>
             </div>

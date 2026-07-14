@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, Clock, MapPin, MessageCircleHeart } from "lucide-react";
+import { ArrowUpRight, Clock, MapPin, MessageCircleHeart, ThumbsUp } from "lucide-react";
 import { MaterialTag } from "@/components/business/material-tag";
 import { SaveBusinessButton } from "@/components/business/save-business-button";
 import { VerificationBadge } from "@/components/business/verification-badge";
@@ -53,6 +53,11 @@ export function BusinessCard({ business }: { business: Business }) {
           {recommendationCount ? (
             <span className="inline-flex items-center gap-2 text-[#536343]">
               <MessageCircleHeart className="h-4 w-4" aria-hidden /> Recommended by {recommendationCount} maker{recommendationCount === 1 ? "" : "s"}
+            </span>
+          ) : null}
+          {business.endorsementCount ? (
+            <span className="inline-flex items-center gap-2 text-[#536343]">
+              <ThumbsUp className="h-4 w-4" aria-hidden /> Endorsed by {business.endorsementCount} person{business.endorsementCount === 1 ? "" : "s"}
             </span>
           ) : null}
         </div>
