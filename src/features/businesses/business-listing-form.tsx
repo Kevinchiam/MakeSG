@@ -19,10 +19,12 @@ type BusinessOutput = z.output<typeof businessSchema>;
 
 export function BusinessListingForm({ existingBusinesses = [] }: { existingBusinesses?: ExistingBusinessSuggestion[] }) {
   const successRef = useRef<HTMLDivElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
   const [submitted, setSubmitted] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [otherError, setOtherError] = useState<string | null>(null);
+  const [portfolioError, setPortfolioError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [portfolioFiles, setPortfolioFiles] = useState<File[]>([]);
   const [otherChecked, setOtherChecked] = useState(false);
@@ -48,6 +50,12 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
       successRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [submitted]);
+
+  useEffect(() => {
+    if (submitError || (submitAttempted && validationMessages.length)) {
+      errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [submitError, submitAttempted, validationMessages.length]);
 
   if (submitted) {
     return (
@@ -76,6 +84,7 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
           setIsSubmitting(true);
           setSubmitError(null);
           setOtherError(null);
+          setPortfolioError(null);
           try {
             const formData = new FormData();
             formData.set("name", data.name);
@@ -95,13 +104,17 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
             const result = await submitBusinessForApproval(formData);
 
             if (!result.ok) {
-              setSubmitError(result.message);
+              if (isPortfolioError(result.message)) {
+                setPortfolioError(result.message);
+              } else {
+                setSubmitError(result.message);
+              }
               return;
             }
 
             setSubmitted(true);
           } catch {
-            setSubmitError("The submission did not complete. If you uploaded large photos or videos, remove one file or use smaller files, then try again.");
+            setPortfolioError("The upload did not complete. Remove one file or use smaller files, then try again.");
           } finally {
             setIsSubmitting(false);
           }
@@ -114,12 +127,12 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
     >
       <h2 className="font-serif text-3xl font-semibold">Business listing</h2>
       {submitError ? (
-        <p className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24]" role="alert">
+        <p ref={errorRef} className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24]" role="alert">
           {submitError}
         </p>
       ) : null}
       {submitAttempted && validationMessages.length ? (
-        <div className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24]" role="alert">
+        <div ref={errorRef} className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24]" role="alert">
           <p className="font-semibold">Please fix these fields:</p>
           <ul className="mt-2 list-disc pl-5">
             {validationMessages.map((message) => <li key={message}>{message}</li>)}
@@ -224,8 +237,12 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
       <FileUploader
         accept="media"
         maxTotalSizeMb={10}
+        error={portfolioError}
         value={portfolioFiles}
-        onFilesChange={setPortfolioFiles}
+        onFilesChange={(files) => {
+          setPortfolioError(null);
+          setPortfolioFiles(files);
+        }}
         label="Upload portfolio photos or videos"
         description="Photos and videos are stored in Supabase and shown after admin approval. Uploads must be 10MB total or smaller."
       />
@@ -236,6 +253,11 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
 
 function normalizeBusinessName(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function isPortfolioError(message: string) {
+  const normalized = message.toLowerCase();
+  return normalized.includes("upload") || normalized.includes("portfolio") || normalized.includes("file");
 }
 
 function Field({ label, hint, error, children }: { label: string; hint?: string; error?: string; children: React.ReactNode }) {

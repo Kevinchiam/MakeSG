@@ -14,6 +14,7 @@ type FileUploaderProps = {
   accept?: "references" | "media";
   maxSizeMb?: number;
   maxTotalSizeMb?: number;
+  error?: string | null;
   value?: File[];
   onFilesChange?: (files: File[]) => void;
 };
@@ -24,6 +25,7 @@ export function FileUploader({
   accept = "references",
   maxSizeMb = accept === "media" ? 40 : 8,
   maxTotalSizeMb,
+  error: externalError,
   value,
   onFilesChange,
 }: FileUploaderProps) {
@@ -39,7 +41,7 @@ export function FileUploader({
       ? `JPG, PNG, WebP, MP4, MOV or WebM${maxTotalSizeMb ? ` up to ${maxTotalSizeMb}MB total` : ` up to ${maxSizeMb}MB each`}`
       : `JPG, PNG, WebP or PDF up to ${maxSizeMb}MB each`);
 
-  function onFiles(nextFiles: FileList | null) {
+  async function onFiles(nextFiles: FileList | null) {
     setError(null);
     if (!nextFiles) return;
     const valid: File[] = [];
@@ -52,7 +54,7 @@ export function FileUploader({
         setError(`Each file must be ${maxSizeMb}MB or smaller.`);
         continue;
       }
-      valid.push(file);
+      valid.push(accept === "media" && imageTypes.includes(file.type) ? await optimizeImage(file) : file);
     }
     const next = [...files, ...valid];
     if (maxTotalSizeMb && totalSizeMb(next) > maxTotalSizeMb) {
@@ -76,9 +78,10 @@ export function FileUploader({
         <FileUp className="mb-3 h-8 w-8 text-[#315c6b]" aria-hidden />
         <span className="font-medium">{label}</span>
         <span className="mt-1 text-sm text-[#6d675d]">{helperText}</span>
-        <input className="sr-only" type="file" accept={acceptAttribute} multiple onChange={(event) => onFiles(event.target.files)} />
+        {accept === "media" ? <span className="mt-1 text-xs text-[#6d675d]">Large images are optimized before upload.</span> : null}
+        <input className="sr-only" type="file" accept={acceptAttribute} multiple onChange={(event) => void onFiles(event.target.files)} />
       </label>
-      {error ? <p className="text-sm text-[#9c4f35]" role="alert">{error}</p> : null}
+      {error || externalError ? <p className="text-sm text-[#9c4f35]" role="alert">{error ?? externalError}</p> : null}
       {files.length ? (
         <ul className="grid gap-3 sm:grid-cols-2">
           {files.map((file) => (
@@ -96,6 +99,33 @@ export function FileUploader({
       ) : null}
     </div>
   );
+}
+
+async function optimizeImage(file: File) {
+  if (file.size < 900 * 1024) return file;
+
+  try {
+    const bitmap = await createImageBitmap(file);
+    const maxDimension = 1800;
+    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) return file;
+
+    context.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
+
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.82));
+    if (!blob || blob.size >= file.size) return file;
+
+    return new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" });
+  } catch {
+    return file;
+  }
 }
 
 function totalSizeMb(files: File[]) {
