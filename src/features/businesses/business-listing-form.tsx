@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Send } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { FileUploader } from "@/components/projects/file-uploader";
@@ -18,6 +18,7 @@ type BusinessInput = z.input<typeof businessSchema>;
 type BusinessOutput = z.output<typeof businessSchema>;
 
 export function BusinessListingForm({ existingBusinesses = [] }: { existingBusinesses?: ExistingBusinessSuggestion[] }) {
+  const successRef = useRef<HTMLDivElement>(null);
   const [submitted, setSubmitted] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -41,11 +42,17 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
     .flatMap((error) => error?.message ? [String(error.message)] : [])
     .filter((message, index, all) => all.indexOf(message) === index);
 
+  useEffect(() => {
+    if (submitted) {
+      successRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [submitted]);
+
   if (submitted) {
     return (
-      <div className="border border-[#536343] bg-[#eef2e8] p-6">
+      <div ref={successRef} className="border border-[#536343] bg-[#eef2e8] p-6" tabIndex={-1}>
         <h2 className="text-xl font-semibold">Listing submitted for approval</h2>
-        <p className="mt-2 text-sm leading-6 text-[#39462d]">The admin dashboard can approve, reject, feature or unpublish the listing.</p>
+        <p className="mt-2 text-sm leading-6 text-[#39462d]">Thanks. Your listing is pending admin review.</p>
       </div>
     );
   }
@@ -57,6 +64,11 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
         async (data) => {
           if (duplicateSuggestion) {
             setSubmitError("This business already exists. Endorse the existing listing instead of creating a duplicate.");
+            return;
+          }
+
+          if (otherChecked && !data.otherService?.trim()) {
+            setSubmitError("Describe the other service, or uncheck Other.");
             return;
           }
 
@@ -104,16 +116,12 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
           {submitError}
         </p>
       ) : null}
-      {submitAttempted ? (
+      {submitAttempted && validationMessages.length ? (
         <div className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24]" role="alert">
           <p className="font-semibold">Please fix these fields:</p>
-          {validationMessages.length ? (
-            <ul className="mt-2 list-disc pl-5">
-              {validationMessages.map((message) => <li key={message}>{message}</li>)}
-            </ul>
-          ) : (
-            <p className="mt-2">Check the highlighted fields below, then try again.</p>
-          )}
+          <ul className="mt-2 list-disc pl-5">
+            {validationMessages.map((message) => <li key={message}>{message}</li>)}
+          </ul>
         </div>
       ) : null}
       {isSubmitting ? (

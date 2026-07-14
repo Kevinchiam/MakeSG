@@ -1,7 +1,11 @@
 import Link from "next/link";
-import { businessRecommendations, businesses } from "@/lib/data";
+import { businessRecommendations } from "@/lib/data";
+import { getAdminBusinesses } from "@/lib/business-submissions";
 
-export default function AdminPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AdminPage() {
+  const businesses = await getAdminBusinesses();
   const pending = businesses.filter((b) => b.publicationStatus === "pending").length;
   const pendingRecommendations = businessRecommendations.filter((recommendation) => recommendation.status === "pending").length;
   return (
@@ -11,7 +15,7 @@ export default function AdminPage() {
         <Link href="/admin/logout" className="text-sm underline">Log out</Link>
       </div>
       <div className="mt-8 grid gap-4 md:grid-cols-4">
-        <AdminLink href="/admin/businesses" title="Businesses" text={`${pending} pending, ${businesses.length} total demo listings`} />
+        <AdminLink href="/admin/businesses" title="Businesses" text={`${pending} pending, ${businesses.length} total listings`} />
         <AdminLink href="/admin/recommendations" title="Recommendations" text={`${pendingRecommendations} pending word-of-mouth submissions`} />
         <AdminLink href="/admin/services" title="Services" text="Edit service categories and descriptions" />
         <AdminLink href="/admin/reports" title="Reports" text="Review reported content" />
