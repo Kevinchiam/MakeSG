@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { services as knownServices } from "@/lib/data";
 import { createSlug } from "@/lib/slug";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -7,7 +8,7 @@ import { businessSchema } from "@/lib/validation";
 
 type SubmitBusinessResult =
   | { ok: true; id: string }
-  | { ok: false; message: string };
+  | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 type EndorseBusinessResult =
   | { ok: true; endorsementCount: number }
@@ -49,7 +50,11 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
   const parsed = businessSchema.safeParse(formInput);
 
   if (!parsed.success) {
-    return { ok: false, message: "Check the highlighted fields and try again." };
+    return {
+      ok: false,
+      message: "Check the highlighted fields and try again.",
+      fieldErrors: fieldErrorsFromIssues(parsed.error.issues),
+    };
   }
 
   let supabase: ReturnType<typeof createAdminClient>;
@@ -171,18 +176,32 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
 
 function formDataToBusinessInput(formData: FormData) {
   return {
-    name: formData.get("name"),
-    shortDescription: formData.get("shortDescription"),
-    description: formData.get("description"),
-    websiteUrl: formData.get("websiteUrl"),
-    publicEmail: formData.get("publicEmail"),
-    location: formData.get("location"),
-    minimumBudget: formData.get("minimumBudget"),
-    typicalLeadTime: formData.get("typicalLeadTime"),
-    businessType: formData.get("businessType"),
+    name: stringFromFormData(formData.get("name")),
+    shortDescription: stringFromFormData(formData.get("shortDescription")),
+    description: stringFromFormData(formData.get("description")),
+    websiteUrl: stringFromFormData(formData.get("websiteUrl")),
+    publicEmail: stringFromFormData(formData.get("publicEmail")),
+    location: stringFromFormData(formData.get("location")),
+    minimumBudget: stringFromFormData(formData.get("minimumBudget")),
+    typicalLeadTime: stringFromFormData(formData.get("typicalLeadTime")),
+    businessType: stringFromFormData(formData.get("businessType")),
     services: formData.getAll("services").filter((value): value is string => typeof value === "string"),
-    otherService: formData.get("otherService"),
+    otherService: stringFromFormData(formData.get("otherService")),
   };
+}
+
+function stringFromFormData(value: FormDataEntryValue | null) {
+  return typeof value === "string" ? value : "";
+}
+
+function fieldErrorsFromIssues(issues: z.ZodIssue[]) {
+  const errors: Record<string, string> = {};
+  for (const issue of issues) {
+    const field = String(issue.path[0] ?? "form");
+    errors[field] ??= issue.message;
+  }
+
+  return errors;
 }
 
 function validPortfolioFiles(values: FormDataEntryValue[]) {

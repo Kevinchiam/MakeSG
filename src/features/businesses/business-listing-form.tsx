@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Send } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, type FieldPath } from "react-hook-form";
 import { z } from "zod";
 import { FileUploader } from "@/components/projects/file-uploader";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,6 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
   const successRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
   const [submitted, setSubmitted] = useState(false);
-  const [submitAttempted, setSubmitAttempted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [otherError, setOtherError] = useState<string | null>(null);
   const [portfolioError, setPortfolioError] = useState<string | null>(null);
@@ -41,9 +40,6 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
   const duplicateSuggestion = normalizedName.length >= 3
     ? existingBusinesses.find((business) => normalizeBusinessName(business.name) === normalizedName)
     : undefined;
-  const validationMessages = Object.values(form.formState.errors)
-    .flatMap((error) => error?.message ? [String(error.message)] : [])
-    .filter((message, index, all) => all.indexOf(message) === index);
 
   useEffect(() => {
     if (submitted) {
@@ -52,10 +48,10 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
   }, [submitted]);
 
   useEffect(() => {
-    if (submitError || (submitAttempted && validationMessages.length)) {
+    if (submitError) {
       errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-  }, [submitError, submitAttempted, validationMessages.length]);
+  }, [submitError]);
 
   if (submitted) {
     return (
@@ -85,6 +81,7 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
           setSubmitError(null);
           setOtherError(null);
           setPortfolioError(null);
+          form.clearErrors();
           try {
             const formData = new FormData();
             formData.set("name", data.name);
@@ -104,6 +101,9 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
             const result = await submitBusinessForApproval(formData);
 
             if (!result.ok) {
+              if (applyServerFieldErrors(result.fieldErrors, form.setError, setOtherError)) {
+                return;
+              }
               if (isPortfolioError(result.message)) {
                 setPortfolioError(result.message);
               } else {
@@ -120,7 +120,6 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
           }
         },
         () => {
-          setSubmitAttempted(true);
           setSubmitError(null);
         },
       )}
@@ -130,14 +129,6 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
         <p ref={errorRef} className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24]" role="alert">
           {submitError}
         </p>
-      ) : null}
-      {submitAttempted && validationMessages.length ? (
-        <div ref={errorRef} className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24]" role="alert">
-          <p className="font-semibold">Please fix these fields:</p>
-          <ul className="mt-2 list-disc pl-5">
-            {validationMessages.map((message) => <li key={message}>{message}</li>)}
-          </ul>
-        </div>
       ) : null}
       {isSubmitting ? (
         <p className="border border-[#ded8cc] bg-[#f8f5ee] p-3 text-sm leading-6 text-[#5f594f]" role="status">
@@ -258,6 +249,44 @@ function normalizeBusinessName(value: string) {
 function isPortfolioError(message: string) {
   const normalized = message.toLowerCase();
   return normalized.includes("upload") || normalized.includes("portfolio") || normalized.includes("file");
+}
+
+const serverErrorFields = new Set([
+  "name",
+  "shortDescription",
+  "description",
+  "websiteUrl",
+  "publicEmail",
+  "location",
+  "minimumBudget",
+  "typicalLeadTime",
+  "businessType",
+  "services",
+  "otherService",
+]);
+
+function applyServerFieldErrors(
+  fieldErrors: Record<string, string> | undefined,
+  setError: ReturnType<typeof useForm<BusinessInput, unknown, BusinessOutput>>["setError"],
+  setOtherError: (message: string | null) => void,
+) {
+  if (!fieldErrors || Object.keys(fieldErrors).length === 0) return false;
+
+  let applied = false;
+  for (const [field, message] of Object.entries(fieldErrors)) {
+    if (field === "otherService") {
+      setOtherError(message);
+      applied = true;
+      continue;
+    }
+
+    if (serverErrorFields.has(field)) {
+      setError(field as FieldPath<BusinessInput>, { type: "server", message });
+      applied = true;
+    }
+  }
+
+  return applied;
 }
 
 function Field({ label, hint, error, children }: { label: string; hint?: string; error?: string; children: React.ReactNode }) {
