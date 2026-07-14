@@ -37,6 +37,9 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
   const duplicateSuggestion = normalizedName.length >= 3
     ? existingBusinesses.find((business) => normalizeBusinessName(business.name) === normalizedName)
     : undefined;
+  const validationMessages = Object.values(form.formState.errors)
+    .flatMap((error) => error?.message ? [String(error.message)] : [])
+    .filter((message, index, all) => all.indexOf(message) === index);
 
   if (submitted) {
     return (
@@ -102,9 +105,16 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
         </p>
       ) : null}
       {submitAttempted ? (
-        <p className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24]" role="alert">
-          Check the highlighted fields below. The full description needs more detail, the website must include https://, and at least one service is required.
-        </p>
+        <div className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24]" role="alert">
+          <p className="font-semibold">Please fix these fields:</p>
+          {validationMessages.length ? (
+            <ul className="mt-2 list-disc pl-5">
+              {validationMessages.map((message) => <li key={message}>{message}</li>)}
+            </ul>
+          ) : (
+            <p className="mt-2">Check the highlighted fields below, then try again.</p>
+          )}
+        </div>
       ) : null}
       {isSubmitting ? (
         <p className="border border-[#ded8cc] bg-[#f8f5ee] p-3 text-sm leading-6 text-[#5f594f]" role="status">
