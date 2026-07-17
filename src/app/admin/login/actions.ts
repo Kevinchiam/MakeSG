@@ -38,6 +38,7 @@ export async function loginAdmin(formData: FormData) {
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: adminSessionMaxAge,
+    expires: new Date(Date.now() + adminSessionMaxAge * 1000),
   });
 
   redirect(next.startsWith("/admin") ? next : "/admin");

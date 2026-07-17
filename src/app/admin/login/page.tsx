@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { loginAdmin } from "@/app/admin/login/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +16,14 @@ type AdminLoginPageProps = {
 
 export default async function AdminLoginPage({ searchParams }: AdminLoginPageProps) {
   const params = await searchParams;
+  const cookieStore = await cookies();
+  const token = cookieStore.get("makesg_admin")?.value;
+  const expectedToken = process.env.ADMIN_SESSION_TOKEN;
+  if (expectedToken && token === expectedToken) {
+    const next = params.next?.startsWith("/admin") && params.next !== "/admin/login" ? params.next : "/admin";
+    redirect(next);
+  }
+
   const errorMessage = params.error === "not-configured"
     ? "Admin login is not configured. Add ADMIN_SESSION_TOKEN in Vercel."
     : "Check the admin username and password.";

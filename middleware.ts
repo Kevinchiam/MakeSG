@@ -23,6 +23,7 @@ export function middleware(request: NextRequest) {
       secure: process.env.NODE_ENV === "production",
       path: "/",
       maxAge: adminSessionMaxAge,
+      expires: new Date(Date.now() + adminSessionMaxAge * 1000),
     });
     return response;
   }
