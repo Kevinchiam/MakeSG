@@ -43,8 +43,12 @@ export async function sendEmail(input: {
 
 export function renderTemplate(template: EmailTemplate, variables: Record<string, string>) {
   const name = variables.name ?? "there";
+  if (template === "new_enquiry_received") {
+    return `<main style="font-family:system-ui,sans-serif;line-height:1.6;color:#211f1b"><h1>${escapeHtml(subjects[template])}</h1><p>Hi ${escapeHtml(name)}, a creative has sent an enquiry through MakeSG.</p><p><strong>From:</strong> ${escapeHtml(variables.senderName ?? "Not provided")}<br><strong>Reply email:</strong> ${escapeHtml(variables.senderEmail ?? "Not provided")}</p><p><strong>Message:</strong><br>${escapeHtml(variables.message ?? "No message provided.").replace(/\n/g, "<br>")}</p></main>`;
+  }
+
   const body: Record<EmailTemplate, string> = {
-    new_enquiry_received: `Hi ${name}, a creative has sent an enquiry about ${variables.project ?? "a project"}.`,
+    new_enquiry_received: "",
     enquiry_confirmation: `Hi ${name}, your enquiry has been sent. The provider can reply using your shared contact details.`,
     business_submitted_for_approval: `Hi ${name}, your listing is pending review by the MakeSG team.`,
     business_approved: `Hi ${name}, your listing has been approved and published.`,
@@ -53,5 +57,14 @@ export function renderTemplate(template: EmailTemplate, variables: Record<string
     admin_notification: `Admin note: ${variables.message ?? "A MakeSG action needs review."}`,
   };
 
-  return `<main style="font-family:system-ui,sans-serif;line-height:1.6;color:#211f1b"><h1>${subjects[template]}</h1><p>${body[template]}</p></main>`;
+  return `<main style="font-family:system-ui,sans-serif;line-height:1.6;color:#211f1b"><h1>${escapeHtml(subjects[template])}</h1><p>${escapeHtml(body[template])}</p></main>`;
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
