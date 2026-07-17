@@ -15,6 +15,8 @@ function adminSessionToken() {
   return process.env.ADMIN_SESSION_TOKEN;
 }
 
+const adminSessionMaxAge = 60 * 60 * 24 * 365;
+
 export async function loginAdmin(formData: FormData) {
   const username = String(formData.get("username") ?? "");
   const password = String(formData.get("password") ?? "");
@@ -35,7 +37,7 @@ export async function loginAdmin(formData: FormData) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 8,
+    maxAge: adminSessionMaxAge,
   });
 
   redirect(next.startsWith("/admin") ? next : "/admin");

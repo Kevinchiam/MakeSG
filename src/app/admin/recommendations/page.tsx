@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { MessageCircleHeart } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { AdminStatusControls } from "@/components/admin/admin-status-controls";
 import { Badge } from "@/components/ui/badge";
 import { businessRecommendations, businesses } from "@/lib/data";
@@ -10,11 +11,11 @@ export default function AdminRecommendationsPage() {
 
   return (
     <section className="container-shell py-12">
-      <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Moderation</p>
-      <h1 className="mt-2 break-words font-serif text-4xl font-semibold sm:text-5xl">Business recommendations</h1>
-      <p className="mt-4 max-w-2xl text-[#6d675d]">
-        Review word-of-mouth submissions before they appear publicly. Recommendations are not ratings; they are moderated trust signals tied to first-hand experience.
-      </p>
+      <AdminPageHeader
+        eyebrow="Moderation"
+        title="Business recommendations"
+        description="Review word-of-mouth submissions before they appear publicly. Recommendations are not ratings; they are moderated trust signals tied to first-hand experience."
+      />
       <p className="mt-4 text-sm font-semibold text-[#536343]">{pendingCount} pending recommendation{pendingCount === 1 ? "" : "s"}</p>
 
       <div className="mt-8 grid gap-4">

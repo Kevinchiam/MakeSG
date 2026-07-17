@@ -4,6 +4,8 @@ function adminSessionToken() {
   return process.env.ADMIN_SESSION_TOKEN;
 }
 
+const adminSessionMaxAge = 60 * 60 * 24 * 365;
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -14,7 +16,15 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("makesg_admin")?.value;
   const expectedToken = adminSessionToken();
   if (expectedToken && token === expectedToken) {
-    return NextResponse.next();
+    const response = NextResponse.next();
+    response.cookies.set("makesg_admin", expectedToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: adminSessionMaxAge,
+    });
+    return response;
   }
 
   const loginUrl = request.nextUrl.clone();

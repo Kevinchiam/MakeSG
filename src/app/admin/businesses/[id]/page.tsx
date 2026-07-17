@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { AdminStatusControls } from "@/components/admin/admin-status-controls";
 import { getAdminBusiness } from "@/lib/business-submissions";
 import { formatCurrency } from "@/lib/utils";
@@ -12,8 +13,7 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
   if (!business) notFound();
   return (
     <section className="container-shell max-w-4xl py-12">
-      <h1 className="font-serif text-5xl font-semibold">{business.name}</h1>
-      <p className="mt-4 text-[#6d675d]">{business.shortDescription}</p>
+      <AdminPageHeader title={business.name} description={business.shortDescription} />
       <div className="mt-8 grid gap-6">
         <details className="border border-[#ded8cc] bg-white p-5" open>
           <summary className="cursor-pointer text-lg font-semibold">Review submitted information</summary>
