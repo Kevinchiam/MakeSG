@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { LayoutDashboard, Menu, Search, X } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -16,6 +17,8 @@ const nav = [
 
 export function SiteHeaderClient({ isAdmin }: { isAdmin: boolean }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const showAdminShortcut = isAdmin && pathname !== "/admin/login";
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#ded8cc] bg-[#fbfaf7]/95 backdrop-blur">
@@ -31,7 +34,7 @@ export function SiteHeaderClient({ isAdmin }: { isAdmin: boolean }) {
           ))}
         </nav>
         <div className="flex items-center gap-2">
-          {isAdmin ? (
+          {showAdminShortcut ? (
             <Button asChild variant="secondary" className="hidden h-10 w-10 px-0 lg:inline-flex" title="Admin home">
               <Link href="/admin" aria-label="Admin home">
                 <LayoutDashboard className="h-4 w-4" aria-hidden />
@@ -65,7 +68,7 @@ export function SiteHeaderClient({ isAdmin }: { isAdmin: boolean }) {
       {open ? (
         <nav className="border-t border-[#ded8cc] bg-[#fbfaf7] lg:hidden" aria-label="Mobile navigation">
           <div className="container-shell grid gap-1 py-3 text-sm font-medium">
-            {isAdmin ? (
+            {showAdminShortcut ? (
               <Link href="/admin" className="border-b border-[#eee7dc] py-3 font-semibold" onClick={() => setOpen(false)}>
                 Admin home
               </Link>
