@@ -7,8 +7,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 const nav = [
-  ["Explore", "/explore"],
-  ["Services", "/services"],
   ["Businesses", "/businesses"],
   ["Recommend", "/recommend-business"],
   ["For businesses", "/for-businesses"],

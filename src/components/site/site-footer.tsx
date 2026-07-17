@@ -13,7 +13,6 @@ export function SiteFooter() {
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-[#d8d0c4]">Browse</h2>
           <div className="mt-4 grid gap-2 text-sm">
-            <Link href="/services">Services</Link>
             <Link href="/businesses">Businesses</Link>
             <Link href="/recommend-business">Recommend a business</Link>
             <Link href="/projects/new">Submit a project</Link>

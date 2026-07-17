@@ -1,14 +1,12 @@
 import Link from "next/link";
-import { ArrowRight, Building2, Compass, Send } from "lucide-react";
+import { Building2, Compass, Send } from "lucide-react";
 import { BusinessGrid } from "@/components/business/business-grid";
-import { ServiceCard } from "@/components/business/service-card";
 import { SearchBar } from "@/components/site/search-bar";
 import { Button } from "@/components/ui/button";
-import { businesses, services } from "@/lib/data";
+import { businesses } from "@/lib/data";
 
 export default function Home() {
   const featured = businesses.filter((business) => business.featured);
-  const popular = services.slice(0, 8);
 
   return (
     <>
@@ -41,21 +39,6 @@ export default function Home() {
               ))}
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="container-shell py-16">
-        <div className="mb-8 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Popular categories</p>
-            <h2 className="mt-2 font-serif text-4xl font-semibold">Start with the service you need</h2>
-          </div>
-          <Button asChild variant="secondary">
-            <Link href="/services">All services <ArrowRight className="h-4 w-4" /></Link>
-          </Button>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {popular.map((service) => <ServiceCard key={service.slug} service={service} />)}
         </div>
       </section>
 
