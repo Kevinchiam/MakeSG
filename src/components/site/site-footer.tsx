@@ -15,13 +15,14 @@ export function SiteFooter() {
           <div className="mt-4 grid gap-2 text-sm">
             <Link href="/businesses">Businesses</Link>
             <Link href="/recommend-business">Recommend a business</Link>
-            <Link href="/projects/new">Submit a project</Link>
+            <Link href="/creative-jobs">Creative jobs</Link>
           </div>
         </div>
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-[#d8d0c4]">Platform</h2>
           <div className="mt-4 grid gap-2 text-sm">
             <Link href="/for-businesses">For businesses</Link>
+            <Link href="/for-creatives">For creatives</Link>
             <Link href="/about">About</Link>
             <Link href="/admin/login">Admin login</Link>
           </div>

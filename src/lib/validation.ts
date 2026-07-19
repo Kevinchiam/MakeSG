@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+const optionalNumber = z.preprocess((value) => {
+  if (value === "" || value === null || value === undefined) return undefined;
+  return value;
+}, z.coerce.number().min(0, "Budget must be 0 or more.").optional());
+
 export const projectSchema = z.object({
   title: z.string().min(3, "Add a short project title."),
   description: z.string().min(20, "Describe the idea in at least 20 characters."),
@@ -16,6 +21,29 @@ export const projectSchema = z.object({
   deadline: z.string().optional(),
   deadlineFlexibility: z.string().optional(),
   referenceLinks: z.string().optional(),
+});
+
+export const creativeJobSchema = z.object({
+  title: z.string().min(3, "Add a short job title."),
+  description: z.string().min(40, "Share enough detail for providers to understand the work."),
+  intendedOutcome: z.string().min(8, "Tell providers what a good outcome looks like."),
+  contactName: z.string().min(2, "Add your name."),
+  contactEmail: z.string().email("Use a valid email address."),
+  companyName: z.string().optional().or(z.literal("")),
+  projectType: z.enum(["physical", "digital", "both"]),
+  services: z.array(z.string()).min(1, "Choose at least one service you need."),
+  budgetMin: optionalNumber,
+  budgetMax: optionalNumber,
+  deadline: z.string().optional().or(z.literal("")),
+  preferredLocation: z.string().optional().or(z.literal("")),
+  referenceLinks: z.string().optional().or(z.literal("")),
+  notes: z.string().optional().or(z.literal("")),
+}).refine((data) => {
+  if (data.budgetMin === undefined || data.budgetMax === undefined) return true;
+  return data.budgetMax >= data.budgetMin;
+}, {
+  message: "Maximum budget should be higher than the minimum budget.",
+  path: ["budgetMax"],
 });
 
 export const businessSchema = z.object({

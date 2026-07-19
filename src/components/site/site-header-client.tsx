@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 const nav = [
   ["Businesses", "/businesses"],
   ["Recommend", "/recommend-business"],
+  ["For creatives", "/for-creatives"],
   ["For businesses", "/for-businesses"],
   ["About", "/about"],
 ];
@@ -45,12 +46,6 @@ export function SiteHeaderClient({ isAdmin }: { isAdmin: boolean }) {
               Search
             </Link>
           </Button>
-          <Button asChild variant="secondary" className="hidden lg:inline-flex">
-            <Link href="/sign-in">Sign in</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/projects/new">Start a brief</Link>
-          </Button>
           <Button
             type="button"
             variant="ghost"
@@ -78,9 +73,6 @@ export function SiteHeaderClient({ isAdmin }: { isAdmin: boolean }) {
             ))}
             <Link href="/businesses" className="border-b border-[#eee7dc] py-3" onClick={() => setOpen(false)}>
               Search
-            </Link>
-            <Link href="/sign-in" className="py-3" onClick={() => setOpen(false)}>
-              Sign in
             </Link>
           </div>
         </nav>
