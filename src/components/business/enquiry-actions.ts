@@ -6,7 +6,7 @@ import { getPublishedBusinesses } from "@/lib/public-businesses";
 
 type EnquiryResult =
   | { ok: true; message: string }
-  | { ok: false; message: string; address?: string };
+  | { ok: false; message: string; address?: string; recipientEmail?: string };
 
 const enquiryFormSchema = z.object({
   businessId: z.string().min(1),
@@ -30,7 +30,8 @@ export async function sendBusinessEnquiry(input: unknown): Promise<EnquiryResult
   }
 
   const address = business.address || business.location || "the listed business location";
-  if (!business.publicEmail.trim()) {
+  const recipientEmail = business.publicEmail.trim();
+  if (!recipientEmail) {
     return {
       ok: false,
       message: "This business does not have an email listed. You may visit the location instead.",
@@ -40,7 +41,7 @@ export async function sendBusinessEnquiry(input: unknown): Promise<EnquiryResult
 
   try {
     await sendEmail({
-      to: business.publicEmail,
+      to: recipientEmail,
       template: "new_enquiry_received",
       replyTo: parsed.data.senderEmail,
       variables: {
@@ -55,10 +56,10 @@ export async function sendBusinessEnquiry(input: unknown): Promise<EnquiryResult
     console.error("[enquiry-email-failed]", error);
     return {
       ok: false,
-      message: "The enquiry could not be emailed right now. You may visit the business location instead.",
-      address,
+      message: "The enquiry could not be sent automatically right now. You can email the business directly.",
+      recipientEmail,
     };
   }
 
-  return { ok: true, message: `Your enquiry has been sent to ${business.name}.` };
+  return { ok: true, message: `Your enquiry has been sent to ${business.name} at ${recipientEmail}.` };
 }

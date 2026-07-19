@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 export function EnquiryForm({ businessId }: { businessId: string }) {
-  const [status, setStatus] = useState<{ tone: "success" | "error"; message: string; address?: string } | null>(null);
+  const [status, setStatus] = useState<{ tone: "success" | "error"; message: string; address?: string; recipientEmail?: string } | null>(null);
   const [isSending, setIsSending] = useState(false);
 
   if (status?.tone === "success") {
@@ -30,7 +30,7 @@ export function EnquiryForm({ businessId }: { businessId: string }) {
         setIsSending(false);
 
         if (!result.ok) {
-          setStatus({ tone: "error", message: result.message, address: result.address });
+          setStatus({ tone: "error", message: result.message, address: result.address, recipientEmail: result.recipientEmail });
           return;
         }
 
@@ -41,6 +41,11 @@ export function EnquiryForm({ businessId }: { businessId: string }) {
       {status?.tone === "error" ? (
         <div className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24]" role="alert">
           <p>{status.message}</p>
+          {status.recipientEmail ? (
+            <p className="mt-2 font-semibold">
+              Email: <a className="underline" href={`mailto:${status.recipientEmail}`}>{status.recipientEmail}</a>
+            </p>
+          ) : null}
           {status.address ? <p className="mt-2 font-semibold">Location: {status.address}</p> : null}
         </div>
       ) : null}
