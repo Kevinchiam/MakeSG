@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ExternalLink, Mail, MapPin, MessageCircleHeart, ThumbsUp } from "lucide-react";
-import { EnquiryForm } from "@/components/business/enquiry-form";
 import { MaterialTag } from "@/components/business/material-tag";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -173,9 +172,6 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
                 <Link href={business.websiteUrl} target="_blank" rel="noreferrer">Website <ExternalLink className="h-4 w-4" /></Link>
               </Button>
             ) : null}
-          </div>
-          <div className="mt-6 border-t border-[#ded8cc] pt-6">
-            <EnquiryForm businessId={business.id} recipientEmail={business.publicEmail} />
           </div>
         </aside>
       </div>
