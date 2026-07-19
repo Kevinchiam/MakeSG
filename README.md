@@ -75,6 +75,17 @@ ADMIN_SESSION_TOKEN=<long-random-secret>
 
 If unset, the default username is `Admin` and the default password is `MakeSG`. Change these before sharing the site widely.
 
+## Enquiry Emails
+
+Business profile enquiries are sent with Resend to the public email submitted during business onboarding. Set these variables in Vercel before relying on enquiry delivery:
+
+```bash
+RESEND_API_KEY=<your-resend-api-key>
+RESEND_FROM_EMAIL="MakeSG <verified-sender@yourdomain.com>"
+```
+
+`RESEND_FROM_EMAIL` must use a sender/domain verified in Resend. If email is not configured or delivery fails, the enquiry form shows a fallback prompt with the business location.
+
 ## Architecture
 
 The app keeps database access out of presentational components. UI components receive typed data, shared validation lives in `src/lib/validation.ts`, recommendations live in `src/lib/recommendation.ts`, and Supabase clients live in `src/lib/supabase`.
@@ -98,7 +109,7 @@ The app keeps database access out of presentational components. UI components re
 ## Known Limitations
 
 - Demo listings are still bundled so the site can run without Supabase credentials.
-- Enquiry and save actions are local interactive placeholders until wired to server actions.
+- Save actions are local interactive placeholders until wired to server actions.
 - Business recommendations are local interactive placeholders until wired to server actions.
 - Public reviews, live chat, payments and AI recommendations are intentionally excluded.
 

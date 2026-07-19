@@ -23,22 +23,30 @@ export async function sendEmail(input: {
   to: string;
   template: EmailTemplate;
   variables?: Record<string, string>;
+  replyTo?: string;
 }) {
-  const from = process.env.RESEND_FROM_EMAIL ?? "MakeSG <notifications@makesg.local>";
+  const from = process.env.RESEND_FROM_EMAIL;
   const html = renderTemplate(input.template, input.variables ?? {});
 
-  if (!process.env.RESEND_API_KEY) {
-    console.info("[email:local]", { to: input.to, subject: subjects[input.template], html });
-    return { id: "local-log" };
+  if (!process.env.RESEND_API_KEY || !from) {
+    console.info("[email:not-configured]", { to: input.to, subject: subjects[input.template], html });
+    throw new Error("Email sending is not configured.");
   }
 
   const resend = new Resend(process.env.RESEND_API_KEY);
-  return resend.emails.send({
+  const result = await resend.emails.send({
     from,
     to: input.to,
     subject: subjects[input.template],
     html,
+    replyTo: input.replyTo,
   });
+
+  if (result.error) {
+    throw new Error(result.error.message);
+  }
+
+  return result.data;
 }
 
 export function renderTemplate(template: EmailTemplate, variables: Record<string, string>) {

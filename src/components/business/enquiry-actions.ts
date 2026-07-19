@@ -38,17 +38,27 @@ export async function sendBusinessEnquiry(input: unknown): Promise<EnquiryResult
     };
   }
 
-  await sendEmail({
-    to: business.publicEmail,
-    template: "new_enquiry_received",
-    variables: {
-      name: business.name,
-      business: business.name,
-      senderName: parsed.data.senderName,
-      senderEmail: parsed.data.senderEmail,
-      message: parsed.data.message,
-    },
-  });
+  try {
+    await sendEmail({
+      to: business.publicEmail,
+      template: "new_enquiry_received",
+      replyTo: parsed.data.senderEmail,
+      variables: {
+        name: business.name,
+        business: business.name,
+        senderName: parsed.data.senderName,
+        senderEmail: parsed.data.senderEmail,
+        message: parsed.data.message,
+      },
+    });
+  } catch (error) {
+    console.error("[enquiry-email-failed]", error);
+    return {
+      ok: false,
+      message: "The enquiry could not be emailed right now. You may visit the business location instead.",
+      address,
+    };
+  }
 
   return { ok: true, message: `Your enquiry has been sent to ${business.name}.` };
 }
