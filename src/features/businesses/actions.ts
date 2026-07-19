@@ -66,6 +66,7 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
 
   const data = parsed.data;
   const portfolioFiles = input instanceof FormData ? validPortfolioFiles(input.getAll("portfolioFiles")) : [];
+  const portfolioCaptions = input instanceof FormData ? input.getAll("portfolioCaptions").map((value) => stringFromFormData(value).trim()) : [];
   const totalPortfolioSizeMb = portfolioFiles.reduce((total, file) => total + file.size, 0) / 1024 / 1024;
   if (totalPortfolioSizeMb > 10) {
     return { ok: false, message: "Portfolio uploads must be 10MB total or smaller." };
@@ -128,6 +129,7 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
 
   const uploadedItems = [];
   for (const [index, file] of portfolioFiles.entries()) {
+    const caption = portfolioCaptions[index] ?? "";
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload";
     const path = `${business.id}/${Date.now()}-${index}.${extension}`;
     const { error: uploadError } = await supabase.storage.from("business-portfolios").upload(path, file, {
@@ -140,8 +142,8 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
     const { data: publicUrlData } = supabase.storage.from("business-portfolios").getPublicUrl(path);
     uploadedItems.push({
       business_id: business.id,
-      title: file.name.replace(/\.[^/.]+$/, ""),
-      description: file.type.startsWith("video/") ? "Submitted portfolio video." : "Submitted portfolio photo.",
+      title: caption || file.name.replace(/\.[^/.]+$/, ""),
+      description: "",
       image_url: publicUrlData.publicUrl,
       tags: [file.type],
       sort_order: index,

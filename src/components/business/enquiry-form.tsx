@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-export function EnquiryForm({ businessId }: { businessId: string }) {
+export function EnquiryForm({ businessId, recipientEmail }: { businessId: string; recipientEmail?: string }) {
   const [status, setStatus] = useState<{ tone: "success" | "error"; message: string; address?: string; recipientEmail?: string } | null>(null);
   const [isSending, setIsSending] = useState(false);
 
@@ -30,7 +30,7 @@ export function EnquiryForm({ businessId }: { businessId: string }) {
         setIsSending(false);
 
         if (!result.ok) {
-          setStatus({ tone: "error", message: result.message, address: result.address, recipientEmail: result.recipientEmail });
+          setStatus({ tone: "error", message: result.message, address: result.address, recipientEmail: result.recipientEmail ?? recipientEmail });
           return;
         }
 

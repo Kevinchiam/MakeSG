@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ExternalLink, MapPin, MessageCircleHeart, ThumbsUp } from "lucide-react";
+import { ExternalLink, Mail, MapPin, MessageCircleHeart, ThumbsUp } from "lucide-react";
 import { EnquiryForm } from "@/components/business/enquiry-form";
 import { MaterialTag } from "@/components/business/material-tag";
 import { Badge } from "@/components/ui/badge";
@@ -59,7 +59,6 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
           </div>
           <div className="mt-8 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Provider profile</p>
               <h1 className="mt-2 max-w-4xl font-serif text-5xl font-semibold leading-tight">{business.name}</h1>
               {(business.endorsementCount || wordOfMouth.length) ? (
                 <div className="mt-4 flex flex-wrap gap-2">
@@ -161,6 +160,12 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
           <h2 className="font-serif text-2xl font-semibold">Contact {business.name}</h2>
           <div className="mt-4 grid gap-3 text-sm text-[#4f493f]">
             {displayAddress ? <p className="flex items-center gap-2"><MapPin className="h-4 w-4" /> {displayAddress}</p> : null}
+            {business.publicEmail ? (
+              <p className="flex items-center gap-2 break-all">
+                <Mail className="h-4 w-4 shrink-0" aria-hidden />
+                <a href={`mailto:${business.publicEmail}`} className="underline">{business.publicEmail}</a>
+              </p>
+            ) : null}
             <p>Starts from {formatCurrency(business.minimumBudget)}</p>
             <p>Typical lead time: {business.typicalLeadTime} days</p>
             {hasWebsite ? (
@@ -170,7 +175,7 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
             ) : null}
           </div>
           <div className="mt-6 border-t border-[#ded8cc] pt-6">
-            <EnquiryForm businessId={business.id} />
+            <EnquiryForm businessId={business.id} recipientEmail={business.publicEmail} />
           </div>
         </aside>
       </div>

@@ -26,6 +26,7 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
   const [portfolioError, setPortfolioError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [portfolioFiles, setPortfolioFiles] = useState<File[]>([]);
+  const [portfolioCaptions, setPortfolioCaptions] = useState<Record<string, string>>({});
   const [otherChecked, setOtherChecked] = useState(false);
   const [endorsedBusinessId, setEndorsedBusinessId] = useState<string | null>(null);
   const [endorseError, setEndorseError] = useState<string | null>(null);
@@ -95,7 +96,10 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
             formData.set("businessType", data.businessType);
             selectedServices.forEach((service) => formData.append("services", service));
             if (otherChecked && data.otherService) formData.set("otherService", data.otherService);
-            portfolioFiles.forEach((file) => formData.append("portfolioFiles", file));
+            portfolioFiles.forEach((file) => {
+              formData.append("portfolioFiles", file);
+              formData.append("portfolioCaptions", portfolioCaptions[fileKey(file)] ?? "");
+            });
 
             window.localStorage.setItem("makesg-last-business-listing", JSON.stringify({ ...data, publicationStatus: "pending" }));
             const result = await submitBusinessForApproval(formData);
@@ -232,11 +236,37 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
         value={portfolioFiles}
         onFilesChange={(files) => {
           setPortfolioError(null);
+          setPortfolioCaptions((current) => {
+            const next: Record<string, string> = {};
+            files.forEach((file) => {
+              const key = fileKey(file);
+              next[key] = current[key] ?? "";
+            });
+            return next;
+          });
           setPortfolioFiles(files);
         }}
         label="Upload portfolio photos or videos"
         description="Photos and videos are stored in Supabase and shown after admin approval. Uploads must be 10MB total or smaller."
       />
+      {portfolioFiles.length ? (
+        <fieldset className="grid gap-3">
+          <legend className="text-sm font-medium">Portfolio captions</legend>
+          <p className="text-xs leading-5 text-[#6d675d]">Add an optional caption for each uploaded photo or video. Captions will appear on the public business profile after approval.</p>
+          {portfolioFiles.map((file, index) => {
+            const key = fileKey(file);
+            return (
+              <Field key={key} label={`Caption for upload ${index + 1}`}>
+                <Input
+                  value={portfolioCaptions[key] ?? ""}
+                  onChange={(event) => setPortfolioCaptions((current) => ({ ...current, [key]: event.target.value }))}
+                  placeholder="e.g. Product photography for ceramic vessel"
+                />
+              </Field>
+            );
+          })}
+        </fieldset>
+      ) : null}
       <Button type="submit" disabled={isSubmitting || Boolean(duplicateSuggestion)}><Send className="h-4 w-4" /> {isSubmitting ? "Submitting..." : "Submit for approval"}</Button>
     </form>
   );
@@ -244,6 +274,10 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
 
 function normalizeBusinessName(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function fileKey(file: File) {
+  return `${file.name}-${file.size}-${file.lastModified}`;
 }
 
 function isPortfolioError(message: string) {
