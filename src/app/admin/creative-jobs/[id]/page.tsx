@@ -44,6 +44,8 @@ export default async function AdminCreativeJobPage({ params }: { params: Promise
             <Field label="Status">
               <select name="status" defaultValue={job.status} className="min-h-11 border border-[#ded8cc] bg-white px-3">
                 <option value="open">Open</option>
+                <option value="in_discussion">In discussion</option>
+                <option value="taken">Taken</option>
                 <option value="closed">Closed</option>
                 <option value="archived">Archived</option>
               </select>

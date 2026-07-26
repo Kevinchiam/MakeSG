@@ -1,14 +1,21 @@
 "use server";
 
+import { randomBytes } from "crypto";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { services as knownServices } from "@/lib/data";
+import type { CreativeJobStatus } from "@/lib/creative-jobs";
 import { createSlug } from "@/lib/slug";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { creativeJobSchema } from "@/lib/validation";
 
 type SubmitCreativeJobResult =
-  | { ok: true; id: string; slug: string }
+  | { ok: true; id: string; slug: string; manageToken: string }
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
+
+type UpdateCreativeJobStatusResult =
+  | { ok: true; status: CreativeJobStatus }
+  | { ok: false; message: string };
 
 export async function submitCreativeJobListing(input: unknown): Promise<SubmitCreativeJobResult> {
   const formInput = input instanceof FormData ? formDataToCreativeJobInput(input) : input;
@@ -39,6 +46,7 @@ export async function submitCreativeJobListing(input: unknown): Promise<SubmitCr
 
   const slugBase = createSlug(data.title) || "creative-job";
   const slug = `${slugBase}-${Date.now().toString(36)}`;
+  const manageToken = createManageToken();
   const selectedServices = knownServices
     .filter((service) => data.services.includes(service.slug))
     .map((service) => service.name);
@@ -65,6 +73,7 @@ export async function submitCreativeJobListing(input: unknown): Promise<SubmitCr
       reference_links: data.referenceLinks || null,
       notes: data.notes || null,
       status: "open",
+      manage_token: manageToken,
     })
     .select("id, slug")
     .single();
@@ -109,7 +118,36 @@ export async function submitCreativeJobListing(input: unknown): Promise<SubmitCr
     await supabase.from("creative_job_reference_files").insert(uploadedReferences);
   }
 
-  return { ok: true, id: job.id, slug: job.slug };
+  return { ok: true, id: job.id, slug: job.slug, manageToken };
+}
+
+export async function updateCreativeJobStatusByToken(token: string, status: CreativeJobStatus): Promise<UpdateCreativeJobStatusResult> {
+  if (!["open", "in_discussion", "taken", "closed"].includes(status)) {
+    return { ok: false, message: "Choose a valid status." };
+  }
+
+  let supabase: ReturnType<typeof createAdminClient>;
+  try {
+    supabase = createAdminClient();
+  } catch {
+    return { ok: false, message: "Supabase is not configured for creative jobs yet." };
+  }
+
+  const { error } = await supabase
+    .from("creative_job_listings")
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("manage_token", token);
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  revalidatePath("/creative-jobs");
+  revalidatePath("/admin");
+  revalidatePath("/admin/creative-jobs");
+  revalidatePath(`/creative-jobs/manage/${token}`);
+
+  return { ok: true, status };
 }
 
 function formDataToCreativeJobInput(formData: FormData) {
@@ -152,4 +190,8 @@ function fieldErrorsFromIssues(issues: z.ZodIssue[]) {
 function validReferenceFiles(values: FormDataEntryValue[]) {
   const allowed = ["image/jpeg", "image/png", "image/webp", "video/mp4", "video/quicktime", "video/webm"];
   return values.filter((value): value is File => value instanceof File && value.size > 0 && allowed.includes(value.type));
+}
+
+function createManageToken() {
+  return randomBytes(24).toString("hex");
 }

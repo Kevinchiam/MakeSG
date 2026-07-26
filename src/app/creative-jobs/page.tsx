@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { getPublicCreativeJobs } from "@/lib/creative-jobs";
+import { creativeJobStatusLabel, getPublicCreativeJobs } from "@/lib/creative-jobs";
 
 export const metadata: Metadata = { title: "Creative jobs" };
 export const dynamic = "force-dynamic";
@@ -29,9 +29,17 @@ export default async function CreativeJobsPage() {
             <article key={job.id} className="border border-[#ded8cc] bg-white p-6">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[#9c4f35]">{job.projectType}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#9c4f35]">{job.projectType === "both" ? "Physical & Digital" : job.projectType}</p>
+                    <span className={`border px-2 py-1 text-xs font-semibold ${job.status === "in_discussion" ? "border-[#b9c6ae] bg-[#eef2e8] text-[#39462d]" : "border-[#ded8cc] bg-[#fbfaf7] text-[#4f493f]"}`}>
+                      {creativeJobStatusLabel(job.status)}
+                    </span>
+                  </div>
                   <h2 className="mt-2 font-serif text-3xl font-semibold">{job.title}</h2>
                   <p className="mt-3 max-w-3xl text-sm leading-6 text-[#6d675d]">{job.description}</p>
+                  {job.status === "in_discussion" ? (
+                    <p className="mt-2 text-sm font-medium text-[#536343]">This job is already in conversation with businesses, but the creative is still accepting useful leads.</p>
+                  ) : null}
                 </div>
                 <Button asChild variant="secondary">
                   <a href={`mailto:${job.contactEmail}?subject=${encodeURIComponent(`MakeSG enquiry: ${job.title}`)}`}>Contact creative</a>

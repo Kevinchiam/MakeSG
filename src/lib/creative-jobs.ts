@@ -1,5 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 
+export const creativeJobStatuses = ["open", "in_discussion", "taken", "closed", "archived"] as const;
+
+export type CreativeJobStatus = typeof creativeJobStatuses[number];
+
 export type PublicCreativeJob = {
   id: string;
   slug: string;
@@ -17,7 +21,8 @@ export type PublicCreativeJob = {
   referenceLinks: string | null;
   references: CreativeJobReference[];
   notes: string | null;
-  status: string;
+  status: CreativeJobStatus;
+  manageToken: string | null;
   createdAt: string;
 };
 
@@ -47,7 +52,8 @@ type CreativeJobRow = {
   reference_links: string | null;
   creative_job_reference_files?: CreativeJobReferenceRow[];
   notes: string | null;
-  status: string;
+  status: CreativeJobStatus;
+  manage_token: string | null;
   created_at: string;
 };
 
@@ -71,7 +77,7 @@ export async function getPublicCreativeJobs(): Promise<PublicCreativeJob[]> {
   const { data, error } = await supabase
     .from("creative_job_listings")
     .select("*, creative_job_reference_files(id, file_name, caption, file_url, mime_type, size_bytes)")
-    .eq("status", "open")
+    .in("status", ["open", "in_discussion"])
     .order("created_at", { ascending: false })
     .limit(50);
 
@@ -95,6 +101,7 @@ export async function getPublicCreativeJobs(): Promise<PublicCreativeJob[]> {
     references: mapReferences(job.creative_job_reference_files),
     notes: job.notes,
     status: job.status,
+    manageToken: job.manage_token,
     createdAt: job.created_at,
   }));
 }
@@ -137,6 +144,27 @@ export async function getAdminCreativeJob(id: string): Promise<PublicCreativeJob
   return mapCreativeJob(data as CreativeJobRow);
 }
 
+export async function getCreativeJobByManageToken(token: string): Promise<PublicCreativeJob | null> {
+  if (!token) return null;
+
+  let supabase: ReturnType<typeof createAdminClient>;
+  try {
+    supabase = createAdminClient();
+  } catch {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from("creative_job_listings")
+    .select("*, creative_job_reference_files(id, file_name, caption, file_url, mime_type, size_bytes)")
+    .eq("manage_token", token)
+    .single();
+
+  if (error || !data) return null;
+
+  return mapCreativeJob(data as CreativeJobRow);
+}
+
 function mapCreativeJob(job: CreativeJobRow): PublicCreativeJob {
   return {
     id: job.id,
@@ -156,8 +184,24 @@ function mapCreativeJob(job: CreativeJobRow): PublicCreativeJob {
     references: mapReferences(job.creative_job_reference_files),
     notes: job.notes,
     status: job.status,
+    manageToken: job.manage_token,
     createdAt: job.created_at,
   };
+}
+
+export function creativeJobStatusLabel(status: CreativeJobStatus) {
+  switch (status) {
+    case "open":
+      return "Open";
+    case "in_discussion":
+      return "In discussion";
+    case "taken":
+      return "Taken";
+    case "closed":
+      return "Closed";
+    case "archived":
+      return "Archived";
+  }
 }
 
 function mapReferences(references: CreativeJobReferenceRow[] | undefined): CreativeJobReference[] {

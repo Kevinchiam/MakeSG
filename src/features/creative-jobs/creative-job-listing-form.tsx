@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2, Send } from "lucide-react";
+import { CheckCircle2, Copy, Send } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useForm, useWatch, type FieldPath } from "react-hook-form";
@@ -21,6 +21,8 @@ export function CreativeJobListingForm() {
   const successRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
   const [submittedSlug, setSubmittedSlug] = useState<string | null>(null);
+  const [manageUrl, setManageUrl] = useState<string | null>(null);
+  const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [otherChecked, setOtherChecked] = useState(false);
   const [otherError, setOtherError] = useState<string | null>(null);
@@ -57,7 +59,7 @@ export function CreativeJobListingForm() {
     }
   }, [submitError]);
 
-  if (submittedSlug) {
+  if (submittedSlug && manageUrl) {
     return (
       <div ref={successRef} className="border border-[#536343] bg-[#eef2e8] p-6" tabIndex={-1}>
         <CheckCircle2 className="h-7 w-7 text-[#536343]" aria-hidden />
@@ -65,13 +67,39 @@ export function CreativeJobListingForm() {
         <p className="mt-2 text-sm leading-6 text-[#39462d]">
           Businesses can now review the listing and reach out using the contact email you provided.
         </p>
+        <div className="mt-5 border border-[#b9c6ae] bg-white p-4">
+          <h3 className="font-semibold">Save your private manage link</h3>
+          <p className="mt-2 text-sm leading-6 text-[#39462d]">
+            Use this link later to mark the job as in discussion, taken, closed or open again. Anyone with this link can manage this job.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Input readOnly value={manageUrl} className="min-w-0 flex-1" />
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={async () => {
+                await navigator.clipboard.writeText(manageUrl);
+                setCopyMessage("Manage link copied.");
+              }}
+            >
+              <Copy className="h-4 w-4" />
+              Copy
+            </Button>
+          </div>
+          {copyMessage ? <p className="mt-2 text-sm font-semibold text-[#536343]" role="status">{copyMessage}</p> : null}
+        </div>
         <div className="mt-5 flex flex-wrap gap-3">
           <Button asChild>
             <Link href="/creative-jobs">View creative jobs</Link>
           </Button>
+          <Button asChild variant="secondary">
+            <Link href={manageUrl}>Manage this job</Link>
+          </Button>
           <Button type="button" variant="secondary" onClick={() => {
             form.reset();
             setSubmittedSlug(null);
+            setManageUrl(null);
+            setCopyMessage(null);
           }}>
             Create another listing
           </Button>
@@ -133,6 +161,7 @@ export function CreativeJobListingForm() {
             }
 
             setSubmittedSlug(result.slug);
+            setManageUrl(`${window.location.origin}/creative-jobs/manage/${result.manageToken}`);
           } catch {
             setSubmitError("The job listing could not be published right now. Your draft has been saved in this browser.");
           } finally {

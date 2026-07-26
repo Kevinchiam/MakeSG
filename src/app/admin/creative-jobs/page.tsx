@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
-import { getAdminCreativeJobs } from "@/lib/creative-jobs";
+import { creativeJobStatusLabel, getAdminCreativeJobs } from "@/lib/creative-jobs";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,7 @@ export default async function AdminCreativeJobsPage() {
               <span className="block font-semibold">{job.title}</span>
               <span className="mt-1 block text-sm text-[#6d675d]">{job.contactName} · {job.contactEmail}</span>
             </span>
-            <span className="text-sm text-[#6d675d]">{job.status} · {job.projectType === "both" ? "Physical & Digital" : job.projectType}</span>
+            <span className="text-sm text-[#6d675d]">{creativeJobStatusLabel(job.status)} · {job.projectType === "both" ? "Physical & Digital" : job.projectType}</span>
           </Link>
         ))}
       </div>

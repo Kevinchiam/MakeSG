@@ -16,7 +16,8 @@ create table if not exists creative_job_listings (
   deadline date,
   reference_links text,
   notes text,
-  status text not null default 'open' check (status in ('open', 'closed', 'archived')),
+  status text not null default 'open' check (status in ('open', 'in_discussion', 'taken', 'closed', 'archived')),
+  manage_token text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -25,7 +26,7 @@ alter table creative_job_listings enable row level security;
 
 drop policy if exists "Anyone can read open creative jobs" on creative_job_listings;
 create policy "Anyone can read open creative jobs" on creative_job_listings
-  for select using (status = 'open');
+  for select using (status in ('open', 'in_discussion'));
 
 drop policy if exists "Admins manage creative jobs" on creative_job_listings;
 create policy "Admins manage creative jobs" on creative_job_listings
