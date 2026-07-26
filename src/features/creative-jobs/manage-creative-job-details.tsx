@@ -1,7 +1,7 @@
 "use client";
 
 import { Save } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,7 @@ import { services } from "@/lib/data";
 import type { PublicCreativeJob } from "@/lib/creative-jobs";
 
 export function ManageCreativeJobDetails({ token, job }: { token: string; job: PublicCreativeJob }) {
+  const messageRef = useRef<HTMLParagraphElement>(null);
   const initialSelectedServices = services.filter((service) => job.services.includes(service.name)).map((service) => service.slug);
   const initialOtherService = job.services.find((service) => !services.some((known) => known.name === service)) ?? "";
   const [selectedServices, setSelectedServices] = useState(initialSelectedServices);
@@ -23,6 +24,7 @@ export function ManageCreativeJobDetails({ token, job }: { token: string; job: P
     if (otherChecked && !otherService.trim()) {
       setFieldErrors({ otherService: "Describe the other service, or uncheck Other." });
       setMessage({ tone: "error", text: "Check the highlighted fields and try again." });
+      window.setTimeout(() => messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
       return;
     }
 
@@ -39,10 +41,12 @@ export function ManageCreativeJobDetails({ token, job }: { token: string; job: P
     if (!result.ok) {
       setFieldErrors(result.fieldErrors ?? {});
       setMessage({ tone: "error", text: result.message });
+      window.setTimeout(() => messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
       return;
     }
 
     setMessage({ tone: "success", text: "Listing details updated." });
+    window.setTimeout(() => messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
   }
 
   return (
@@ -52,7 +56,7 @@ export function ManageCreativeJobDetails({ token, job }: { token: string; job: P
         <h2 className="mt-1 text-2xl font-semibold">Edit your job</h2>
       </div>
       {message ? (
-        <p className={`border p-3 text-sm ${message.tone === "success" ? "border-[#b9c6ae] bg-[#eef2e8] text-[#39462d]" : "border-[#e2b8a7] bg-[#fff6f1] text-[#8a3c24]"}`} role={message.tone === "error" ? "alert" : "status"}>
+        <p ref={messageRef} className={`border p-3 text-sm ${message.tone === "success" ? "border-[#b9c6ae] bg-[#eef2e8] text-[#39462d]" : "border-[#e2b8a7] bg-[#fff6f1] text-[#8a3c24]"}`} role={message.tone === "error" ? "alert" : "status"}>
           {message.text}
         </p>
       ) : null}
