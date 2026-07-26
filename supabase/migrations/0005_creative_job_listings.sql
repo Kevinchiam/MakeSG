@@ -10,6 +10,7 @@ create table if not exists creative_job_listings (
   project_type text not null check (project_type in ('physical', 'digital', 'both')),
   services text[] not null default '{}',
   service_slugs text[] not null default '{}',
+  other_service text,
   budget_min integer,
   budget_max integer,
   deadline date,

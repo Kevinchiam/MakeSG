@@ -25,19 +25,22 @@ export const projectSchema = z.object({
 
 export const creativeJobSchema = z.object({
   title: z.string().min(3, "Add a short job title."),
-  description: z.string().min(40, "Share enough detail for providers to understand the work."),
-  intendedOutcome: z.string().min(8, "Tell providers what a good outcome looks like."),
+  description: z.string().min(50, "Describe the work in at least 50 characters so providers understand the scope."),
   contactName: z.string().min(2, "Add your name."),
   contactEmail: z.string().email("Use a valid email address."),
   companyName: z.string().optional().or(z.literal("")),
   projectType: z.enum(["physical", "digital", "both"]),
-  services: z.array(z.string()).min(1, "Choose at least one service you need."),
+  services: z.array(z.string()).default([]),
+  otherService: z.string().trim().optional().or(z.literal("")),
   budgetMin: optionalNumber,
   budgetMax: optionalNumber,
   deadline: z.string().optional().or(z.literal("")),
   preferredLocation: z.string().optional().or(z.literal("")),
   referenceLinks: z.string().optional().or(z.literal("")),
   notes: z.string().optional().or(z.literal("")),
+}).refine((data) => data.services.length > 0 || Boolean(data.otherService?.trim()), {
+  message: "Choose at least one service, or describe another service.",
+  path: ["services"],
 }).refine((data) => {
   if (data.budgetMin === undefined || data.budgetMax === undefined) return true;
   return data.budgetMax >= data.budgetMin;

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useForm, useWatch, type FieldPath } from "react-hook-form";
 import { z } from "zod";
+import { FileUploader } from "@/components/projects/file-uploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,41 +17,27 @@ import { creativeJobSchema } from "@/lib/validation";
 type CreativeJobInput = z.input<typeof creativeJobSchema>;
 type CreativeJobOutput = z.output<typeof creativeJobSchema>;
 
-const featuredServiceSlugs = [
-  "photography",
-  "videography",
-  "product-design",
-  "woodworking",
-  "cnc-routing",
-  "3d-printing",
-  "metal-fabrication",
-  "model-making",
-  "installation",
-  "printing",
-  "ceramics",
-  "textiles",
-];
-
-const serviceOptions = services.filter((service) => featuredServiceSlugs.includes(service.slug));
-
 export function CreativeJobListingForm() {
   const successRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
   const [submittedSlug, setSubmittedSlug] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [otherChecked, setOtherChecked] = useState(false);
+  const [otherError, setOtherError] = useState<string | null>(null);
+  const [referenceFiles, setReferenceFiles] = useState<File[]>([]);
+  const [referenceError, setReferenceError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<CreativeJobInput, unknown, CreativeJobOutput>({
     resolver: zodResolver(creativeJobSchema),
     defaultValues: {
       title: "",
       description: "",
-      intendedOutcome: "",
       contactName: "",
       contactEmail: "",
       companyName: "",
       projectType: "physical",
       services: [],
-      referenceLinks: "",
+      otherService: "",
       notes: "",
     },
   });
@@ -97,32 +84,44 @@ export function CreativeJobListingForm() {
       className="grid gap-5 border border-[#ded8cc] bg-white p-6"
       onSubmit={form.handleSubmit(
         async (data) => {
+          if (otherChecked && !data.otherService?.trim()) {
+            setOtherError("Describe the other service, or uncheck Other.");
+            return;
+          }
+
           setIsSubmitting(true);
           setSubmitError(null);
+          setOtherError(null);
+          setReferenceError(null);
           form.clearErrors();
 
           try {
             const formData = new FormData();
             formData.set("title", data.title);
             formData.set("description", data.description);
-            formData.set("intendedOutcome", data.intendedOutcome);
             formData.set("contactName", data.contactName);
             formData.set("contactEmail", data.contactEmail);
             formData.set("companyName", data.companyName ?? "");
             formData.set("projectType", data.projectType);
             selectedServices.forEach((service) => formData.append("services", service));
+            if (otherChecked && data.otherService) formData.set("otherService", data.otherService);
             formData.set("budgetMin", data.budgetMin === undefined ? "" : String(data.budgetMin));
             formData.set("budgetMax", data.budgetMax === undefined ? "" : String(data.budgetMax));
             formData.set("deadline", data.deadline ?? "");
             formData.set("preferredLocation", data.preferredLocation ?? "");
-            formData.set("referenceLinks", data.referenceLinks ?? "");
             formData.set("notes", data.notes ?? "");
+            referenceFiles.forEach((file) => formData.append("referenceFiles", file));
 
             window.localStorage.setItem("makesg-last-creative-job", JSON.stringify({ ...data, status: "open" }));
             const result = await submitCreativeJobListing(formData);
 
             if (!result.ok) {
               if (applyServerFieldErrors(result.fieldErrors, form.setError)) {
+                return;
+              }
+
+              if (result.message.toLowerCase().includes("upload") || result.message.toLowerCase().includes("reference")) {
+                setReferenceError(result.message);
                 return;
               }
 
@@ -149,11 +148,8 @@ export function CreativeJobListingForm() {
       <Field label="Job title" error={form.formState.errors.title?.message}>
         <Input {...form.register("title")} placeholder="Product photography for new ceramic collection" />
       </Field>
-      <Field label="What do you need made?" error={form.formState.errors.description?.message}>
+      <Field label="What do you need made?" hint="Minimum 50 characters. Include what you need, quantity or size if known, and any important constraints." error={form.formState.errors.description?.message}>
         <Textarea {...form.register("description")} placeholder="Describe the object, shoot, installation, prototype, batch or production support you need." />
-      </Field>
-      <Field label="What should success look like?" error={form.formState.errors.intendedOutcome?.message}>
-        <Input {...form.register("intendedOutcome")} placeholder="e.g. 12 edited product images ready for launch" />
       </Field>
       <div className="grid gap-4 md:grid-cols-2">
         <Field label="Your name" error={form.formState.errors.contactName?.message}>
@@ -169,18 +165,38 @@ export function CreativeJobListingForm() {
           <select {...form.register("projectType")} className="min-h-11 border border-[#ded8cc] bg-white px-3">
             <option value="physical">Physical</option>
             <option value="digital">Digital</option>
-            <option value="both">Both</option>
+            <option value="both">Physical & Digital</option>
           </select>
         </Field>
       </div>
       <Checklist
         label="Services needed"
         error={form.formState.errors.services?.message}
-        items={serviceOptions.map((service) => service.slug)}
-        labels={Object.fromEntries(serviceOptions.map((service) => [service.slug, service.name]))}
+        items={services.map((service) => service.slug)}
+        labels={Object.fromEntries(services.map((service) => [service.slug, service.name]))}
         selected={selectedServices}
         onChange={(next) => form.setValue("services", next, { shouldValidate: true })}
       />
+      <fieldset className="grid gap-2">
+        <legend className="sr-only">Other service</legend>
+        <label className="flex items-center gap-2 border border-[#ded8cc] px-3 py-2 text-sm">
+          <input
+            type="checkbox"
+            checked={otherChecked}
+            onChange={(event) => {
+              setOtherChecked(event.target.checked);
+              setOtherError(null);
+              if (!event.target.checked) form.setValue("otherService", "", { shouldValidate: true });
+            }}
+          />
+          Other
+        </label>
+        {otherChecked ? (
+          <Field label="Describe other service" error={form.formState.errors.otherService?.message ?? otherError ?? undefined}>
+            <Input {...form.register("otherService")} placeholder="e.g. prop styling, glass blowing, mural painting" />
+          </Field>
+        ) : null}
+      </fieldset>
       <div className="grid gap-4 md:grid-cols-2">
         <Field label="Minimum budget (SGD)" hint="Optional. This helps providers understand the scale." error={form.formState.errors.budgetMin?.message}>
           <Input {...form.register("budgetMin")} inputMode="numeric" placeholder="e.g. 800" />
@@ -195,9 +211,18 @@ export function CreativeJobListingForm() {
           <Input {...form.register("preferredLocation")} placeholder="e.g. Hougang, Ubi, remote-friendly" />
         </Field>
       </div>
-      <Field label="Reference links" hint="Paste moodboards, drawings, image folders or existing references." error={form.formState.errors.referenceLinks?.message}>
-        <Textarea {...form.register("referenceLinks")} placeholder="https://..." />
-      </Field>
+      <FileUploader
+        accept="media"
+        maxTotalSizeMb={10}
+        error={referenceError}
+        value={referenceFiles}
+        onFilesChange={(files) => {
+          setReferenceError(null);
+          setReferenceFiles(files);
+        }}
+        label="Upload reference photos or videos"
+        description="Upload photos or videos that help providers understand the job. Uploads must be 10MB total or smaller."
+      />
       <Field label="Anything providers should know?" error={form.formState.errors.notes?.message}>
         <Textarea {...form.register("notes")} placeholder="Access constraints, materials already purchased, files available, preferred working style..." />
       </Field>

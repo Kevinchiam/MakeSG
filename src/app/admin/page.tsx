@@ -2,18 +2,22 @@ import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { businessRecommendations } from "@/lib/data";
 import { getAdminBusinesses } from "@/lib/business-submissions";
+import { getAdminCreativeJobs } from "@/lib/creative-jobs";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   const businesses = await getAdminBusinesses();
+  const creativeJobs = await getAdminCreativeJobs();
   const pending = businesses.filter((b) => b.publicationStatus === "pending").length;
+  const openCreativeJobs = creativeJobs.filter((job) => job.status === "open").length;
   const pendingRecommendations = businessRecommendations.filter((recommendation) => recommendation.status === "pending").length;
   return (
     <section className="container-shell py-12">
       <AdminPageHeader title="Admin" />
-      <div className="mt-8 grid gap-4 md:grid-cols-4">
+      <div className="mt-8 grid gap-4 md:grid-cols-5">
         <AdminLink href="/admin/businesses" title="Businesses" text={`${pending} pending, ${businesses.length} total listings`} />
+        <AdminLink href="/admin/creative-jobs" title="Creative jobs" text={`${openCreativeJobs} open, ${creativeJobs.length} total listings`} />
         <AdminLink href="/admin/recommendations" title="Recommendations" text={`${pendingRecommendations} pending word-of-mouth submissions`} />
         <AdminLink href="/admin/services" title="Services" text="Edit service categories and descriptions" />
         <AdminLink href="/admin/reports" title="Reports" text="Review reported content" />

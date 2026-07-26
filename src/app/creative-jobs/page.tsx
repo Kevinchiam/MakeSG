@@ -50,6 +50,21 @@ export default async function CreativeJobsPage() {
                   ))}
                 </div>
               ) : null}
+              {job.references.length ? (
+                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                  {job.references.map((reference) => (
+                    <a key={reference.id} href={reference.fileUrl} target="_blank" rel="noreferrer" className="block border border-[#ded8cc] bg-[#fbfaf7]">
+                      {reference.mimeType.startsWith("image/") ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={reference.fileUrl} alt="" className="aspect-video w-full object-cover" />
+                      ) : (
+                        <video src={reference.fileUrl} className="aspect-video w-full bg-black object-cover" muted />
+                      )}
+                      <span className="block truncate px-3 py-2 text-xs font-medium">{reference.fileName}</span>
+                    </a>
+                  ))}
+                </div>
+              ) : null}
             </article>
           ))}
         </div>

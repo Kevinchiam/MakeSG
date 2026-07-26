@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 
 const nav = [
   ["Businesses", "/businesses"],
+  ["Creative jobs", "/creative-jobs"],
   ["Recommend", "/recommend-business"],
   ["For creatives", "/for-creatives"],
   ["For businesses", "/for-businesses"],

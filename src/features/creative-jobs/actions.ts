@@ -30,11 +30,19 @@ export async function submitCreativeJobListing(input: unknown): Promise<SubmitCr
   }
 
   const data = parsed.data;
+  const referenceFiles = input instanceof FormData ? validReferenceFiles(input.getAll("referenceFiles")) : [];
+  const totalReferenceSizeMb = referenceFiles.reduce((total, file) => total + file.size, 0) / 1024 / 1024;
+  if (totalReferenceSizeMb > 10) {
+    return { ok: false, message: "Reference uploads must be 10MB total or smaller." };
+  }
+
   const slugBase = createSlug(data.title) || "creative-job";
   const slug = `${slugBase}-${Date.now().toString(36)}`;
   const selectedServices = knownServices
     .filter((service) => data.services.includes(service.slug))
     .map((service) => service.name);
+  const serviceLabels = [...selectedServices];
+  if (data.otherService?.trim()) serviceLabels.push(data.otherService.trim());
 
   const { data: job, error } = await supabase
     .from("creative_job_listings")
@@ -42,13 +50,14 @@ export async function submitCreativeJobListing(input: unknown): Promise<SubmitCr
       title: data.title,
       slug,
       description: data.description,
-      intended_outcome: data.intendedOutcome,
+      intended_outcome: null,
       contact_name: data.contactName,
       contact_email: data.contactEmail,
       company_name: data.companyName || null,
       project_type: data.projectType,
-      services: selectedServices.length ? selectedServices : data.services,
+      services: serviceLabels.length ? serviceLabels : data.services,
       service_slugs: data.services,
+      other_service: data.otherService?.trim() || null,
       budget_min: data.budgetMin ?? null,
       budget_max: data.budgetMax ?? null,
       deadline: data.deadline || null,
@@ -70,6 +79,34 @@ export async function submitCreativeJobListing(input: unknown): Promise<SubmitCr
     };
   }
 
+  const uploadedReferences = [];
+  for (const [index, file] of referenceFiles.entries()) {
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload";
+    const path = `${job.id}/${Date.now()}-${index}.${extension}`;
+    const { error: uploadError } = await supabase.storage.from("creative-job-references").upload(path, file, {
+      contentType: file.type,
+      upsert: false,
+    });
+
+    if (uploadError) continue;
+
+    const { data: publicUrlData } = supabase.storage.from("creative-job-references").getPublicUrl(path);
+    uploadedReferences.push({
+      job_id: job.id,
+      bucket: "creative-job-references",
+      storage_path: path,
+      file_name: file.name,
+      file_url: publicUrlData.publicUrl,
+      mime_type: file.type,
+      size_bytes: file.size,
+      sort_order: index,
+    });
+  }
+
+  if (uploadedReferences.length > 0) {
+    await supabase.from("creative_job_reference_files").insert(uploadedReferences);
+  }
+
   return { ok: true, id: job.id, slug: job.slug };
 }
 
@@ -77,12 +114,12 @@ function formDataToCreativeJobInput(formData: FormData) {
   return {
     title: stringFromFormData(formData.get("title")),
     description: stringFromFormData(formData.get("description")),
-    intendedOutcome: stringFromFormData(formData.get("intendedOutcome")),
     contactName: stringFromFormData(formData.get("contactName")),
     contactEmail: stringFromFormData(formData.get("contactEmail")),
     companyName: stringFromFormData(formData.get("companyName")),
     projectType: stringFromFormData(formData.get("projectType")),
     services: formData.getAll("services").filter((value): value is string => typeof value === "string"),
+    otherService: stringFromFormData(formData.get("otherService")),
     budgetMin: optionalNumberString(formData.get("budgetMin")),
     budgetMax: optionalNumberString(formData.get("budgetMax")),
     deadline: stringFromFormData(formData.get("deadline")),
@@ -109,4 +146,9 @@ function fieldErrorsFromIssues(issues: z.ZodIssue[]) {
   }
 
   return errors;
+}
+
+function validReferenceFiles(values: FormDataEntryValue[]) {
+  const allowed = ["image/jpeg", "image/png", "image/webp", "video/mp4", "video/quicktime", "video/webm"];
+  return values.filter((value): value is File => value instanceof File && value.size > 0 && allowed.includes(value.type));
 }
