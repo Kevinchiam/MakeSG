@@ -16,7 +16,7 @@ create table if not exists creative_job_listings (
   deadline date,
   reference_links text,
   notes text,
-  status text not null default 'open' check (status in ('open', 'in_discussion', 'taken', 'closed', 'archived')),
+  status text not null default 'open' check (status in ('open', 'in_discussion', 'taken', 'archived')),
   manage_token text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

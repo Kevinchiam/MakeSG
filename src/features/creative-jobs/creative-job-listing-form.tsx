@@ -70,7 +70,7 @@ export function CreativeJobListingForm() {
         <div className="mt-5 border border-[#b9c6ae] bg-white p-4">
           <h3 className="font-semibold">Save your private manage link</h3>
           <p className="mt-2 text-sm leading-6 text-[#39462d]">
-            Use this link later to mark the job as in discussion, taken, closed or open again. Anyone with this link can manage this job.
+            Use this link later to edit the listing or mark the job as in discussion, taken or open again. Anyone with this link can manage this job.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Input readOnly value={manageUrl} className="min-w-0 flex-1" />

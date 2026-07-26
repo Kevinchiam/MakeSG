@@ -8,8 +8,7 @@ import { creativeJobStatusLabel, type CreativeJobStatus } from "@/lib/creative-j
 const statuses: Array<{ value: CreativeJobStatus; label: string; description: string }> = [
   { value: "open", label: "Open", description: "Businesses can contact you." },
   { value: "in_discussion", label: "In discussion", description: "You are speaking with businesses, but it is not confirmed yet." },
-  { value: "taken", label: "Taken", description: "You have selected a business." },
-  { value: "closed", label: "Closed", description: "You no longer need responses for this job." },
+  { value: "taken", label: "Taken", description: "You have selected a business and no longer need responses." },
 ];
 
 export function ManageCreativeJobStatus({ token, initialStatus }: { token: string; initialStatus: CreativeJobStatus }) {

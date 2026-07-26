@@ -46,7 +46,6 @@ export default async function AdminCreativeJobPage({ params }: { params: Promise
                 <option value="open">Open</option>
                 <option value="in_discussion">In discussion</option>
                 <option value="taken">Taken</option>
-                <option value="closed">Closed</option>
                 <option value="archived">Archived</option>
               </select>
             </Field>

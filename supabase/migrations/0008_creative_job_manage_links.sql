@@ -4,8 +4,13 @@ alter table creative_job_listings
 alter table creative_job_listings
   drop constraint if exists creative_job_listings_status_check;
 
+update creative_job_listings
+set status = 'taken',
+  updated_at = now()
+where status = 'closed';
+
 alter table creative_job_listings
-  add constraint creative_job_listings_status_check check (status in ('open', 'in_discussion', 'taken', 'closed', 'archived'));
+  add constraint creative_job_listings_status_check check (status in ('open', 'in_discussion', 'taken', 'archived'));
 
 create unique index if not exists creative_job_listings_manage_token_key
   on creative_job_listings (manage_token)

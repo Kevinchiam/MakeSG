@@ -17,6 +17,10 @@ type UpdateCreativeJobStatusResult =
   | { ok: true; status: CreativeJobStatus }
   | { ok: false; message: string };
 
+type UpdateCreativeJobDetailsResult =
+  | { ok: true }
+  | { ok: false; message: string; fieldErrors?: Record<string, string> };
+
 export async function submitCreativeJobListing(input: unknown): Promise<SubmitCreativeJobResult> {
   const formInput = input instanceof FormData ? formDataToCreativeJobInput(input) : input;
   const parsed = creativeJobSchema.safeParse(formInput);
@@ -122,7 +126,7 @@ export async function submitCreativeJobListing(input: unknown): Promise<SubmitCr
 }
 
 export async function updateCreativeJobStatusByToken(token: string, status: CreativeJobStatus): Promise<UpdateCreativeJobStatusResult> {
-  if (!["open", "in_discussion", "taken", "closed"].includes(status)) {
+  if (!["open", "in_discussion", "taken"].includes(status)) {
     return { ok: false, message: "Choose a valid status." };
   }
 
@@ -148,6 +152,65 @@ export async function updateCreativeJobStatusByToken(token: string, status: Crea
   revalidatePath(`/creative-jobs/manage/${token}`);
 
   return { ok: true, status };
+}
+
+export async function updateCreativeJobDetailsByToken(token: string, input: unknown): Promise<UpdateCreativeJobDetailsResult> {
+  const formInput = input instanceof FormData ? formDataToCreativeJobInput(input) : input;
+  const parsed = creativeJobSchema.safeParse(formInput);
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Check the highlighted fields and try again.",
+      fieldErrors: fieldErrorsFromIssues(parsed.error.issues),
+    };
+  }
+
+  let supabase: ReturnType<typeof createAdminClient>;
+  try {
+    supabase = createAdminClient();
+  } catch {
+    return { ok: false, message: "Supabase is not configured for creative jobs yet." };
+  }
+
+  const data = parsed.data;
+  const selectedServices = knownServices
+    .filter((service) => data.services.includes(service.slug))
+    .map((service) => service.name);
+  const serviceLabels = [...selectedServices];
+  if (data.otherService?.trim()) serviceLabels.push(data.otherService.trim());
+
+  const { error } = await supabase
+    .from("creative_job_listings")
+    .update({
+      title: data.title,
+      description: data.description,
+      contact_name: data.contactName,
+      contact_email: data.contactEmail,
+      company_name: data.companyName || null,
+      project_type: data.projectType,
+      services: serviceLabels.length ? serviceLabels : data.services,
+      service_slugs: data.services,
+      other_service: data.otherService?.trim() || null,
+      budget_min: data.budgetMin ?? null,
+      budget_max: data.budgetMax ?? null,
+      deadline: data.deadline || null,
+      reference_links: data.referenceLinks || null,
+      notes: data.notes || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("manage_token", token);
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  revalidatePath("/creative-jobs");
+  revalidatePath("/admin");
+  revalidatePath("/admin/creative-jobs");
+  revalidatePath(`/creative-jobs/manage/${token}`);
+
+  return { ok: true };
 }
 
 function formDataToCreativeJobInput(formData: FormData) {

@@ -16,7 +16,7 @@ create table if not exists creative_job_listings (
   deadline date,
   reference_links text,
   notes text,
-  status text not null default 'open' check (status in ('open', 'in_discussion', 'taken', 'closed', 'archived')),
+  status text not null default 'open' check (status in ('open', 'in_discussion', 'taken', 'archived')),
   manage_token text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -32,7 +32,7 @@ alter table creative_job_listings
   drop constraint if exists creative_job_listings_status_check;
 
 alter table creative_job_listings
-  add constraint creative_job_listings_status_check check (status in ('open', 'in_discussion', 'taken', 'closed', 'archived'));
+  add constraint creative_job_listings_status_check check (status in ('open', 'in_discussion', 'taken', 'archived'));
 
 create unique index if not exists creative_job_listings_manage_token_key
   on creative_job_listings (manage_token)

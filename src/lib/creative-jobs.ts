@@ -198,7 +198,7 @@ export function creativeJobStatusLabel(status: CreativeJobStatus) {
     case "taken":
       return "Taken";
     case "closed":
-      return "Closed";
+      return "Taken";
     case "archived":
       return "Archived";
   }
