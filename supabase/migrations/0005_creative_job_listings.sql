@@ -14,7 +14,6 @@ create table if not exists creative_job_listings (
   budget_min integer,
   budget_max integer,
   deadline date,
-  preferred_location text,
   reference_links text,
   notes text,
   status text not null default 'open' check (status in ('open', 'closed', 'archived')),

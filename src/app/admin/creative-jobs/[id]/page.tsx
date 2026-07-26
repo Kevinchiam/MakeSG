@@ -41,7 +41,6 @@ export default async function AdminCreativeJobPage({ params }: { params: Promise
             <Field label="Minimum budget (SGD)"><Input name="budgetMin" defaultValue={job.budgetMin ?? ""} inputMode="numeric" /></Field>
             <Field label="Maximum budget (SGD)"><Input name="budgetMax" defaultValue={job.budgetMax ?? ""} inputMode="numeric" /></Field>
             <Field label="Preferred deadline"><Input name="deadline" type="date" defaultValue={job.deadline ?? ""} /></Field>
-            <Field label="Preferred location"><Input name="preferredLocation" defaultValue={job.preferredLocation ?? ""} /></Field>
             <Field label="Status">
               <select name="status" defaultValue={job.status} className="min-h-11 border border-[#ded8cc] bg-white px-3">
                 <option value="open">Open</option>
@@ -78,7 +77,7 @@ export default async function AdminCreativeJobPage({ params }: { params: Promise
                     ) : (
                       <video src={reference.fileUrl} className="aspect-video w-full bg-black object-cover" muted />
                     )}
-                    <span className="block truncate px-3 py-2 text-xs font-medium">{reference.fileName}</span>
+                    <span className="block truncate px-3 py-2 text-xs font-medium">{reference.caption || reference.fileName}</span>
                   </a>
                 ))}
               </div>

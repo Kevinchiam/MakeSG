@@ -62,7 +62,7 @@ export function RecommendBusinessForm({ initialBusinessId }: { initialBusinessId
     <form onSubmit={form.handleSubmit(submit)} className="grid gap-5 border border-[#ded8cc] bg-white p-6">
       <h2 className="font-serif text-3xl font-semibold">Recommend a business</h2>
       <p className="text-sm leading-6 text-[#6d675d]">
-        Share a provider you have worked with and would trust again. This is moderated and focused on word-of-mouth reliability, not public ratings.
+        Share a business you have worked with and would trust again. This is moderated and focused on word-of-mouth reliability, not public ratings.
       </p>
 
       <Field label="Business">

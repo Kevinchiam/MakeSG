@@ -4,7 +4,7 @@ import { businesses } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Recommend a business",
-  description: "Share a trusted Singapore creative-services or fabrication provider you have worked with.",
+  description: "Share a trusted Singapore creative-services or fabrication business you have worked with.",
 };
 
 export default async function RecommendBusinessPage({

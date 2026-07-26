@@ -24,7 +24,7 @@ export function FilterPanel() {
   }
 
   return (
-    <form onSubmit={submit} className="border border-[#ded8cc] bg-white p-4" aria-label="Provider filters">
+    <form onSubmit={submit} className="border border-[#ded8cc] bg-white p-4" aria-label="Business filters">
       <div className="mb-4 flex items-center gap-2">
         <SlidersHorizontal className="h-4 w-4" aria-hidden />
         <h2 className="font-semibold">Filters</h2>

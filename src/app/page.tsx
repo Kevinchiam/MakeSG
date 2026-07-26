@@ -30,7 +30,7 @@ export default function Home() {
               {[
                 ["Describe", "Turn a loose idea into a clear project brief."],
                 ["Map services", "See the making disciplines likely needed."],
-                ["Contact", "Shortlist Singapore providers and send a focused enquiry."],
+                ["Contact", "Shortlist Singapore businesses and send a focused enquiry."],
               ].map(([title, text]) => (
                 <div key={title} className="border-l-2 border-[#315c6b] pl-4">
                   <p className="font-semibold">{title}</p>
@@ -46,7 +46,7 @@ export default function Home() {
         <div className="container-shell">
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Featured providers</p>
+              <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Featured businesses</p>
               <h2 className="mt-2 font-serif text-4xl font-semibold">Fictional Singapore demo listings</h2>
             </div>
             <Button asChild variant="secondary"><Link href="/businesses">Browse directory</Link></Button>
@@ -74,7 +74,7 @@ export default function Home() {
       <section className="border-y border-[#ded8cc] bg-white">
         <div className="container-shell grid gap-8 py-14 md:grid-cols-3">
           <Feature icon={<Compass />} title="Describe your project" text="Use the brief builder to capture outcomes, constraints, materials and references." />
-          <Feature icon={<Building2 />} title="Discover relevant providers" text="Browse by service, material, location, budget, lead time and production fit." />
+          <Feature icon={<Building2 />} title="Discover relevant businesses" text="Browse by service, material, location, budget, lead time and production fit." />
           <Feature icon={<Send />} title="Send focused enquiries" text="Contact businesses with the context they need to respond usefully." />
         </div>
       </section>

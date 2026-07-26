@@ -25,6 +25,7 @@ export function CreativeJobListingForm() {
   const [otherChecked, setOtherChecked] = useState(false);
   const [otherError, setOtherError] = useState<string | null>(null);
   const [referenceFiles, setReferenceFiles] = useState<File[]>([]);
+  const [referenceCaptions, setReferenceCaptions] = useState<Record<string, string>>({});
   const [referenceError, setReferenceError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<CreativeJobInput, unknown, CreativeJobOutput>({
@@ -62,7 +63,7 @@ export function CreativeJobListingForm() {
         <CheckCircle2 className="h-7 w-7 text-[#536343]" aria-hidden />
         <h2 className="mt-4 text-xl font-semibold">Job listing published</h2>
         <p className="mt-2 text-sm leading-6 text-[#39462d]">
-          Providers can now review the listing and reach out using the contact email you provided.
+          Businesses can now review the listing and reach out using the contact email you provided.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Button asChild>
@@ -108,9 +109,11 @@ export function CreativeJobListingForm() {
             formData.set("budgetMin", data.budgetMin === undefined ? "" : String(data.budgetMin));
             formData.set("budgetMax", data.budgetMax === undefined ? "" : String(data.budgetMax));
             formData.set("deadline", data.deadline ?? "");
-            formData.set("preferredLocation", data.preferredLocation ?? "");
             formData.set("notes", data.notes ?? "");
-            referenceFiles.forEach((file) => formData.append("referenceFiles", file));
+            referenceFiles.forEach((file) => {
+              formData.append("referenceFiles", file);
+              formData.append("referenceCaptions", referenceCaptions[fileKey(file)] ?? "");
+            });
 
             window.localStorage.setItem("makesg-last-creative-job", JSON.stringify({ ...data, status: "open" }));
             const result = await submitCreativeJobListing(formData);
@@ -198,7 +201,7 @@ export function CreativeJobListingForm() {
         ) : null}
       </fieldset>
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Minimum budget (SGD)" hint="Optional. This helps providers understand the scale." error={form.formState.errors.budgetMin?.message}>
+        <Field label="Minimum budget (SGD)" hint="Optional. This helps businesses understand the scale." error={form.formState.errors.budgetMin?.message}>
           <Input {...form.register("budgetMin")} inputMode="numeric" placeholder="e.g. 800" />
         </Field>
         <Field label="Maximum budget (SGD)" hint="Optional. Use a realistic upper range if you have one." error={form.formState.errors.budgetMax?.message}>
@@ -206,9 +209,6 @@ export function CreativeJobListingForm() {
         </Field>
         <Field label="Preferred deadline" error={form.formState.errors.deadline?.message}>
           <Input {...form.register("deadline")} type="date" />
-        </Field>
-        <Field label="Preferred location" hint="Optional. Add a Singapore area if location matters." error={form.formState.errors.preferredLocation?.message}>
-          <Input {...form.register("preferredLocation")} placeholder="e.g. Hougang, Ubi, remote-friendly" />
         </Field>
       </div>
       <FileUploader
@@ -218,12 +218,38 @@ export function CreativeJobListingForm() {
         value={referenceFiles}
         onFilesChange={(files) => {
           setReferenceError(null);
+          setReferenceCaptions((current) => {
+            const next: Record<string, string> = {};
+            files.forEach((file) => {
+              const key = fileKey(file);
+              next[key] = current[key] ?? "";
+            });
+            return next;
+          });
           setReferenceFiles(files);
         }}
         label="Upload reference photos or videos"
-        description="Upload photos or videos that help providers understand the job. Uploads must be 10MB total or smaller."
+        description="Upload photos or videos that help businesses understand the job. Uploads must be 10MB total or smaller."
       />
-      <Field label="Anything providers should know?" error={form.formState.errors.notes?.message}>
+      {referenceFiles.length ? (
+        <fieldset className="grid gap-3">
+          <legend className="text-sm font-medium">Reference captions</legend>
+          <p className="text-xs leading-5 text-[#6d675d]">Add an optional caption for each uploaded photo or video. Captions will appear with the reference files.</p>
+          {referenceFiles.map((file, index) => {
+            const key = fileKey(file);
+            return (
+              <Field key={key} label={`Caption for upload ${index + 1}`}>
+                <Input
+                  value={referenceCaptions[key] ?? ""}
+                  onChange={(event) => setReferenceCaptions((current) => ({ ...current, [key]: event.target.value }))}
+                  placeholder="e.g. Preferred mood, finish, reference angle or material detail"
+                />
+              </Field>
+            );
+          })}
+        </fieldset>
+      ) : null}
+      <Field label="Anything businesses should know?" error={form.formState.errors.notes?.message}>
         <Textarea {...form.register("notes")} placeholder="Access constraints, materials already purchased, files available, preferred working style..." />
       </Field>
       <Button type="submit" disabled={isSubmitting}>
@@ -232,6 +258,10 @@ export function CreativeJobListingForm() {
       </Button>
     </form>
   );
+}
+
+function fileKey(file: File) {
+  return `${file.name}-${file.size}-${file.lastModified}`;
 }
 
 function Field({ label, hint, error, children }: { label: string; hint?: string; error?: string; children: React.ReactNode }) {

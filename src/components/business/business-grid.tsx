@@ -6,7 +6,7 @@ export function BusinessGrid({ businesses }: { businesses: Business[] }) {
   if (!businesses.length) {
     return (
       <EmptyState
-        title="No providers match those filters"
+        title="No businesses match those filters"
         description="Try broadening the service, material, location or budget filters. The URL will keep any filters you do want to share."
         actionHref="/businesses"
         actionLabel="Clear filters"

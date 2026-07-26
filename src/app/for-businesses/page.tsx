@@ -14,9 +14,9 @@ export default async function ForBusinessesPage() {
     <section className="container-shell py-12">
       <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Provider onboarding</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Business onboarding</p>
           <h1 className="mt-2 font-serif text-5xl font-semibold">List a creative service or fabrication business</h1>
-          <p className="mt-5 text-lg leading-8 text-[#6d675d]">Create a listing with services, contact details, budget range, lead time and portfolio notes. Providers submit for approval before publication.</p>
+          <p className="mt-5 text-lg leading-8 text-[#6d675d]">Create a listing with services, contact details, budget range, lead time and portfolio notes. Businesses submit for approval before publication.</p>
           <div className="mt-8 grid gap-4">
             <Step icon={<Building2 />} title="Describe your capabilities" />
             <Step icon={<Clock />} title="Set indicative budget and lead time" />

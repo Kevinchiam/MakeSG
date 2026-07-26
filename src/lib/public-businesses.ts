@@ -122,6 +122,6 @@ function rowToBusiness(row: PublishedBusinessRow): Business {
       imageUrl: item.image_url ?? "",
     })) ?? [],
     heroImage: row.hero_image_url ?? fallbackImage,
-    demoNotice: "Community-submitted provider.",
+    demoNotice: "Community-submitted business.",
   };
 }

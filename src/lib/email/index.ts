@@ -57,7 +57,7 @@ export function renderTemplate(template: EmailTemplate, variables: Record<string
 
   const body: Record<EmailTemplate, string> = {
     new_enquiry_received: "",
-    enquiry_confirmation: `Hi ${name}, your enquiry has been sent. The provider can reply using your shared contact details.`,
+    enquiry_confirmation: `Hi ${name}, your enquiry has been sent. The business can reply using your shared contact details.`,
     business_submitted_for_approval: `Hi ${name}, your listing is pending review by the MakeSG team.`,
     business_approved: `Hi ${name}, your listing has been approved and published.`,
     business_rejected: `Hi ${name}, your listing needs a few changes before it can be published.`,

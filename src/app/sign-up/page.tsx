@@ -38,7 +38,7 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
         <fieldset className="grid gap-2">
           <legend className="text-sm font-medium">Account type</legend>
           <label className="flex gap-2"><input type="radio" name="accountType" value="creative" defaultChecked /> Creative</label>
-          <label className="flex gap-2"><input type="radio" name="accountType" value="provider" /> Provider</label>
+          <label className="flex gap-2"><input type="radio" name="accountType" value="provider" /> Business</label>
         </fieldset>
         <Button type="submit">Send magic link</Button>
       </form>

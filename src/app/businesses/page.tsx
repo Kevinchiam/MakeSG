@@ -7,8 +7,8 @@ import { filterBusinesses, parseFilters } from "@/lib/filters";
 import { getPublishedBusinesses } from "@/lib/public-businesses";
 
 export const metadata: Metadata = {
-  title: "Browse providers",
-  description: "Search and filter fictional Singapore creative-services and fabrication providers.",
+  title: "Browse businesses",
+  description: "Search and filter fictional Singapore creative-services and fabrication businesses.",
 };
 
 export const dynamic = "force-dynamic";
@@ -24,8 +24,8 @@ export default async function BusinessesPage({ searchParams }: { searchParams: P
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Directory</p>
-          <h1 className="mt-2 font-serif text-5xl font-semibold">Browse providers</h1>
-          <p className="mt-3 text-[#6d675d]">{results.length} published provider{results.length === 1 ? "" : "s"} found.</p>
+          <h1 className="mt-2 font-serif text-5xl font-semibold">Browse businesses</h1>
+          <p className="mt-3 text-[#6d675d]">{results.length} published business{results.length === 1 ? "" : "es"} found.</p>
         </div>
         <MobileFilterDrawer />
       </div>

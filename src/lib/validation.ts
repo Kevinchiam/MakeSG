@@ -25,7 +25,7 @@ export const projectSchema = z.object({
 
 export const creativeJobSchema = z.object({
   title: z.string().min(3, "Add a short job title."),
-  description: z.string().min(50, "Describe the work in at least 50 characters so providers understand the scope."),
+  description: z.string().min(50, "Describe the work in at least 50 characters so businesses understand the scope."),
   contactName: z.string().min(2, "Add your name."),
   contactEmail: z.string().email("Use a valid email address."),
   companyName: z.string().optional().or(z.literal("")),
@@ -35,7 +35,6 @@ export const creativeJobSchema = z.object({
   budgetMin: optionalNumber,
   budgetMax: optionalNumber,
   deadline: z.string().optional().or(z.literal("")),
-  preferredLocation: z.string().optional().or(z.literal("")),
   referenceLinks: z.string().optional().or(z.literal("")),
   notes: z.string().optional().or(z.literal("")),
 }).refine((data) => data.services.length > 0 || Boolean(data.otherService?.trim()), {
@@ -69,7 +68,7 @@ export const businessSchema = z.object({
 export const enquirySchema = z.object({
   projectId: z.string().min(1),
   businessId: z.string().min(1),
-  message: z.string().min(20, "Write a useful note for the provider."),
+  message: z.string().min(20, "Write a useful note for the business."),
 });
 
 export const businessRecommendationSchema = z.object({

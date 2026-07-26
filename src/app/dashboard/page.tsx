@@ -7,9 +7,9 @@ export default function DashboardPage() {
       <h1 className="font-serif text-5xl font-semibold">Dashboard</h1>
       <div className="mt-8 grid gap-4 md:grid-cols-4">
         <Tile href="/dashboard/projects" icon={<FolderKanban />} title="Projects" text="Drafts and submitted briefs" />
-        <Tile href="/dashboard/saved" icon={<Heart />} title="Saved" text="Shortlisted providers" />
+        <Tile href="/dashboard/saved" icon={<Heart />} title="Saved" text="Shortlisted businesses" />
         <Tile href="/dashboard/enquiries" icon={<Mail />} title="Enquiries" text="Sent and received messages" />
-        <Tile href="/dashboard/business" icon={<Store />} title="Business" text="Provider listing workspace" />
+        <Tile href="/dashboard/business" icon={<Store />} title="Business" text="Business listing workspace" />
       </div>
     </section>
   );

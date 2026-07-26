@@ -50,7 +50,6 @@ export async function updateCreativeJobFromForm(jobId: string, formData: FormDat
       budget_min: nullableNumberFromFormData(formData.get("budgetMin")),
       budget_max: nullableNumberFromFormData(formData.get("budgetMax")),
       deadline: nullableStringFromFormData(formData.get("deadline")),
-      preferred_location: nullableStringFromFormData(formData.get("preferredLocation")),
       notes: nullableStringFromFormData(formData.get("notes")),
       status: stringFromFormData(formData.get("status")) || "open",
       updated_at: new Date().toISOString(),

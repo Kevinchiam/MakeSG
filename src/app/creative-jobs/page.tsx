@@ -14,9 +14,9 @@ export default async function CreativeJobsPage() {
     <section className="container-shell py-12">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Provider opportunities</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Business opportunities</p>
           <h1 className="mt-2 font-serif text-5xl font-semibold">Creative jobs</h1>
-          <p className="mt-4 max-w-2xl text-[#6d675d]">Open project listings from creatives looking for fabrication, production, photography, design and specialist services.</p>
+          <p className="mt-4 max-w-2xl text-[#6d675d]">Open project listings from creatives looking for fabrication, production, photography, design and specialist businesses.</p>
         </div>
         <Button asChild>
           <Link href="/for-creatives">Post a job</Link>
@@ -40,7 +40,6 @@ export default async function CreativeJobsPage() {
               <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
                 <Detail label="Budget" value={formatBudget(job.budgetMin, job.budgetMax)} />
                 <Detail label="Deadline" value={job.deadline ? new Date(job.deadline).toLocaleDateString("en-SG", { dateStyle: "medium" }) : "Flexible"} />
-                <Detail label="Location" value={job.preferredLocation || "Flexible"} />
                 <Detail label="Contact" value={job.contactName} />
               </dl>
               {job.services.length ? (
@@ -60,7 +59,7 @@ export default async function CreativeJobsPage() {
                       ) : (
                         <video src={reference.fileUrl} className="aspect-video w-full bg-black object-cover" muted />
                       )}
-                      <span className="block truncate px-3 py-2 text-xs font-medium">{reference.fileName}</span>
+                      <span className="block truncate px-3 py-2 text-xs font-medium">{reference.caption || reference.fileName}</span>
                     </a>
                   ))}
                 </div>
@@ -72,7 +71,7 @@ export default async function CreativeJobsPage() {
         <div className="mt-10">
           <EmptyState
             title="No creative jobs yet"
-            description="Once creatives post jobs, providers will be able to browse them here and reach out directly."
+            description="Once creatives post jobs, businesses will be able to browse them here and reach out directly."
             actionHref="/for-creatives"
             actionLabel="Post the first job"
           />

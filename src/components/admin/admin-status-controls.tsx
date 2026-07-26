@@ -40,7 +40,7 @@ export function AdminStatusControls({
       return;
     }
 
-    setMessage(nextStatus === "published" ? "Published. This provider can now appear in the public directory." : "Status updated.");
+    setMessage(nextStatus === "published" ? "Published. This business can now appear in the public directory." : "Status updated.");
   }
 
   async function deleteEntry() {

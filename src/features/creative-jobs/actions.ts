@@ -31,6 +31,7 @@ export async function submitCreativeJobListing(input: unknown): Promise<SubmitCr
 
   const data = parsed.data;
   const referenceFiles = input instanceof FormData ? validReferenceFiles(input.getAll("referenceFiles")) : [];
+  const referenceCaptions = input instanceof FormData ? input.getAll("referenceCaptions").map((value) => stringFromFormData(value).trim()) : [];
   const totalReferenceSizeMb = referenceFiles.reduce((total, file) => total + file.size, 0) / 1024 / 1024;
   if (totalReferenceSizeMb > 10) {
     return { ok: false, message: "Reference uploads must be 10MB total or smaller." };
@@ -61,7 +62,6 @@ export async function submitCreativeJobListing(input: unknown): Promise<SubmitCr
       budget_min: data.budgetMin ?? null,
       budget_max: data.budgetMax ?? null,
       deadline: data.deadline || null,
-      preferred_location: data.preferredLocation || null,
       reference_links: data.referenceLinks || null,
       notes: data.notes || null,
       status: "open",
@@ -74,13 +74,14 @@ export async function submitCreativeJobListing(input: unknown): Promise<SubmitCr
     return {
       ok: false,
       message: missingTable
-        ? "The creative job listings database table has not been added yet."
+        ? "Creative jobs need one more Supabase setup step before listings can be published."
         : error?.message ?? "Could not publish this job listing.",
     };
   }
 
   const uploadedReferences = [];
   for (const [index, file] of referenceFiles.entries()) {
+    const caption = referenceCaptions[index] ?? "";
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload";
     const path = `${job.id}/${Date.now()}-${index}.${extension}`;
     const { error: uploadError } = await supabase.storage.from("creative-job-references").upload(path, file, {
@@ -96,6 +97,7 @@ export async function submitCreativeJobListing(input: unknown): Promise<SubmitCr
       bucket: "creative-job-references",
       storage_path: path,
       file_name: file.name,
+      caption: caption || null,
       file_url: publicUrlData.publicUrl,
       mime_type: file.type,
       size_bytes: file.size,
@@ -123,7 +125,6 @@ function formDataToCreativeJobInput(formData: FormData) {
     budgetMin: optionalNumberString(formData.get("budgetMin")),
     budgetMax: optionalNumberString(formData.get("budgetMax")),
     deadline: stringFromFormData(formData.get("deadline")),
-    preferredLocation: stringFromFormData(formData.get("preferredLocation")),
     referenceLinks: stringFromFormData(formData.get("referenceLinks")),
     notes: stringFromFormData(formData.get("notes")),
   };
