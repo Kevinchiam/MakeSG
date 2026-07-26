@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ManageCreativeJobDetails } from "@/features/creative-jobs/manage-creative-job-details";
+import { ManageCreativeJobMedia } from "@/features/creative-jobs/manage-creative-job-media";
 import { ManageCreativeJobStatus } from "@/features/creative-jobs/manage-creative-job-status";
 import { creativeJobStatusLabel, getCreativeJobByManageToken } from "@/lib/creative-jobs";
 
@@ -28,6 +29,7 @@ export default async function ManageCreativeJobPage({ params }: { params: Promis
             <p className="mt-4 text-sm"><span className="font-semibold">Current status:</span> {creativeJobStatusLabel(job.status)}</p>
           </div>
           <ManageCreativeJobDetails token={token} job={job} />
+          <ManageCreativeJobMedia token={token} references={job.references} />
         </div>
         <ManageCreativeJobStatus token={token} initialStatus={job.status} />
       </div>

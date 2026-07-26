@@ -31,6 +31,7 @@ export type CreativeJobReference = {
   fileName: string;
   caption: string | null;
   fileUrl: string;
+  storagePath: string;
   mimeType: string;
   sizeBytes: number;
 };
@@ -62,6 +63,7 @@ type CreativeJobReferenceRow = {
   file_name: string;
   caption: string | null;
   file_url: string;
+  storage_path: string;
   mime_type: string;
   size_bytes: number;
 };
@@ -76,7 +78,7 @@ export async function getPublicCreativeJobs(): Promise<PublicCreativeJob[]> {
 
   const { data, error } = await supabase
     .from("creative_job_listings")
-    .select("*, creative_job_reference_files(id, file_name, caption, file_url, mime_type, size_bytes)")
+    .select("*, creative_job_reference_files(id, file_name, caption, file_url, storage_path, mime_type, size_bytes)")
     .in("status", ["open", "in_discussion"])
     .order("created_at", { ascending: false })
     .limit(50);
@@ -116,7 +118,7 @@ export async function getAdminCreativeJobs(): Promise<PublicCreativeJob[]> {
 
   const { data, error } = await supabase
     .from("creative_job_listings")
-    .select("*, creative_job_reference_files(id, file_name, caption, file_url, mime_type, size_bytes)")
+    .select("*, creative_job_reference_files(id, file_name, caption, file_url, storage_path, mime_type, size_bytes)")
     .order("created_at", { ascending: false })
     .limit(100);
 
@@ -135,7 +137,7 @@ export async function getAdminCreativeJob(id: string): Promise<PublicCreativeJob
 
   const { data, error } = await supabase
     .from("creative_job_listings")
-    .select("*, creative_job_reference_files(id, file_name, caption, file_url, mime_type, size_bytes)")
+    .select("*, creative_job_reference_files(id, file_name, caption, file_url, storage_path, mime_type, size_bytes)")
     .eq("id", id)
     .single();
 
@@ -156,7 +158,7 @@ export async function getCreativeJobByManageToken(token: string): Promise<Public
 
   const { data, error } = await supabase
     .from("creative_job_listings")
-    .select("*, creative_job_reference_files(id, file_name, caption, file_url, mime_type, size_bytes)")
+    .select("*, creative_job_reference_files(id, file_name, caption, file_url, storage_path, mime_type, size_bytes)")
     .eq("manage_token", token)
     .single();
 
@@ -210,6 +212,7 @@ function mapReferences(references: CreativeJobReferenceRow[] | undefined): Creat
     fileName: reference.file_name,
     caption: reference.caption,
     fileUrl: reference.file_url,
+    storagePath: reference.storage_path,
     mimeType: reference.mime_type,
     sizeBytes: reference.size_bytes,
   }));

@@ -21,6 +21,10 @@ type UpdateCreativeJobDetailsResult =
   | { ok: true }
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
+type UpdateCreativeJobMediaResult =
+  | { ok: true }
+  | { ok: false; message: string };
+
 export async function submitCreativeJobListing(input: unknown): Promise<SubmitCreativeJobResult> {
   const formInput = input instanceof FormData ? formDataToCreativeJobInput(input) : input;
   const parsed = creativeJobSchema.safeParse(formInput);
@@ -203,6 +207,111 @@ export async function updateCreativeJobDetailsByToken(token: string, input: unkn
 
   if (error) {
     return { ok: false, message: error.message };
+  }
+
+  revalidatePath("/creative-jobs");
+  revalidatePath("/admin");
+  revalidatePath("/admin/creative-jobs");
+  revalidatePath(`/creative-jobs/manage/${token}`);
+
+  return { ok: true };
+}
+
+export async function updateCreativeJobMediaByToken(token: string, formData: FormData): Promise<UpdateCreativeJobMediaResult> {
+  let supabase: ReturnType<typeof createAdminClient>;
+  try {
+    supabase = createAdminClient();
+  } catch {
+    return { ok: false, message: "Supabase is not configured for creative jobs yet." };
+  }
+
+  const { data: job, error: jobError } = await supabase
+    .from("creative_job_listings")
+    .select("id")
+    .eq("manage_token", token)
+    .single();
+
+  if (jobError || !job) {
+    return { ok: false, message: "This private manage link is no longer valid." };
+  }
+
+  const { data: currentReferences, error: referencesError } = await supabase
+    .from("creative_job_reference_files")
+    .select("id, storage_path, size_bytes")
+    .eq("job_id", job.id);
+
+  if (referencesError || !currentReferences) {
+    return { ok: false, message: "Could not load the current uploads." };
+  }
+
+  const referenceRows = currentReferences as Array<{ id: string; storage_path: string; size_bytes: number }>;
+  const deletedIds = new Set(formData.getAll("deletedReferenceIds").filter((value): value is string => typeof value === "string"));
+  const newFiles = validReferenceFiles(formData.getAll("newReferenceFiles"));
+  const newCaptions = formData.getAll("newReferenceCaptions").map((value) => stringFromFormData(value).trim());
+  const keptSizeBytes = referenceRows
+    .filter((reference) => !deletedIds.has(reference.id))
+    .reduce((total, reference) => total + reference.size_bytes, 0);
+  const newSizeBytes = newFiles.reduce((total, file) => total + file.size, 0);
+
+  if ((keptSizeBytes + newSizeBytes) / 1024 / 1024 > 10) {
+    return { ok: false, message: "Reference uploads must be 10MB total or smaller. Remove a file or upload smaller files." };
+  }
+
+  const captionUpdates = formData.getAll("referenceCaptionUpdates").filter((value): value is string => typeof value === "string");
+  for (const update of captionUpdates) {
+    const [id, ...captionParts] = update.split("::");
+    if (!id || deletedIds.has(id)) continue;
+    const caption = captionParts.join("::").trim();
+    await supabase
+      .from("creative_job_reference_files")
+      .update({ caption: caption || null })
+      .eq("id", id)
+      .eq("job_id", job.id);
+  }
+
+  if (deletedIds.size > 0) {
+    const rowsToDelete = referenceRows.filter((reference) => deletedIds.has(reference.id));
+    const storagePaths = rowsToDelete.map((reference) => reference.storage_path);
+    if (storagePaths.length > 0) {
+      await supabase.storage.from("creative-job-references").remove(storagePaths);
+    }
+    await supabase.from("creative_job_reference_files").delete().eq("job_id", job.id).in("id", Array.from(deletedIds));
+  }
+
+  const remainingCount = referenceRows.filter((reference) => !deletedIds.has(reference.id)).length;
+  const uploadedReferences = [];
+  for (const [index, file] of newFiles.entries()) {
+    const caption = newCaptions[index] ?? "";
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload";
+    const path = `${job.id}/${Date.now()}-${index}.${extension}`;
+    const { error: uploadError } = await supabase.storage.from("creative-job-references").upload(path, file, {
+      contentType: file.type,
+      upsert: false,
+    });
+
+    if (uploadError) {
+      return { ok: false, message: uploadError.message };
+    }
+
+    const { data: publicUrlData } = supabase.storage.from("creative-job-references").getPublicUrl(path);
+    uploadedReferences.push({
+      job_id: job.id,
+      bucket: "creative-job-references",
+      storage_path: path,
+      file_name: file.name,
+      caption: caption || null,
+      file_url: publicUrlData.publicUrl,
+      mime_type: file.type,
+      size_bytes: file.size,
+      sort_order: remainingCount + index,
+    });
+  }
+
+  if (uploadedReferences.length > 0) {
+    const { error: insertError } = await supabase.from("creative_job_reference_files").insert(uploadedReferences);
+    if (insertError) {
+      return { ok: false, message: insertError.message };
+    }
   }
 
   revalidatePath("/creative-jobs");
