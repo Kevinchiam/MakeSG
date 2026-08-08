@@ -11,11 +11,13 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Added private business listing-detail editing with automatic return to pending moderation after edits.
 - Added private business portfolio media editing for photos/videos and captions.
 - Added business manage tokens and portfolio media metadata migration in `supabase/migrations/0010_business_manage_links.sql`.
+- Added `business_listing_revisions` migration in `supabase/migrations/0011_business_listing_revisions.sql`.
 - Added private edit link display after business onboarding submission.
+- Added admin review support for pending business edits while live listings remain unchanged.
 
 ### Changed
 - Changed business onboarding submission results to return a private manage token.
-- Changed edited business listings to require admin approval again before public display.
+- Changed published business edits to save as pending revisions so the existing approved listing stays live until admin approval.
 
 ### Fixed
 - Fixed the creative job status management panel so it adapts during desktop scrolling.

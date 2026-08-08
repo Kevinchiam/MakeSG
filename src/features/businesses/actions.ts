@@ -4,6 +4,7 @@ import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { services as knownServices } from "@/lib/data";
+import type { PortfolioRevisionItem } from "@/lib/business-submissions";
 import { createSlug } from "@/lib/slug";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { businessSchema } from "@/lib/validation";
@@ -214,12 +215,45 @@ export async function updateBusinessDetailsByToken(token: string, input: unknown
   const data = parsed.data;
   const { data: business, error: businessError } = await supabase
     .from("businesses")
-    .select("id")
+    .select("id, publication_status, business_services(services(name)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes), business_listing_revisions(id, status, proposed_data, proposed_services, proposed_portfolio)")
     .eq("manage_token", token)
     .single();
 
   if (businessError || !business) {
     return { ok: false, message: "This private business edit link is no longer valid." };
+  }
+
+  const serviceSlugs = [...data.services];
+  if (data.otherService?.trim()) {
+    const otherSlug = `other-${createSlug(data.otherService)}`;
+    serviceSlugs.push(otherSlug);
+    await supabase.from("services").upsert(
+      {
+        slug: otherSlug,
+        name: data.otherService.trim(),
+        description: "Community-submitted service.",
+        service_group: "Other",
+      },
+      { onConflict: "slug" },
+    );
+  }
+
+  const serviceLabels = serviceLabelsFromSlugs(serviceSlugs, data.otherService);
+  if (business.publication_status === "published") {
+    const currentPortfolio = revisionPortfolioFromRows(business.portfolio_items);
+    const pendingRevision = pendingRevisionFromRows(business.business_listing_revisions);
+    const { error: revisionError } = await savePendingBusinessRevision(supabase, business.id, {
+      proposedData: businessInputToRevisionData(data),
+      proposedServices: serviceLabels,
+      proposedPortfolio: pendingRevision?.proposed_portfolio ?? currentPortfolio,
+    });
+
+    if (revisionError) {
+      return { ok: false, message: revisionError.message };
+    }
+
+    revalidateBusinessPaths(token, business.id);
+    return { ok: true };
   }
 
   const { error: updateError } = await supabase
@@ -242,21 +276,6 @@ export async function updateBusinessDetailsByToken(token: string, input: unknown
 
   if (updateError) {
     return { ok: false, message: updateError.message };
-  }
-
-  const serviceSlugs = [...data.services];
-  if (data.otherService?.trim()) {
-    const otherSlug = `other-${createSlug(data.otherService)}`;
-    serviceSlugs.push(otherSlug);
-    await supabase.from("services").upsert(
-      {
-        slug: otherSlug,
-        name: data.otherService.trim(),
-        description: "Community-submitted service.",
-        service_group: "Other",
-      },
-      { onConflict: "slug" },
-    );
   }
 
   await supabase.from("business_services").delete().eq("business_id", business.id);
@@ -287,12 +306,82 @@ export async function updateBusinessMediaByToken(token: string, formData: FormDa
 
   const { data: business, error: businessError } = await supabase
     .from("businesses")
-    .select("id")
+    .select("id, publication_status, name, short_description, description, website_url, public_email, address, minimum_budget, typical_lead_time, business_type, business_services(services(name)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes), business_listing_revisions(id, status, proposed_data, proposed_services, proposed_portfolio)")
     .eq("manage_token", token)
     .single();
 
   if (businessError || !business) {
     return { ok: false, message: "This private business edit link is no longer valid." };
+  }
+
+  if (business.publication_status === "published") {
+    const pendingRevision = pendingRevisionFromRows(business.business_listing_revisions);
+    const basePortfolio = pendingRevision?.proposed_portfolio ?? revisionPortfolioFromRows(business.portfolio_items);
+    const deletedIds = new Set(formData.getAll("deletedPortfolioIds").filter((value): value is string => typeof value === "string"));
+    const newFiles = validPortfolioFiles(formData.getAll("newPortfolioFiles"));
+    const newCaptions = formData.getAll("newPortfolioCaptions").map((value) => stringFromFormData(value).trim());
+    const captionUpdates = new Map(
+      formData.getAll("portfolioCaptionUpdates")
+        .filter((value): value is string => typeof value === "string")
+        .map((value) => {
+          const [id, ...captionParts] = value.split("::");
+          return [id, captionParts.join("::").trim()] as const;
+        }),
+    );
+    const keptPortfolio = basePortfolio
+      .filter((item) => !deletedIds.has(item.id ?? ""))
+      .map((item) => ({
+        ...item,
+        title: captionUpdates.get(item.id ?? "") ?? item.title,
+      }));
+    const keptSizeBytes = keptPortfolio.reduce((total, item) => total + (item.sizeBytes ?? 0), 0);
+    const newSizeBytes = newFiles.reduce((total, file) => total + file.size, 0);
+
+    if ((keptSizeBytes + newSizeBytes) / 1024 / 1024 > 10) {
+      return { ok: false, message: "Portfolio uploads must be 10MB total or smaller. Remove a file or upload smaller files." };
+    }
+
+    const uploadedItems: PortfolioRevisionItem[] = [];
+    for (const [index, file] of newFiles.entries()) {
+      const caption = newCaptions[index] ?? "";
+      const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload";
+      const path = `${business.id}/pending-${Date.now()}-${index}.${extension}`;
+      const { error: uploadError } = await supabase.storage.from("business-portfolios").upload(path, file, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+      if (uploadError) {
+        return { ok: false, message: uploadError.message };
+      }
+
+      const { data: publicUrlData } = supabase.storage.from("business-portfolios").getPublicUrl(path);
+      uploadedItems.push({
+        id: `new-${Date.now()}-${index}`,
+        title: caption || file.name.replace(/\.[^/.]+$/, ""),
+        description: "",
+        imageUrl: publicUrlData.publicUrl,
+        tags: [file.type],
+        fileName: file.name,
+        storagePath: path,
+        mimeType: file.type,
+        sizeBytes: file.size,
+        isNew: true,
+      });
+    }
+
+    const { error: revisionError } = await savePendingBusinessRevision(supabase, business.id, {
+      proposedData: pendingRevision?.proposed_data ?? businessRowToRevisionData(business),
+      proposedServices: pendingRevision?.proposed_services ?? servicesFromBusinessRow(business),
+      proposedPortfolio: [...keptPortfolio, ...uploadedItems],
+    });
+
+    if (revisionError) {
+      return { ok: false, message: revisionError.message };
+    }
+
+    revalidateBusinessPaths(token, business.id);
+    return { ok: true };
   }
 
   const { data: currentItems, error: itemsError } = await supabase
@@ -412,6 +501,132 @@ async function upsertKnownServices(supabase: ReturnType<typeof createAdminClient
   if (selectedServices.length > 0) {
     await supabase.from("services").upsert(selectedServices, { onConflict: "slug" });
   }
+}
+
+function businessInputToRevisionData(data: z.output<typeof businessSchema>) {
+  return {
+    name: data.name,
+    shortDescription: data.shortDescription,
+    description: data.description,
+    websiteUrl: data.websiteUrl,
+    publicEmail: data.publicEmail,
+    location: data.location,
+    minimumBudget: data.minimumBudget,
+    typicalLeadTime: data.typicalLeadTime,
+    businessType: data.businessType,
+  };
+}
+
+function businessRowToRevisionData(business: {
+  name: string;
+  short_description: string;
+  description: string;
+  website_url: string | null;
+  public_email: string | null;
+  address: string | null;
+  minimum_budget: number;
+  typical_lead_time: number;
+  business_type: string;
+}) {
+  return {
+    name: business.name,
+    shortDescription: business.short_description,
+    description: business.description,
+    websiteUrl: business.website_url ?? "",
+    publicEmail: business.public_email ?? "",
+    location: business.address ?? "Singapore",
+    minimumBudget: business.minimum_budget,
+    typicalLeadTime: business.typical_lead_time,
+    businessType: business.business_type as z.output<typeof businessSchema>["businessType"],
+  };
+}
+
+function serviceLabelsFromSlugs(slugs: string[], otherService?: string) {
+  const labels = knownServices
+    .filter((service) => slugs.includes(service.slug))
+    .map((service) => service.name);
+  if (otherService?.trim()) labels.push(otherService.trim());
+  return labels;
+}
+
+function servicesFromBusinessRow(business: { business_services?: { services: { name: string } | { name: string }[] | null }[] }) {
+  return business.business_services?.flatMap((join) => {
+    if (!join.services) return [];
+    if (Array.isArray(join.services)) return join.services.map((service) => service.name);
+    return [join.services.name];
+  }) ?? [];
+}
+
+function revisionPortfolioFromRows(
+  rows?: Array<{
+    id: string;
+    title: string;
+    description: string | null;
+    image_url: string | null;
+    tags: string[] | null;
+    file_name?: string | null;
+    storage_path?: string | null;
+    mime_type?: string | null;
+    size_bytes?: number | null;
+  }>,
+): PortfolioRevisionItem[] {
+  return (rows ?? [])
+    .filter((item) => Boolean(item.image_url))
+    .map((item) => ({
+      id: item.id,
+      title: item.title,
+      description: item.description ?? "",
+      imageUrl: item.image_url ?? "",
+      tags: item.tags ?? [],
+      fileName: item.file_name ?? undefined,
+      storagePath: item.storage_path ?? undefined,
+      mimeType: item.mime_type ?? undefined,
+      sizeBytes: item.size_bytes ?? undefined,
+    }));
+}
+
+function pendingRevisionFromRows(
+  rows?: Array<{
+    id: string;
+    status: string;
+    proposed_data: ReturnType<typeof businessInputToRevisionData>;
+    proposed_services: string[] | null;
+    proposed_portfolio: PortfolioRevisionItem[] | null;
+  }>,
+) {
+  return rows?.find((row) => row.status === "pending") ?? null;
+}
+
+async function savePendingBusinessRevision(
+  supabase: ReturnType<typeof createAdminClient>,
+  businessId: string,
+  payload: {
+    proposedData: ReturnType<typeof businessInputToRevisionData>;
+    proposedServices: string[];
+    proposedPortfolio: PortfolioRevisionItem[];
+  },
+) {
+  const { data: existing } = await supabase
+    .from("business_listing_revisions")
+    .select("id")
+    .eq("business_id", businessId)
+    .eq("status", "pending")
+    .maybeSingle();
+
+  const revisionPayload = {
+    business_id: businessId,
+    status: "pending",
+    proposed_data: payload.proposedData,
+    proposed_services: payload.proposedServices,
+    proposed_portfolio: payload.proposedPortfolio,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (existing?.id) {
+    return supabase.from("business_listing_revisions").update(revisionPayload).eq("id", existing.id);
+  }
+
+  return supabase.from("business_listing_revisions").insert(revisionPayload);
 }
 
 function formDataToBusinessInput(formData: FormData) {

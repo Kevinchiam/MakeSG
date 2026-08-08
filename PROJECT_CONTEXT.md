@@ -212,7 +212,7 @@ Future improvements:
 ### Business Onboarding
 Status: Completed
 
-Description: Businesses can submit listing details, service options including Other, SGD budget, lead time in days, and portfolio photos/videos. Listings enter moderation before publication. After submission, businesses receive a private edit link that can update listing details and portfolio media. Any edit returns the listing to pending admin moderation.
+Description: Businesses can submit listing details, service options including Other, SGD budget, lead time in days, and portfolio photos/videos. Listings enter moderation before publication. After submission, businesses receive a private edit link that can update listing details and portfolio media. Edits to already published listings create a pending revision, so the current approved public listing stays live until an admin approves the changes.
 
 Relevant files:
 - `src/app/for-businesses/page.tsx`
@@ -224,6 +224,7 @@ Relevant files:
 - `src/components/projects/file-uploader.tsx`
 - `supabase/migrations/0003_media_uploads.sql`
 - `supabase/migrations/0010_business_manage_links.sql`
+- `supabase/migrations/0011_business_listing_revisions.sql`
 
 Future improvements:
 - Add regenerate/revoke manage link.

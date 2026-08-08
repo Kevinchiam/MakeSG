@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const businesses = await getAdminBusinesses();
   const creativeJobs = await getAdminCreativeJobs();
-  const pending = businesses.filter((b) => b.publicationStatus === "pending").length;
+  const pending = businesses.filter((b) => b.publicationStatus === "pending" || b.pendingRevision).length;
   const openCreativeJobs = creativeJobs.filter((job) => job.status === "open").length;
   const inDiscussionCreativeJobs = creativeJobs.filter((job) => job.status === "in_discussion").length;
   const pendingRecommendations = businessRecommendations.filter((recommendation) => recommendation.status === "pending").length;

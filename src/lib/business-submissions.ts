@@ -10,6 +10,7 @@ export type AdminBusinessSummary = {
   verificationStatus: VerificationStatus;
   source: "supabase" | "demo";
   endorsementCount: number;
+  pendingRevision: boolean;
 };
 
 type BusinessRow = {
@@ -42,6 +43,44 @@ type BusinessRow = {
   }[];
 };
 
+export type PortfolioRevisionItem = {
+  id?: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  tags: string[];
+  fileName?: string;
+  storagePath?: string;
+  mimeType?: string;
+  sizeBytes?: number;
+  isNew?: boolean;
+};
+
+type BusinessRevisionRow = {
+  id: string;
+  status: "pending" | "approved" | "rejected";
+  proposed_data: {
+    name?: string;
+    shortDescription?: string;
+    description?: string;
+    websiteUrl?: string;
+    publicEmail?: string;
+    location?: string;
+    minimumBudget?: number;
+    typicalLeadTime?: number;
+    businessType?: BusinessType;
+  };
+  proposed_services: string[] | null;
+  proposed_portfolio: PortfolioRevisionItem[] | null;
+};
+
+export type PendingBusinessRevision = {
+  id: string;
+  data: BusinessRevisionRow["proposed_data"];
+  services: string[];
+  portfolio: PortfolioItem[];
+};
+
 export type ManagedBusiness = {
   id: string;
   name: string;
@@ -58,6 +97,7 @@ export type ManagedBusiness = {
   publicationStatus: PublicationStatus;
   endorsementCount: number;
   manageToken: string;
+  pendingRevision: boolean;
 };
 
 export type ExistingBusinessSuggestion = {
@@ -77,6 +117,7 @@ export async function getAdminBusinesses(): Promise<AdminBusinessSummary[]> {
     publicationStatus: business.publicationStatus,
     verificationStatus: business.verificationStatus,
     endorsementCount: business.endorsementCount,
+    pendingRevision: false,
     source: "demo" as const,
   }));
 
@@ -84,16 +125,17 @@ export async function getAdminBusinesses(): Promise<AdminBusinessSummary[]> {
     const supabase = createAdminClient();
     const { data } = await supabase
       .from("businesses")
-      .select("id, name, short_description, publication_status, verification_status, endorsement_count")
+      .select("id, name, short_description, publication_status, verification_status, endorsement_count, business_listing_revisions(status)")
       .order("created_at", { ascending: false });
 
-    const submittedBusinesses = ((data ?? []) as BusinessRow[]).map((business) => ({
+    const submittedBusinesses = ((data ?? []) as Array<BusinessRow & { business_listing_revisions?: { status: string }[] }>).map((business) => ({
       id: business.id,
       name: business.name,
       shortDescription: business.short_description,
       publicationStatus: business.publication_status,
       verificationStatus: business.verification_status,
       endorsementCount: business.endorsement_count ?? 0,
+      pendingRevision: hasPendingRevision(business.business_listing_revisions),
       source: "supabase" as const,
     }));
 
@@ -122,6 +164,7 @@ export async function getAdminBusiness(id: string) {
       portfolio: demoBusiness.portfolio,
       publicationStatus: demoBusiness.publicationStatus,
       endorsementCount: demoBusiness.endorsementCount,
+      pendingRevision: null,
       source: "demo" as const,
     };
   }
@@ -130,13 +173,14 @@ export async function getAdminBusiness(id: string) {
     const supabase = createAdminClient();
     const { data } = await supabase
       .from("businesses")
-      .select("id, name, short_description, description, website_url, public_email, address, minimum_budget, typical_lead_time, business_type, publication_status, endorsement_count, business_services(services(name, slug)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes)")
+      .select("id, name, short_description, description, website_url, public_email, address, minimum_budget, typical_lead_time, business_type, publication_status, endorsement_count, business_services(services(name, slug)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes), business_listing_revisions(id, status, proposed_data, proposed_services, proposed_portfolio)")
       .eq("id", id)
       .single();
 
     if (!data) return null;
 
-    const business = data as unknown as BusinessRow;
+    const business = data as unknown as BusinessRow & { business_listing_revisions?: BusinessRevisionRow[] };
+    const pendingRevision = pendingRevisionFromRows(business.business_listing_revisions);
     return {
       id: business.id,
       name: business.name,
@@ -153,19 +197,10 @@ export async function getAdminBusiness(id: string) {
         if (Array.isArray(join.services)) return join.services.map((service) => service.name);
         return [join.services.name];
       }) ?? [],
-      portfolio: business.portfolio_items?.filter((item) => Boolean(item.image_url)).map((item) => ({
-        id: item.id,
-        title: item.title,
-        description: item.description ?? "",
-        imageUrl: item.image_url ?? "",
-        tags: item.tags ?? [],
-        fileName: item.file_name ?? undefined,
-        storagePath: item.storage_path ?? undefined,
-        mimeType: item.mime_type ?? undefined,
-        sizeBytes: item.size_bytes ?? undefined,
-      })) ?? [],
+      portfolio: business.portfolio_items?.filter((item) => Boolean(item.image_url)).map(portfolioRowToItem) ?? [],
       publicationStatus: business.publication_status,
       endorsementCount: business.endorsement_count ?? 0,
+      pendingRevision,
       source: "supabase" as const,
     };
   } catch {
@@ -180,43 +215,38 @@ export async function getBusinessByManageToken(token: string): Promise<ManagedBu
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("businesses")
-      .select("id, name, short_description, description, website_url, public_email, address, minimum_budget, typical_lead_time, business_type, publication_status, manage_token, endorsement_count, business_services(services(name, slug)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes)")
+      .select("id, name, short_description, description, website_url, public_email, address, minimum_budget, typical_lead_time, business_type, publication_status, manage_token, endorsement_count, business_services(services(name, slug)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes), business_listing_revisions(id, status, proposed_data, proposed_services, proposed_portfolio)")
       .eq("manage_token", token)
       .single();
 
     if (error || !data) return null;
 
-    const business = data as unknown as BusinessRow;
+    const business = data as unknown as BusinessRow & { business_listing_revisions?: BusinessRevisionRow[] };
+    const pendingRevision = pendingRevisionFromRows(business.business_listing_revisions);
+    const baseServices = business.business_services?.flatMap((join) => {
+      if (!join.services) return [];
+      if (Array.isArray(join.services)) return join.services.map((service) => service.name);
+      return [join.services.name];
+    }) ?? [];
+    const basePortfolio = business.portfolio_items?.filter((item) => Boolean(item.image_url)).map(portfolioRowToItem) ?? [];
+    const displayData = pendingRevision?.data;
     return {
       id: business.id,
-      name: business.name,
-      shortDescription: business.short_description,
-      description: business.description ?? "",
-      websiteUrl: business.website_url ?? "",
-      publicEmail: business.public_email ?? "",
-      location: business.address ?? "Singapore",
-      minimumBudget: business.minimum_budget ?? 0,
-      typicalLeadTime: business.typical_lead_time ?? 14,
-      businessType: (business.business_type ?? "studio") as BusinessType,
-      services: business.business_services?.flatMap((join) => {
-        if (!join.services) return [];
-        if (Array.isArray(join.services)) return join.services.map((service) => service.name);
-        return [join.services.name];
-      }) ?? [],
-      portfolio: business.portfolio_items?.filter((item) => Boolean(item.image_url)).map((item) => ({
-        id: item.id,
-        title: item.title,
-        description: item.description ?? "",
-        imageUrl: item.image_url ?? "",
-        tags: item.tags ?? [],
-        fileName: item.file_name ?? undefined,
-        storagePath: item.storage_path ?? undefined,
-        mimeType: item.mime_type ?? undefined,
-        sizeBytes: item.size_bytes ?? undefined,
-      })) ?? [],
+      name: displayData?.name ?? business.name,
+      shortDescription: displayData?.shortDescription ?? business.short_description,
+      description: displayData?.description ?? business.description ?? "",
+      websiteUrl: displayData?.websiteUrl ?? business.website_url ?? "",
+      publicEmail: displayData?.publicEmail ?? business.public_email ?? "",
+      location: displayData?.location ?? business.address ?? "Singapore",
+      minimumBudget: displayData?.minimumBudget ?? business.minimum_budget ?? 0,
+      typicalLeadTime: displayData?.typicalLeadTime ?? business.typical_lead_time ?? 14,
+      businessType: (displayData?.businessType ?? business.business_type ?? "studio") as BusinessType,
+      services: pendingRevision?.services ?? baseServices,
+      portfolio: pendingRevision?.portfolio ?? basePortfolio,
       publicationStatus: business.publication_status,
       endorsementCount: business.endorsement_count ?? 0,
       manageToken: business.manage_token ?? token,
+      pendingRevision: Boolean(pendingRevision),
     };
   } catch {
     return null;
@@ -255,4 +285,44 @@ export async function getExistingBusinessSuggestions(): Promise<ExistingBusiness
   } catch {
     return demoSuggestions;
   }
+}
+
+function portfolioRowToItem(item: NonNullable<BusinessRow["portfolio_items"]>[number]): PortfolioItem {
+  return {
+    id: item.id,
+    title: item.title,
+    description: item.description ?? "",
+    imageUrl: item.image_url ?? "",
+    tags: item.tags ?? [],
+    fileName: item.file_name ?? undefined,
+    storagePath: item.storage_path ?? undefined,
+    mimeType: item.mime_type ?? undefined,
+    sizeBytes: item.size_bytes ?? undefined,
+  };
+}
+
+function pendingRevisionFromRows(rows: BusinessRevisionRow[] | undefined): PendingBusinessRevision | null {
+  const revision = rows?.find((row) => row.status === "pending");
+  if (!revision) return null;
+
+  return {
+    id: revision.id,
+    data: revision.proposed_data,
+    services: revision.proposed_services ?? [],
+    portfolio: (revision.proposed_portfolio ?? []).map((item, index) => ({
+      id: item.id ?? `revision-${index}`,
+      title: item.title,
+      description: item.description ?? "",
+      imageUrl: item.imageUrl,
+      tags: item.tags ?? [],
+      fileName: item.fileName,
+      storagePath: item.storagePath,
+      mimeType: item.mimeType,
+      sizeBytes: item.sizeBytes,
+    })),
+  };
+}
+
+function hasPendingRevision(rows: { status: string }[] | undefined) {
+  return Boolean(rows?.some((row) => row.status === "pending"));
 }
