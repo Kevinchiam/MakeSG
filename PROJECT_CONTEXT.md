@@ -151,7 +151,7 @@ Most mutations use server actions:
 ### Public Home
 Status: Completed
 
-Description: Landing/search entry for MakeSG with editorial visual direction, live directory counts, current platform feature copy, and homepage business highlights ranked by recommendations, featured status, and latest updates.
+Description: Landing/search entry for MakeSG with editorial visual direction, CSS-only motion, live directory counts, current platform feature copy, and homepage business highlights ranked by recommendations, featured status, and latest updates.
 
 Relevant files:
 - `src/app/page.tsx`
@@ -540,8 +540,10 @@ Photos/videos attached to creative jobs. Stores storage bucket/path, public URL,
 - `lucide-react` is used for navigation, status, upload, save, search, delete, dashboard, and contact icons.
 
 ### Animations
-- Minimal animation.
+- Motion is CSS-only and intentionally restrained.
+- Homepage elements use entrance reveals, featured-card staggering, hover lift states, icon motion, and a subtle hero-card float.
 - `html { scroll-behavior: smooth; }` supports feedback scrolling.
+- `prefers-reduced-motion` disables motion-heavy effects.
 
 ### Responsive Behaviour
 - Header collapses into mobile menu below large breakpoints.
