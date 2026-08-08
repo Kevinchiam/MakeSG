@@ -130,7 +130,7 @@ function getHomepageBusinesses(businesses: Business[]) {
     if (aUpdated !== bUpdated) return bUpdated - aUpdated;
 
     return a.name.localeCompare(b.name);
-  });
+  }).slice(0, 6);
 }
 
 function Feature({ icon, title, text, index }: { icon: React.ReactNode; title: string; text: string; index: number }) {
