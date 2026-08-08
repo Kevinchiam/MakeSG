@@ -1,288 +1,309 @@
 # Session Handover
 
-Date: 2026-07-26
+Date: 2026-08-08
 
 ## Session Summary
 
-Today's work focused on completing the no-account creative job management flow. Creatives can now use the private manage link they receive after posting a job to update job status, edit listing details, and manage photos/videos with captions. Documentation was also generated for project context, session handover, and changelog continuity.
+Today's work continued the MakeSG product polish and platform maturity push. The focus was on business listing self-management, homepage freshness, copy clarity, and motion. Businesses now have private manage-link editing with moderation-safe revisions, the homepage reflects current platform features with dynamic highlights, and motion has been applied consistently across the app through a shared CSS-only layer.
 
 ## Objectives Completed
 
-- [x] Added private creative job status management.
-- [x] Removed the public/visible `Closed` status and consolidated that meaning into `Taken`.
-- [x] Added private listing-detail editing for creative jobs.
-- [x] Added automatic scroll-to-feedback after listing details are saved.
-- [x] Restored a compact status selector.
-- [x] Added private creative job media management.
-- [x] Allowed creatives to add new photos/videos after posting.
-- [x] Allowed creatives to remove existing photos/videos.
-- [x] Allowed creatives to add, edit, or clear media captions.
-- [x] Verified linting, TypeScript, and production build after code changes.
-- [x] Created updated project documentation and handover.
-- [x] Added repository-level AI collaboration rules.
+- [x] Made the creative job manage status container adaptive during desktop scrolling.
+- [x] Extended private manage-link logic to business listings.
+- [x] Added business listing edit pages for details and portfolio media.
+- [x] Preserved the old approved business listing while edits wait for admin approval.
+- [x] Removed superfluous public business-card labels such as unverified/demo-style language.
+- [x] Updated homepage copy to reflect the current real platform direction.
+- [x] Updated footer/about copy away from fictional demo language.
+- [x] Removed the old recommendation form page experience and moved recommendations into business profiles.
+- [x] Added business profile recommendation panel with ratings, review, optional media, captions, supporting links, moderation details, and contributor display preference.
+- [x] Removed endorsement language across the platform.
+- [x] Added public business change requests on business cards and business profile pages.
+- [x] Routed business change requests into the admin dashboard instead of email.
+- [x] Made business onboarding contact/budget fields optional and added optional phone number.
+- [x] Updated business onboarding copy so community members can submit listings on behalf of businesses.
+- [x] Refreshed the homepage with live platform feature copy and iconography.
+- [x] Made homepage featured businesses dynamic and capped directory highlights at six businesses.
+- [x] Added homepage-specific animations.
+- [x] Added shared platform-wide CSS-only animations.
+- [x] Updated `PROJECT_CONTEXT.md` and `CHANGELOG.md` for today's work.
 
 ## Files Created
 
-### `src/features/creative-jobs/manage-creative-job-details.tsx`
-Provides the private listing-detail editor shown on `/creative-jobs/manage/[token]`. It exists so creatives can update a posted job without creating an account.
+### `src/app/businesses/manage/[token]/page.tsx`
+Private business listing management page. It lets a submitter revisit a business listing using a manage token and edit details/media without requiring an account.
 
-### `src/features/creative-jobs/manage-creative-job-media.tsx`
-Provides the private media manager for creative jobs. It lets creatives edit captions, remove existing files, and upload additional photos/videos.
+### `src/features/businesses/manage-business-details.tsx`
+Private business listing detail editor. Edits to an already published listing create a pending revision rather than immediately changing the live public listing.
 
-### `supabase/migrations/0009_remove_closed_creative_job_status.sql`
-Converts legacy `closed` creative jobs to `taken` and updates the status constraint so `closed` is no longer allowed for creative job listings.
+### `src/features/businesses/manage-business-media.tsx`
+Private business portfolio media editor. Supports add/remove/update flows for submitted portfolio photos/videos and captions.
 
-### `PROJECT_CONTEXT.md`
-Full project context for future engineers or AI sessions.
+### `src/lib/business-change-requests.ts`
+Data access helper for public requests to correct listed business information.
 
-### `SESSION_HANDOVER.md`
-Detailed handover for today's work and next-session continuity.
+### `src/components/business/request-business-change-panel.tsx`
+Reusable public UI panel for requesting a change to a listed business.
 
-### `CHANGELOG.md`
-Semantic changelog started for the project.
+### `src/components/business/change-request-actions.ts`
+Server action bridge for saving public business change requests.
 
-### `AI_RULES.md`
-Repository-level AI collaboration rulebook. It exists to keep future sessions aligned on product mission, production quality, design consistency, accessibility, security, documentation discipline, and long-term maintainability.
+### `src/components/admin/business-change-request-controls.tsx`
+Admin controls for marking change requests as reviewed, accepted, or rejected.
+
+### `src/app/admin/change-requests/page.tsx`
+Admin inbox for reviewing public business change requests.
+
+### `supabase/migrations/0010_business_manage_links.sql`
+Adds business manage-token support and metadata needed for private editing.
+
+### `supabase/migrations/0011_business_listing_revisions.sql`
+Adds pending revision support so edits to published businesses do not overwrite the live listing before approval.
+
+### `supabase/migrations/0013_business_change_requests.sql`
+Adds the `business_change_requests` table for admin-visible public correction requests.
 
 ## Files Modified
 
-### `src/app/creative-jobs/manage/[token]/page.tsx`
-Added the listing-detail editor and media manager to the private manage page. The page now controls status, content, and reference media.
+### `src/app/page.tsx`
+Homepage now uses current product copy, live directory counts, live creative job counts, dynamic ranked business highlights, a six-business highlight cap, updated feature callouts, and homepage animation classes.
 
-### `src/features/creative-jobs/actions.ts`
-Added server actions for:
-- Updating creative job details by private token.
-- Updating creative job media by private token.
-- Removing files from Supabase Storage and database records.
-- Updating captions.
-- Uploading new files.
+### `src/app/layout.tsx`
+Added the `platform-motion` class to the main app shell so platform-wide animation styles can be scoped safely.
 
-Also tightened status updates to `open`, `in_discussion`, and `taken`.
+### `src/app/globals.css`
+Added the shared CSS-only motion layer for page reveals, card/list staggering, hover lifts, form focus feedback, details panel opening, header entrance, and footer link motion. The existing reduced-motion media query continues to disable motion-heavy effects.
 
-### `src/features/creative-jobs/manage-creative-job-status.tsx`
-Removed `Closed` from the choices and changed the UI back to a compact segmented selector.
+### `src/app/about/page.tsx`
+Updated copy so the page describes MakeSG as a real Singapore creative-production directory rather than fictional demo content.
 
-### `src/features/creative-jobs/creative-job-listing-form.tsx`
-Updated success copy so the private manage link clearly explains that users can edit listing details and change status later.
+### `src/components/site/site-footer.tsx`
+Updated footer language and navigation to reflect the current product direction.
 
-### `src/lib/creative-jobs.ts`
-Exposed `storagePath` on creative job reference objects so server actions can remove files from Supabase Storage correctly. Also maps legacy `closed` status to the visible label `Taken` for safety.
+### `src/components/business/business-card.tsx`
+Removed inactive/superfluous labels and buttons, added recommendation label when applicable, and added request-change access.
 
-### `src/app/admin/creative-jobs/[id]/page.tsx`
-Removed `Closed` from admin status options while keeping `Archived` for admin-only cleanup.
+### `src/app/businesses/page.tsx`
+Supports the updated business directory cards, search, live data, and change-request workflow.
 
-### `supabase/migrations/0005_creative_job_listings.sql`
-Updated fresh-install creative job status constraint to remove `closed`.
+### `src/app/businesses/[slug]/page.tsx`
+Cleaned up public profile presentation, added direct contact fallback, recommendation panel placement, and request-change access.
 
-### `supabase/migrations/0007_ensure_creative_jobs.sql`
-Updated repair migration status constraint to remove `closed`.
+### `src/app/for-businesses/page.tsx`
+Updated onboarding copy so both business owners and community members understand they can submit businesses.
 
-### `supabase/migrations/0008_creative_job_manage_links.sql`
-Updated follow-up migration to convert `closed` to `taken` before enforcing the new status constraint.
+### `src/features/businesses/business-listing-form.tsx`
+Supports optional website, public email, location, minimum budget, typical lead time, optional phone number, duplicate prevention, portfolio media/captions, and private manage-link result.
+
+### `src/features/businesses/actions.ts`
+Handles business onboarding, private business edits, pending revisions, media updates, and moderation-safe revalidation.
+
+### `src/app/admin/page.tsx`
+Admin home now links to the business change-request queue.
+
+### `src/app/admin/businesses/[id]/page.tsx`
+Admin business review supports pending revisions and updated listing/contact/media fields.
+
+### `src/app/recommend-business/page.tsx`
+Old standalone form flow was removed/reworked so recommendations happen from existing business contexts.
+
+### `src/components/business/recommend-business-panel.tsx`
+Business recommendation panel now includes rating categories, review text, optional uploads with captions, supporting links, contributor identity fields, moderation requirements, and close behaviour.
+
+### `src/components/business/recommend-business-lookup.tsx`
+Existing-business lookup now focuses people on viewing existing listings rather than endorsement actions.
+
+### `src/lib/public-businesses.ts`
+Public business mapping includes updated fields, recommendation counts, media/contact data, and `updatedAt` for homepage ranking.
+
+### `src/lib/types.ts`
+Business-related types expanded for phone, updated timestamps, revision-aware flows, and recommendation/change-request surfaces.
 
 ### `PROJECT_CONTEXT.md`
-Added a reference to `AI_RULES.md` in the folder structure and coding standards sections.
+Updated to describe the current platform state, business management flow, homepage highlight cap, shared animations, and known risks.
 
 ### `CHANGELOG.md`
-Recorded the addition of `AI_RULES.md`.
+Updated with semantic entries for business management, business change requests, homepage updates, and platform-wide motion.
 
 ## Database Changes
 
-- `creative_job_listings.status` should now allow:
-  - `open`
-  - `in_discussion`
-  - `taken`
-  - `archived`
-- `closed` is treated as legacy and converted to `taken`.
-- No new table was required for media management because `creative_job_reference_files` already stores captions, URLs, storage paths, mime types, and file sizes.
+- Business listings now support private manage-token editing.
+- Published business edits are stored as pending revisions until admin approval.
+- Business change requests are stored in `business_change_requests` for admin review.
+- Business contact details now include optional phone number.
+- No database changes were needed for platform-wide animations or the six-business homepage highlight cap.
 
 ## API Changes
 
 Server actions added or expanded:
-- `updateCreativeJobDetailsByToken(token, input)`
-- `updateCreativeJobMediaByToken(token, formData)`
-- `updateCreativeJobStatusByToken(token, status)` now rejects `closed`.
 
-No new HTTP route handlers were added.
+- `submitBusinessListing(...)`: now returns private manage-link information and handles optional fields.
+- Private business detail/media update actions: update by manage token and send published listings back through moderation via pending revisions.
+- `requestBusinessChange(formData)`: saves public change requests for admin review.
+- `updateBusinessChangeRequestStatus(...)`: lets admins manage the change-request queue.
+
+No new public REST-style route handlers were introduced today.
 
 ## UI Changes
 
-- Private manage page now has three functional areas:
-  - Job summary.
-  - Listing detail editor.
-  - Photos/videos editor.
-  - Compact status selector in the right column.
-- Save feedback for listing details scrolls into view.
-- Media save feedback scrolls into view.
-- Existing media cards include preview, filename, remove button, and caption input.
-- New media uploads use the shared `FileUploader` and support captions before save.
+- Homepage now reflects the current platform: businesses, creative jobs, recommendations, change requests, and private edit links.
+- Directory highlights on the homepage are limited to six ranked businesses.
+- Platform-wide motion now covers page sections, cards, forms, links, buttons, expandable panels, header, and footer.
+- Business cards are cleaner and no longer show confusing unverified/community-submitted phrasing.
+- Business profiles show recommendation and request-change actions in context.
+- Business onboarding explains that community members can submit on behalf of businesses.
+- Business edit/manage pages now mirror the low-friction creative job manage-link experience.
 
 ## Bugs Fixed
 
-- Users could save listing details but miss the success message because it appeared above the current scroll position.
-- Status choices became visually too large due to the right panel stretching alongside a tall edit form.
-- `Closed` duplicated the meaning of `Taken`.
-- Creative job owners previously could not update reference photos/videos after posting.
+- Fixed desktop creative job management layout where the status container stayed fixed instead of adapting with the page.
+- Fixed stale fictional/demo copy across visible areas such as about/footer/home.
+- Fixed confusing endorsement terminology by removing endorsement UI and consolidating around recommendations.
+- Fixed homepage highlights showing more businesses than intended by capping the section at six.
 
 ## Bugs Remaining
 
-- Private manage links are not emailed automatically.
-- Anyone with a private manage link can edit the creative job.
-- Media deletion is immediate after saving and has no undo.
-- Public enquiries are emailed but not persisted in the `enquiries` table.
-- Some dashboard pages remain placeholder/scaffold experiences.
+- Public enquiries are not persisted in the `enquiries` table yet.
+- Email delivery depends on Resend configuration and a verified sender/domain; without that, direct email fallback is used.
+- Some dashboard/account pages remain scaffolds.
+- Existing businesses or creative jobs created before manage-token migrations may not have private manage links.
+- Private manage links are bearer credentials; anyone with the link can edit the related listing/job.
 
 ## Technical Decisions
 
-- Continued using private manage tokens instead of requiring creative accounts. This preserves the low-friction posting flow.
-- Kept `archived` as admin-only status but removed `closed` from user/admin UI because it duplicated `taken`.
-- Reused `creative_job_reference_files` for media editing rather than adding a new table.
-- Removed files from Supabase Storage when deleted from a creative job to avoid orphaned storage.
-- Kept uploads capped at 10MB total for a creative job.
+- Kept private manage links instead of account requirements to preserve low-friction MVP workflows.
+- Used pending business revisions so live approved business pages stay stable while edits wait for admin review.
+- Routed public change requests to the admin dashboard instead of email so moderation remains visible even without email infrastructure.
+- Added animations through scoped global CSS rather than per-page JavaScript animation libraries to keep performance strong and dependencies low.
+- Capped homepage highlights after ranking rather than changing data retrieval, so the ranking logic remains reusable.
 
 ## Lessons Learned
 
-- Private-link management works well for low-friction MVP workflows but needs clear copy and eventual recovery options.
-- Feedback messages should scroll into view after async saves when forms are long.
-- Status controls should stay compact when status is a simple state choice.
-- Migrations should be written with live repair in mind because the project has already had manual Supabase setup steps.
+- The product language needs to keep pace with feature maturity; old demo wording quickly becomes trust-eroding.
+- Private-link workflows are effective for early-stage UX but need clear recovery, revocation, and email-delivery plans.
+- Homepage content should be dynamic but editorially constrained so it feels curated rather than endless.
+- Motion works best here as a quiet system layer, not as flashy page-specific decoration.
 
 ## Risks
 
-- Private manage token leakage could allow unwanted edits.
-- No rate limiting on server actions yet.
-- Email delivery depends on Resend configuration and verified sender/domain.
-- Existing live Supabase environments must run latest migrations in order.
-- Storage upload/delete failures may partially complete in edge cases.
+- Private manage tokens should be treated as sensitive URLs.
+- Business pending revisions add moderation complexity and should be tested whenever schema changes are made.
+- Public change requests could be spammed without rate limiting.
+- Broad CSS motion selectors should be watched during future UI additions so important layouts do not feel jumpy.
+- Supabase production must have all latest migrations applied before relying on business edit/change-request workflows.
 
 ## Things To Watch
 
-- Whether users understand they must save their private manage link.
-- Whether creative jobs need moderation before appearing publicly.
-- Whether the 10MB total media limit feels too small.
-- Whether old creative jobs without manage tokens need manual admin support.
-- Whether direct email fallback is enough before a custom domain is configured.
+- Whether users understand they should save private manage links after business onboarding.
+- Whether admins need a clearer queue for pending business revisions versus new submissions.
+- Whether change-request volume requires notifications or filtering.
+- Whether homepage animations feel smooth on mobile devices with real production data.
+- Whether recommendation media should be surfaced more richly on public business profiles.
 
 ## Suggested Refactoring
 
-- Extract shared media upload/delete helpers used by business onboarding and creative jobs.
-- Create a typed Supabase schema layer or generated database types.
-- Move repeated service selection UI into a reusable component.
-- Add reusable feedback-scroll hook for long forms.
-- Consolidate admin status controls across businesses and creative jobs.
+- Extract shared private manage-link patterns between business listings and creative jobs.
+- Extract shared media upload/caption/edit helpers between business and creative job flows.
+- Create generated Supabase database types for safer schema evolution.
+- Consolidate service selection UI between business onboarding, business editing, and creative job posting.
+- Add a reusable feedback-scroll hook for all long-form save flows.
 
 ## Performance Considerations
 
-- Public business search is currently in-memory over loaded businesses; fine for MVP, but should move to indexed database search as data grows.
-- Media uses public Supabase URLs without image transformations beyond client-side pre-upload optimisation.
-- Server actions revalidate broad paths; can be narrowed later.
+- Platform-wide animations are CSS-only and respect `prefers-reduced-motion`.
+- Homepage still fetches full published businesses before ranking and slicing to six; acceptable for MVP, but a database-side limit/ranking query may be needed as data grows.
+- Public business search remains in-memory over loaded listings and should move toward indexed search for scale.
+- Media files use Supabase public URLs without a dedicated transformation strategy.
 
 ## Accessibility Considerations
 
-- Form fields use labels and inline errors.
-- Status and save messages use `role="status"` or `role="alert"`.
-- Buttons have visible focus states via global outline styles.
-- Media previews need careful alt text strategy if captions become meaningful content.
-- Segmented status controls are buttons, keyboard-accessible, and show selected state visually.
+- The global reduced-motion rule protects users who prefer less motion.
+- Focus styling on form fields was strengthened through global focus animation.
+- Recommendation and change-request panels should remain keyboard-tested after future visual edits.
+- Hover lift should never be the only signal for interaction; links/buttons still use text, borders, and focus outlines.
 
 ## Security Considerations
 
-- `SUPABASE_SERVICE_ROLE_KEY` must remain server-only.
-- Admin cookie is HTTP-only and secure in production.
-- `ADMIN_SESSION_TOKEN` must be long and random.
-- Private manage links are bearer credentials; treat them as sensitive.
-- Add rate limiting for admin login, enquiries, business submissions, and creative job actions.
-- Validate file types and enforce size limits server-side as well as client-side.
+- Keep `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_TOKEN` server-only.
+- Add rate limiting for public forms: onboarding, recommendations, change requests, enquiries, and admin login.
+- Private manage links should eventually support revoke/regenerate flows.
+- Admin should eventually move from static credentials to role-based Supabase authentication.
 
 ## Testing Completed
 
-Completed in the latest code session:
+Completed during today's session:
+
 - `pnpm lint`
 - `pnpm typecheck`
 - `pnpm build`
+- `git diff --check`
+
+Note: The regular shell could not find Node during one check, so Codex's bundled Node runtime was used to run the final successful checks.
 
 ## Testing Still Needed
 
-- Unit tests for creative job status transitions.
-- Unit tests for media update server action.
-- E2E test for creative job posting and private manage link workflow.
-- E2E test for editing details, adding media, changing captions, and removing media.
-- Manual test in Vercel after Supabase migrations are applied.
+- Manual Vercel smoke test after deployment.
+- E2E test for business onboarding, private manage link, pending edit, and admin approval.
+- E2E test for business profile recommendation submission.
+- E2E test for business change request submission and admin review.
+- Mobile visual QA for the platform-wide animation layer.
+- Regression test to ensure homepage highlights never exceed six cards.
 
 ## Recommended Next Tasks
 
-1. Run `supabase/migrations/0009_remove_closed_creative_job_status.sql` in Supabase if not already applied.
-2. Push changes to GitHub and redeploy on Vercel.
-3. Manually test a full creative job flow on production:
-   - Post job.
-   - Copy private manage link.
-   - Edit details.
-   - Add media and captions.
-   - Remove media.
-   - Change status to In discussion and Taken.
-4. Add E2E coverage for the private manage link flow.
-5. Decide whether to email private manage links now or after custom domain setup.
-6. Add rate limiting for public mutations.
-7. Decide whether dashboard/account pages should be hidden until finished.
+1. Push today's changes to GitHub and redeploy on Vercel.
+2. Run any unapplied Supabase migrations in production.
+3. Smoke test production:
+   - Homepage highlights show no more than six businesses.
+   - Business profile recommendation panel opens/closes and preserves form state on errors.
+   - Request-change panel works on business cards and profile pages.
+   - Business manage link can submit edits without changing the live listing before approval.
+4. Add rate limiting to public mutation actions.
+5. Add automated tests for business manage-link and change-request workflows.
+6. Decide whether scaffold dashboard/account pages should be hidden until fully connected.
 
 ## Ready-to-use Prompt for Next Session
 
 Paste this into a fresh Codex chat:
 
 ```text
-We are working on MakeSG in /Users/kevinchiam/Documents/Design Directory. MakeSG is a Next.js 16 App Router, TypeScript, Tailwind CSS, Supabase, and Vercel app for a Singapore creative-services and fabrication directory.
+Before writing code, read AI_RULES.md, PROJECT_CONTEXT.md, and SESSION_HANDOVER.md.
 
-Current product state:
-- Public business directory and profiles are live.
-- Business onboarding supports services, "Other", SGD budget, lead time in days, and portfolio photo/video uploads.
-- Admin login uses ADMIN_USERNAME, ADMIN_PASSWORD, and ADMIN_SESSION_TOKEN via middleware and an HTTP-only cookie.
-- Creative jobs are public listings created without accounts.
-- After posting a creative job, users receive a private manage link with a manage_token.
-- The private manage page is /creative-jobs/manage/[token].
-- Creatives can use the private link to edit job details, update status, and manage reference photos/videos with captions.
-- Creative job statuses are open, in_discussion, taken, and admin-only archived. Closed was removed and converted to taken.
+We are working on MakeSG, a Next.js 16 + TypeScript + Tailwind + Supabase + Vercel platform for Singapore creatives to find businesses, recommend trusted businesses, and post creative jobs.
 
-Today's work:
-- Added ManageCreativeJobDetails and ManageCreativeJobMedia.
-- Added updateCreativeJobDetailsByToken and updateCreativeJobMediaByToken server actions.
-- Updated creative job reference types to include storagePath.
-- Made the status selector compact.
-- Added scroll-to-feedback after save.
-- Added migration 0009_remove_closed_creative_job_status.sql.
-- Generated PROJECT_CONTEXT.md, SESSION_HANDOVER.md, and CHANGELOG.md.
+The latest session on 2026-08-08 added:
+- private business manage links,
+- business listing edits that create pending revisions while the old approved listing stays live,
+- business portfolio media editing,
+- public request-change panels saved to an admin dashboard queue,
+- cleaned-up business cards and profile copy,
+- refreshed homepage copy/iconography,
+- dynamic homepage directory highlights capped at six businesses,
+- CSS-only homepage and platform-wide animations with reduced-motion support.
 
-Important files to read first:
+Important architecture decisions:
+- Use private manage tokens for low-friction editing instead of requiring accounts for now.
+- Keep live approved business listings unchanged while edits wait for admin approval.
+- Route public change requests into the admin dashboard, not email.
+- Keep motion CSS-only and scoped through `platform-motion` in src/app/layout.tsx plus rules in src/app/globals.css.
+- Continue using server actions for mutations and Supabase admin client only in server-side code.
+
+Read these files first:
+- AI_RULES.md
 - PROJECT_CONTEXT.md
 - SESSION_HANDOVER.md
-- src/app/creative-jobs/manage/[token]/page.tsx
-- src/features/creative-jobs/actions.ts
-- src/features/creative-jobs/manage-creative-job-details.tsx
-- src/features/creative-jobs/manage-creative-job-media.tsx
-- src/features/creative-jobs/manage-creative-job-status.tsx
-- src/lib/creative-jobs.ts
-- supabase/migrations/0009_remove_closed_creative_job_status.sql
+- src/app/page.tsx
+- src/app/globals.css
+- src/features/businesses/actions.ts
+- src/features/businesses/business-listing-form.tsx
+- src/app/businesses/manage/[token]/page.tsx
+- src/app/admin/businesses/[id]/page.tsx
+- src/components/business/request-business-change-panel.tsx
+- src/app/admin/change-requests/page.tsx
 
-Continue by verifying the production creative-job manage flow end-to-end, then add tests for private job management and media editing. Be careful not to expose SUPABASE_SERVICE_ROLE_KEY or weaken the admin/private token model.
+Recommended next work:
+1. Add rate limiting to public server actions.
+2. Add automated tests for business manage links, pending revisions, and public change requests.
+3. Smoke test production after Vercel redeploy and Supabase migrations.
+4. Decide whether dashboard/account scaffold pages should be hidden until account workflows are complete.
 ```
-
-## Self Review
-
-Overall project health: 🟡 Good
-
-| Area | Score |
-| --- | ---: |
-| Architecture | 8 |
-| Code Quality | 8 |
-| Maintainability | 7 |
-| Performance | 7 |
-| Accessibility | 8 |
-| UI Consistency | 8 |
-| Documentation | 8 |
-| Technical Debt | 6 |
-| Developer Experience | 8 |
-
-### Scores Below 8
-
-- Maintainability: 7. Some business and creative-job form logic is duplicated. Shared service selection, media upload, and feedback-scroll utilities would reduce drift.
-- Performance: 7. Search is in-memory and media uses direct public URLs. This is fine for MVP but should move to indexed database search and image delivery strategy later.
-- Technical Debt: 6. Demo data remains, dashboard/account pages are partially scaffolded, admin auth is simple static credentials, and migrations include repair-style overlap from live setup evolution.
