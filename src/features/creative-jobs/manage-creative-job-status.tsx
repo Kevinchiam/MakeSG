@@ -32,7 +32,7 @@ export function ManageCreativeJobStatus({ token, initialStatus }: { token: strin
   }
 
   return (
-    <div className="grid self-start border border-[#ded8cc] bg-white p-5">
+    <div className="grid self-start border border-[#ded8cc] bg-white p-5 lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:overflow-auto">
       <div>
         <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Current status</p>
         <p className="mt-1 text-2xl font-semibold">{creativeJobStatusLabel(status)}</p>

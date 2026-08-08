@@ -1,0 +1,620 @@
+# MakeSG Project Context
+
+Last updated: 2026-07-26
+
+## Project Overview
+
+### Purpose
+MakeSG is a Singapore-focused directory and marketplace prototype that helps creatives find trusted businesses for fabrication, production, photography, videography, design, and specialist making services. It also lets businesses onboard themselves and lets creatives post jobs that businesses can browse.
+
+### Vision
+MakeSG should become a trusted word-of-mouth layer for Singapore's creative production ecosystem: a place where real makers, studios, suppliers, and service businesses can be discovered through structured listings, recommendations, endorsements, portfolios, and practical job briefs.
+
+### Target Audience
+- Creatives, designers, artists, founders, agencies, and students looking for reliable businesses to help make ideas real.
+- Fabricators, studios, photographers, videographers, workshops, consultants, manufacturers, and suppliers who want relevant creative work.
+- MakeSG admins who moderate listings, recommendations, reports, and creative jobs.
+
+### Problem Being Solved
+Creative production relies heavily on word of mouth, but reliable service discovery is fragmented across personal networks, social media, and search engines. MakeSG centralises business discovery, recommendation, onboarding, moderation, and job posting so people can find credible help faster.
+
+## Product Goals
+
+### MVP Objectives
+- Publish a usable public directory of Singapore creative-production businesses.
+- Allow businesses to submit listings with services, budget, lead time, email, website, and portfolio media.
+- Allow people to recommend and endorse businesses they have tried.
+- Allow admins to moderate business listings, recommendations, and creative jobs.
+- Allow creatives to post public job listings without account creation.
+- Allow creatives to manage posted jobs through a private manage link.
+- Provide direct contact routes through visible email or mailto links, with Resend support when configured.
+
+### Future Roadmap
+- Replace remaining demo/dashboard placeholders with fully persisted Supabase workflows.
+- Add robust user accounts for business owners and optional creative accounts.
+- Add moderation queues with richer status history and admin notes.
+- Add stronger search ranking, synonyms, and possibly AI-assisted service matching.
+- Add map/location search once a custom geocoding provider is selected.
+- Add notification emails for creative job submissions and changes.
+- Add rate limiting, abuse detection, and spam protection.
+- Add analytics for search-to-contact conversion and successful job closure.
+
+### Success Metrics
+- Number of published businesses.
+- Number of approved recommendations and endorsements.
+- Number of creative jobs posted.
+- Percentage of creative jobs moved from Open to In discussion or Taken.
+- Search-to-profile and profile-to-contact conversion.
+- Percentage of submitted business listings approved without admin rework.
+- Median time from listing submission to approval.
+
+## Tech Stack
+
+### Framework
+- Next.js 16 App Router.
+
+### Languages
+- TypeScript.
+- SQL for Supabase migrations.
+- CSS through Tailwind CSS 4 utilities and CSS custom properties.
+
+### Database
+- Supabase Postgres.
+- Row Level Security policies are defined in migrations.
+
+### Hosting
+- Vercel.
+
+### Third-Party APIs
+- Supabase Auth, Postgres, Storage.
+- Resend for email delivery when configured.
+
+### Authentication
+- Supabase Auth exists for general user-facing auth scaffolding.
+- Admin currently uses a simple private cookie-based login via `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_TOKEN`.
+- Creative job management uses private random manage tokens instead of account creation.
+
+### Search
+- Local server-side filtering in `src/lib/filters.ts`.
+- Search uses token matching and Levenshtein typo tolerance against business listing text, services, portfolio text, and descriptions.
+
+### Maps
+- Database supports address, postal code, latitude, and longitude fields.
+- No map provider is currently wired into the UI.
+
+### Deployment
+- GitHub to Vercel.
+- Build command: `pnpm build`.
+- Install command: `pnpm install`.
+- Environment variables are documented in `.env.example` and `README.md`.
+
+## Folder Structure
+
+- `src/app`: Next.js App Router pages, route handlers, loading/error/not-found states, sitemap, robots, admin pages, public pages, dashboard placeholders, and auth callback.
+- `src/components`: Reusable UI and domain components.
+- `src/components/admin`: Admin page headers, moderation controls, delete controls, and server actions for admin-managed data.
+- `src/components/business`: Business cards, filter UI, enquiry form, recommendation form, badges, and directory display components.
+- `src/components/projects`: Project brief and file-upload UI shared by project and media flows.
+- `src/components/site`: Site header, footer, mobile navigation, admin shortcut, and search bar.
+- `src/components/ui`: Small design-system primitives such as buttons, inputs, textareas, badges, pagination, skeletons, and empty states.
+- `src/features`: Feature-specific workflows that combine UI and server actions.
+- `src/features/businesses`: Business onboarding form and submission action.
+- `src/features/creative-jobs`: Creative job posting, private job management, status management, listing-detail editing, media editing, and server actions.
+- `src/lib`: Shared data access, types, validation, permissions, filters, Supabase clients, email utilities, slugging, and fallback demo data.
+- `src/lib/supabase`: Supabase browser, server, and admin client setup.
+- `src/lib/email`: Resend email templates and sending wrapper.
+- `src/lib/analytics`: Analytics event typing placeholder.
+- `supabase/migrations`: Ordered SQL migrations for schema, storage buckets, RLS, recommendations, media, endorsements, creative jobs, and status changes.
+- `supabase/seed`: Demo data seed script.
+- `tests/unit`: Vitest unit tests for filtering, permissions, recommendation logic, slugging, and validation.
+- `tests/e2e`: Playwright end-to-end tests for major user flows.
+- `docs`: Planning and implementation notes.
+- `public`: Public static assets. The current app mostly uses generated/local demo assets.
+- `AI_RULES.md`: Repository-level AI collaboration rules for long-term product quality, design consistency, documentation discipline, and implementation standards.
+
+## Architecture
+
+### Frontend
+The frontend is built with Next.js App Router. Server components fetch data and compose pages. Client components handle forms, local UI state, uploads, navigation toggles, and optimistic interactions. Styling uses Tailwind utility classes plus global CSS variables in `src/app/globals.css`.
+
+### Backend
+Backend logic is implemented with Next.js server actions and route handlers. Supabase admin access is kept in server-only functions. Validation is shared through Zod schemas in `src/lib/validation.ts`.
+
+### Database
+Supabase Postgres stores profiles, businesses, services, materials, business joins, portfolio items, projects, enquiries, saved businesses, reports, business recommendations, recommendation media, creative jobs, and creative job reference files.
+
+### API Flow
+Most mutations use server actions:
+- Forms build `FormData` or typed objects.
+- Server actions validate with Zod.
+- Server actions use `createAdminClient()` for trusted inserts/updates.
+- Pages are revalidated with `revalidatePath()` when visible data changes.
+- UI displays success/error messages and scrolls to feedback when appropriate.
+
+### Authentication Flow
+- Public browsing does not require login.
+- Admin pages are protected in `middleware.ts`.
+- Admin login writes an HTTP-only `makesg_admin` cookie if credentials match configured environment variables.
+- Site header reads the admin cookie server-side and shows an admin shortcut only when the cookie is valid.
+- Supabase Auth and callback scaffolding exist for future user accounts.
+- Creative job owners do not need accounts; they receive a private manage URL containing a long random token.
+
+### Data Flow
+- Public business pages call `getPublishedBusinesses()` or `getPublishedBusinessBySlug()` in `src/lib/public-businesses.ts`.
+- Public creative jobs call `getPublicCreativeJobs()` in `src/lib/creative-jobs.ts`.
+- Business onboarding inserts into Supabase and uploads portfolio media.
+- Creative job submission inserts a job, stores a manage token, uploads reference files, and returns the private manage link.
+- Admin pages call admin data helpers and update moderation status with server actions.
+
+## Features
+
+### Public Home
+Status: Completed
+
+Description: Landing/search entry for MakeSG with editorial visual direction and a prominent provider search form.
+
+Relevant files:
+- `src/app/page.tsx`
+- `src/components/site/search-bar.tsx`
+- `src/app/globals.css`
+
+Future improvements:
+- Add stronger dynamic content from featured businesses and creative jobs.
+- Track search conversion.
+
+### Business Directory
+Status: Completed
+
+Description: Browse published businesses with filters, search, cards, pagination, and empty states. Search includes typo-tolerant matching.
+
+Relevant files:
+- `src/app/businesses/page.tsx`
+- `src/components/business/business-grid.tsx`
+- `src/components/business/business-card.tsx`
+- `src/components/business/filter-panel.tsx`
+- `src/components/business/mobile-filter-drawer.tsx`
+- `src/lib/public-businesses.ts`
+- `src/lib/filters.ts`
+
+Future improvements:
+- Add service synonyms and query analytics.
+- Remove material filters if no longer part of product direction.
+
+### Business Profile
+Status: Completed
+
+Description: Public business profile with hero media, service details, portfolio media, visible email fallback, website link, location, budget, lead time, and recommendation CTA.
+
+Relevant files:
+- `src/app/businesses/[slug]/page.tsx`
+- `src/components/business/enquiry-form.tsx`
+- `src/components/business/enquiry-actions.ts`
+
+Future improvements:
+- Add structured contact analytics.
+- Support claimed-business editing with owner authentication.
+
+### Business Enquiry
+Status: In Progress
+
+Description: Lets users submit enquiries. If Resend is configured, enquiries are emailed to the business public email. If email is not configured or fails, the UI shows a direct email fallback.
+
+Relevant files:
+- `src/components/business/enquiry-form.tsx`
+- `src/components/business/enquiry-actions.ts`
+- `src/lib/email/index.ts`
+
+Future improvements:
+- Add rate limiting and spam prevention.
+- Persist enquiries in Supabase.
+- Add business/creative confirmation emails.
+
+### Business Onboarding
+Status: Completed
+
+Description: Businesses can submit listing details, service options including Other, SGD budget, lead time in days, and portfolio photos/videos. Listings enter moderation before publication.
+
+Relevant files:
+- `src/app/for-businesses/page.tsx`
+- `src/features/businesses/business-listing-form.tsx`
+- `src/features/businesses/actions.ts`
+- `src/components/projects/file-uploader.tsx`
+- `supabase/migrations/0003_media_uploads.sql`
+
+Future improvements:
+- Allow businesses to edit pending submissions through a private link or account.
+- Add clearer admin rejection feedback loop.
+
+### Business Recommendations
+Status: Completed
+
+Description: Users can recommend businesses based on real experience. Recommendations are moderated before public use.
+
+Relevant files:
+- `src/app/recommend-business/page.tsx`
+- `src/components/business/recommend-business-form.tsx`
+- `src/lib/recommendation.ts`
+- `supabase/migrations/0002_business_recommendations.sql`
+
+Future improvements:
+- Persist recommendation media in public display.
+- Add recommendation editing before approval.
+
+### Business Endorsements
+Status: Completed
+
+Description: Duplicate-prevention and trust signal for businesses. Similar names can prompt users to endorse existing listings instead of creating duplicates.
+
+Relevant files:
+- `src/features/businesses/business-listing-form.tsx`
+- `src/features/businesses/actions.ts`
+- `supabase/migrations/0004_endorsements.sql`
+
+Future improvements:
+- Add per-user or per-email duplicate endorsement prevention.
+
+### Creative Job Posting
+Status: Completed
+
+Description: Creatives can publish public job listings for businesses to browse. Jobs include title, description, contact email, project type, services, optional other service, budget, deadline, notes, and reference uploads with captions.
+
+Relevant files:
+- `src/app/for-creatives/page.tsx`
+- `src/features/creative-jobs/creative-job-listing-form.tsx`
+- `src/features/creative-jobs/actions.ts`
+- `src/lib/creative-jobs.ts`
+- `src/lib/validation.ts`
+- `supabase/migrations/0005_creative_job_listings.sql`
+- `supabase/migrations/0006_creative_job_references.sql`
+
+Future improvements:
+- Email the private manage link after submission once sender/domain setup is ready.
+- Add optional moderation if creative jobs need review before public display.
+
+### Public Creative Jobs
+Status: Completed
+
+Description: Businesses can browse open and in-discussion creative jobs and contact creatives by email.
+
+Relevant files:
+- `src/app/creative-jobs/page.tsx`
+- `src/lib/creative-jobs.ts`
+
+Future improvements:
+- Add filters by service, deadline, budget, and project type.
+- Add search across creative jobs.
+
+### Private Creative Job Management
+Status: Completed
+
+Description: After posting, creatives receive a private manage link. The manage page allows status changes, listing-detail edits, media additions/removals, and caption edits without requiring an account.
+
+Relevant files:
+- `src/app/creative-jobs/manage/[token]/page.tsx`
+- `src/features/creative-jobs/manage-creative-job-status.tsx`
+- `src/features/creative-jobs/manage-creative-job-details.tsx`
+- `src/features/creative-jobs/manage-creative-job-media.tsx`
+- `src/features/creative-jobs/actions.ts`
+- `supabase/migrations/0008_creative_job_manage_links.sql`
+- `supabase/migrations/0009_remove_closed_creative_job_status.sql`
+
+Future improvements:
+- Add regenerate/revoke manage link.
+- Email manage link to the creative.
+- Add audit log for status and listing edits.
+
+### Admin Login
+Status: Completed
+
+Description: Simple admin-only login protects admin routes through middleware and a secure HTTP-only cookie.
+
+Relevant files:
+- `middleware.ts`
+- `src/app/admin/login/page.tsx`
+- `src/app/admin/login/actions.ts`
+- `src/app/admin/logout/route.ts`
+- `src/components/site/site-header.tsx`
+- `src/components/site/site-header-client.tsx`
+
+Future improvements:
+- Replace static admin credentials with Supabase role-based admin accounts.
+- Add rate limiting.
+
+### Admin Dashboard
+Status: Completed
+
+Description: Admin home with links to business moderation, creative jobs, recommendations, services, and reports.
+
+Relevant files:
+- `src/app/admin/page.tsx`
+- `src/components/admin/admin-page-header.tsx`
+
+Future improvements:
+- Add counts for rejected/suspended items.
+- Add activity feed.
+
+### Admin Business Moderation
+Status: Completed
+
+Description: Admin can review, approve, reject, feature, unpublish, and delete business listings.
+
+Relevant files:
+- `src/app/admin/businesses/page.tsx`
+- `src/app/admin/businesses/[id]/page.tsx`
+- `src/components/admin/admin-status-controls.tsx`
+- `src/components/admin/actions.ts`
+
+Future improvements:
+- Add richer review panels and admin notes.
+
+### Admin Creative Job Management
+Status: Completed
+
+Description: Admin can view, edit, status-change, archive, and delete creative jobs.
+
+Relevant files:
+- `src/app/admin/creative-jobs/page.tsx`
+- `src/app/admin/creative-jobs/[id]/page.tsx`
+- `src/components/admin/admin-creative-job-delete-button.tsx`
+- `src/components/admin/actions.ts`
+
+Future improvements:
+- Add media editing from admin.
+- Add job activity timeline.
+
+### Dashboard Pages
+Status: In Progress
+
+Description: Dashboard, project, saved business, enquiry, and business management pages exist as scaffolds but are not all fully wired to persisted user workflows.
+
+Relevant files:
+- `src/app/dashboard/page.tsx`
+- `src/app/dashboard/projects/page.tsx`
+- `src/app/dashboard/projects/[id]/page.tsx`
+- `src/app/dashboard/business/page.tsx`
+- `src/app/dashboard/business/edit/page.tsx`
+- `src/app/dashboard/business/portfolio/page.tsx`
+- `src/app/dashboard/enquiries/page.tsx`
+- `src/app/dashboard/saved/page.tsx`
+
+Future improvements:
+- Decide whether dashboards remain in MVP or are hidden until account system is ready.
+
+## Database Schema
+
+### `profiles`
+Stores Supabase-authenticated user profile metadata. Links to `auth.users` through `user_id`.
+
+### `services`
+Canonical service categories used for businesses and creative job service selection.
+
+### `materials`
+Original material taxonomy. It still exists in the schema but the current business onboarding UI removed the materials section.
+
+### `businesses`
+Core business listings with owner, publication status, verification status, contact details, address, budget, lead time, capabilities, and hero image.
+
+### `business_services`
+Many-to-many join between businesses and services.
+
+### `business_materials`
+Many-to-many join between businesses and materials. Currently lower priority because material selection was removed from onboarding.
+
+### `portfolio_items`
+Portfolio records for business profiles. Stores image URLs, descriptions, tags, and sort order.
+
+### `projects`
+Original authenticated project brief model. Still used by dashboard/project scaffolding.
+
+### `project_files`
+Files attached to authenticated projects.
+
+### `project_service_matches`
+Stores service match scores and explanations for project recommendations.
+
+### `enquiries`
+Persisted enquiry schema for authenticated workflows. Current public enquiry flow sends email and does not yet persist here.
+
+### `saved_businesses`
+Join table for user-saved businesses.
+
+### `reports`
+Stores reported content for admin review.
+
+### `business_recommendations`
+Word-of-mouth recommendation submissions tied to a business, with recommender details, relationship, strengths, comment, permissions, and moderation status.
+
+### `business_recommendation_media`
+Media attached to business recommendations.
+
+### `creative_job_listings`
+Public creative jobs. Important fields include `title`, `slug`, `description`, `contact_email`, `project_type`, `services`, `service_slugs`, `other_service`, `budget_min`, `budget_max`, `deadline`, `notes`, `status`, and `manage_token`.
+
+Relationships:
+- `creative_job_reference_files.job_id` references `creative_job_listings.id`.
+- Public readers can see jobs with `open` or `in_discussion` status.
+- `taken` and `archived` jobs are hidden publicly.
+
+### `creative_job_reference_files`
+Photos/videos attached to creative jobs. Stores storage bucket/path, public URL, filename, caption, mime type, size, and sort order.
+
+### Storage Buckets
+- `avatars`: public profile avatars.
+- `business-portfolios`: public business and recommendation media.
+- `project-references`: private project files.
+- `creative-job-references`: public creative job reference media.
+
+## API Endpoints
+
+### Route Handlers
+- `GET /auth/callback`: Supabase auth callback that exchanges auth code and upserts profile metadata.
+- `GET /admin/logout`: Clears the admin cookie and redirects to admin login.
+- `GET /demo/[slug]`: Serves demo SVG image assets.
+- `GET /robots.txt`: Generated by `src/app/robots.ts`.
+- `GET /sitemap.xml`: Generated by `src/app/sitemap.ts`.
+
+### Server Actions
+- `loginAdmin(formData)`: Validates admin credentials and sets `makesg_admin` cookie.
+- `updateBusinessPublicationStatus(businessId, status)`: Admin moderation of business publication status.
+- `deleteBusinessEntry(businessId)`: Admin deletion of business listing.
+- `updateCreativeJobFromForm(jobId, formData)`: Admin edit of creative job listing.
+- `deleteCreativeJobEntry(jobId)`: Admin deletion of creative job.
+- `submitBusinessListing(input)`: Business onboarding submission and portfolio upload.
+- `submitCreativeJobListing(input)`: Creative job creation, reference upload, and manage-token generation.
+- `updateCreativeJobStatusByToken(token, status)`: Private status update for creative jobs.
+- `updateCreativeJobDetailsByToken(token, input)`: Private listing-detail update for creative jobs.
+- `updateCreativeJobMediaByToken(token, formData)`: Private creative job media add/remove/caption update.
+- `sendBusinessEnquiry(input)`: Sends enquiry email or returns contact fallback.
+
+## UI Components
+
+- `SiteHeader`: Server component that determines admin cookie state and renders navigation.
+- `SiteHeaderClient`: Responsive header, mobile menu, admin shortcut, and search link.
+- `SiteFooter`: Footer navigation and admin entry.
+- `SearchBar`: Search form that routes to `/businesses?q=...`.
+- `Button`: Reusable button/link styling primitive.
+- `Input`: Reusable input primitive.
+- `Textarea`: Reusable textarea primitive.
+- `Badge`: Reusable badge primitive.
+- `EmptyState`: Generic empty-state panel.
+- `LoadingSkeleton`: Loading placeholder component.
+- `Pagination`: Pagination controls.
+- `BusinessGrid`: Directory layout and result handling.
+- `BusinessCard`: Directory result card.
+- `FilterPanel`: Desktop business filters.
+- `MobileFilterDrawer`: Mobile filters.
+- `EnquiryForm`: Business profile contact UI.
+- `RecommendBusinessForm`: Recommendation submission UI.
+- `BusinessListingForm`: Business onboarding form.
+- `CreativeJobListingForm`: Creative job posting form.
+- `ManageCreativeJobStatus`: Private status selector.
+- `ManageCreativeJobDetails`: Private listing-detail editor.
+- `ManageCreativeJobMedia`: Private media/caption manager.
+- `FileUploader`: Shared media/reference uploader with previews and client-side image optimisation.
+- `AdminPageHeader`: Admin page heading wrapper.
+- `AdminStatusControls`: Business moderation buttons.
+- `AdminCreativeJobDeleteButton`: Admin deletion confirmation for creative jobs.
+
+## Design System
+
+### Typography
+- Sans-serif: Inter/system stack through `--font-sans-local`.
+- Serif: Newsreader/Georgia-style editorial headings through `--font-serif-local`.
+- Large editorial headings are used for landing, directory, onboarding, and profile pages.
+- Compact panels use tighter sans-serif headings.
+
+### Colours
+- Background: `#fbfaf7`
+- Ink/foreground: `#211f1b`
+- Muted text: `#6d675d`
+- Line/border: `#ded8cc`
+- White surface: `#ffffff`
+- Warm surface: `#f3eee5`
+- Clay accent: `#9c4f35`
+- Moss success: `#536343`
+- Steel focus/accent: `#315c6b`
+- Gold accent: `#b9852f`
+
+### Spacing
+- Main content uses `container-shell`: `min(1180px, calc(100% - 32px))`.
+- Panels generally use 16-24px padding.
+- Dense repeated items use smaller gaps; editorial hero sections use larger vertical spacing.
+
+### Icons
+- `lucide-react` is used for navigation, status, upload, save, search, delete, dashboard, and contact icons.
+
+### Animations
+- Minimal animation.
+- `html { scroll-behavior: smooth; }` supports feedback scrolling.
+
+### Responsive Behaviour
+- Header collapses into mobile menu below large breakpoints.
+- Directory filters support desktop panel and mobile drawer.
+- Forms use single-column mobile layouts and two-column desktop groups.
+- Media grids collapse naturally on smaller screens.
+
+## Dependencies
+
+- `next`: App framework, routing, server actions, build.
+- `react`, `react-dom`: UI runtime.
+- `typescript`: Type safety.
+- `tailwindcss`, `@tailwindcss/postcss`: Styling.
+- `@supabase/supabase-js`, `@supabase/ssr`: Supabase database/auth/storage clients.
+- `zod`: Runtime validation schemas.
+- `react-hook-form`, `@hookform/resolvers`: Client form handling and validation integration.
+- `lucide-react`: Icon library.
+- `resend`: Email delivery.
+- `clsx`, `tailwind-merge`: Classname composition utilities.
+- `@radix-ui/react-slot`: Composition primitive used by buttons.
+- `vitest`, `jsdom`: Unit testing.
+- `@playwright/test`: End-to-end testing.
+- `eslint`, `eslint-config-next`: Linting.
+
+## Coding Standards
+
+### Naming Conventions
+- React components use PascalCase.
+- Server actions use verb-first camelCase names.
+- Database columns use snake_case.
+- TypeScript domain models convert database snake_case into camelCase public types.
+- Routes use kebab-case where public-facing.
+
+### Architecture Conventions
+- Keep Supabase admin access in server-only code.
+- Keep presentational components data-driven and typed.
+- Use `src/lib/validation.ts` for shared Zod schemas.
+- Use feature folders for multi-part workflows.
+- Use server actions for mutations and `revalidatePath()` after changes.
+
+### Styling Conventions
+- Tailwind utility classes inline with components.
+- Shared colours are CSS variables in `globals.css`.
+- Cards/panels use square editorial borders rather than rounded-card-heavy UI.
+- Avoid decorative gradients and unnecessary marketing hero layouts.
+
+### Commenting Conventions
+- Keep comments sparse.
+- Comments are acceptable for accessibility/lint exceptions or non-obvious logic.
+
+### AI Collaboration Conventions
+- Follow `AI_RULES.md` before implementing changes.
+- Preserve working functionality while improving maintainability and user experience.
+- Update `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md` before ending coding sessions.
+
+## Known Issues
+
+- Resend email delivery requires a verified sender/domain; without it, enquiry UI falls back to visible email.
+- Public enquiry submission is not persisted to the `enquiries` table yet.
+- Supabase Auth exists but general user account flows are incomplete.
+- Some dashboard pages are scaffolds and not ready as core product experiences.
+- Creative job private manage links are powerful: anyone with the link can edit the job.
+- Existing creative jobs created before manage-token rollout may not have manage links.
+
+## Technical Debt
+
+- Demo fallback data still ships in `src/lib/data.ts`.
+- Admin auth is a static credential/cookie system rather than role-based Supabase auth.
+- Business materials schema remains though the current UI removed material onboarding.
+- Enquiry persistence and rate limiting are not implemented.
+- Public profile media and creative job media rely on public Supabase Storage URLs without transformation/CDN strategy.
+- Some migrations overlap because later migrations repair earlier live setup gaps.
+
+## Future Ideas
+
+- Email creative job manage links after submission.
+- Add job status history and timestamps.
+- Add business response tracking for creative jobs.
+- Add custom domain and verified email sender.
+- Add richer admin moderation queues.
+- Add map view for businesses.
+- Add AI-assisted search and service matching after enough data is collected.
+- Add public trust badges based on verified recommendations and endorsements.
+
+## Outstanding Questions
+
+- Should creative jobs require moderation before public display?
+- Should private manage links expire or be revocable?
+- Should business owners have account-based editing, or use private links similar to creative jobs?
+- Should the dashboard/account area be hidden until it is fully connected?
+- What custom domain and email domain will MakeSG use?
+- What map provider should be used if map search becomes important?
