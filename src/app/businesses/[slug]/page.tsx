@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ExternalLink, Mail, MapPin, MessageCircleHeart, Phone, Star } from "lucide-react";
 import { MaterialTag } from "@/components/business/material-tag";
 import { RecommendBusinessPanel } from "@/components/business/recommend-business-panel";
+import { RequestBusinessChangePanel } from "@/components/business/request-business-change-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { services } from "@/lib/data";
@@ -199,6 +200,9 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
                 </Button>
               ) : null}
             </div>
+          </div>
+          <div className="border border-[#ded8cc] bg-white p-5">
+            <RequestBusinessChangePanel businessId={business.id} businessName={business.name} />
           </div>
           <RecommendBusinessPanel businessId={business.id} businessName={business.name} />
         </aside>
