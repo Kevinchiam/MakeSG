@@ -51,7 +51,7 @@ export function RequestBusinessChangePanel({ businessId, businessName }: { busin
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="font-semibold">Request a listing change</h3>
-              <p className="mt-1 text-xs leading-5 text-[#6d675d]">Tell admin what should be updated for {businessName}.</p>
+              <p className="mt-1 text-xs leading-5 text-[#6d675d]">Tell admin what should be updated for {businessName}. It will appear in the admin dashboard for review.</p>
             </div>
             <button
               type="button"
@@ -96,7 +96,7 @@ export function RequestBusinessChangePanel({ businessId, businessName }: { busin
             {fieldErrors.reason ? <span className="text-[#9c4f35]">{fieldErrors.reason}</span> : null}
           </label>
           <Button type="submit" disabled={isSubmitting}>
-            <Send className="h-4 w-4" aria-hidden /> {isSubmitting ? "Sending..." : "Send to admin"}
+            <Send className="h-4 w-4" aria-hidden /> {isSubmitting ? "Saving..." : "Submit request"}
           </Button>
         </form>
       ) : null}

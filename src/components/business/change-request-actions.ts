@@ -1,8 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { sendEmail } from "@/lib/email";
-import { getPublishedBusinesses } from "@/lib/public-businesses";
+import { revalidatePath } from "next/cache";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 type ChangeRequestResult =
   | { ok: true; message: string }
@@ -29,38 +29,26 @@ export async function requestBusinessChange(formData: FormData): Promise<ChangeR
     };
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_NOTIFICATION_EMAIL;
-  if (!adminEmail) {
-    return { ok: false, message: "Admin email is not configured yet. Add ADMIN_EMAIL in Vercel before collecting change requests." };
-  }
-
-  const businesses = await getPublishedBusinesses();
-  const business = businesses.find((item) => item.id === parsed.data.businessId);
-  if (!business) {
-    return { ok: false, message: "This business listing could not be found." };
-  }
-
   try {
-    await sendEmail({
-      to: adminEmail,
-      template: "admin_notification",
-      replyTo: parsed.data.requesterEmail,
-      variables: {
-        message: [
-          `Business change request for ${business.name}`,
-          `Listing: ${business.slug}`,
-          `Requester email: ${parsed.data.requesterEmail}`,
-          "",
-          parsed.data.reason,
-        ].join("\n"),
-      },
+    const supabase = createAdminClient();
+    const { error } = await supabase.from("business_change_requests").insert({
+      business_id: parsed.data.businessId,
+      requester_email: parsed.data.requesterEmail,
+      reason: parsed.data.reason,
+      status: "open",
     });
+
+    if (error) {
+      return { ok: false, message: error.message };
+    }
   } catch (error) {
-    console.error("[business-change-request-email-failed]", error);
-    return { ok: false, message: "The change request could not be emailed right now. Please try again later." };
+    console.error("[business-change-request-failed]", error);
+    return { ok: false, message: "Change requests are not available yet. Please try again after the admin database is updated." };
   }
 
-  return { ok: true, message: "Change request sent to MakeSG admin for review." };
+  revalidatePath("/admin");
+  revalidatePath("/admin/change-requests");
+  return { ok: true, message: "Change request saved for MakeSG admin review." };
 }
 
 function fieldErrorsFromIssues(issues: z.ZodIssue[]) {

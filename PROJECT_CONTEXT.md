@@ -165,14 +165,18 @@ Future improvements:
 ### Business Directory
 Status: Completed
 
-Description: Browse published businesses with filters, search, cards, pagination, empty states, recommendation labels, and public change-request panels that email admin.
+Description: Browse published businesses with filters, search, cards, pagination, empty states, recommendation labels, and public change-request panels that save into the admin dashboard.
 
 Relevant files:
 - `src/app/businesses/page.tsx`
+- `src/app/admin/change-requests/page.tsx`
 - `src/components/business/business-grid.tsx`
 - `src/components/business/business-card.tsx`
+- `src/components/business/request-business-change-panel.tsx`
+- `src/components/admin/business-change-request-controls.tsx`
 - `src/components/business/filter-panel.tsx`
 - `src/components/business/mobile-filter-drawer.tsx`
+- `src/lib/business-change-requests.ts`
 - `src/lib/public-businesses.ts`
 - `src/lib/filters.ts`
 
@@ -433,6 +437,9 @@ Word-of-mouth recommendation submissions tied to a business, with recommender de
 ### `business_recommendation_media`
 Media attached to business recommendations.
 
+### `business_change_requests`
+Public requests to correct or update an existing business listing. Each request stores the target business, requester email, reason, admin notes, status, and timestamps. Admins review these from `/admin/change-requests` and manually update the listing if the request is valid.
+
 ### `creative_job_listings`
 Public creative jobs. Important fields include `title`, `slug`, `description`, `contact_email`, `project_type`, `services`, `service_slugs`, `other_service`, `budget_min`, `budget_max`, `deadline`, `notes`, `status`, and `manage_token`.
 
@@ -463,6 +470,8 @@ Photos/videos attached to creative jobs. Stores storage bucket/path, public URL,
 - `loginAdmin(formData)`: Validates admin credentials and sets `makesg_admin` cookie.
 - `updateBusinessPublicationStatus(businessId, status)`: Admin moderation of business publication status.
 - `deleteBusinessEntry(businessId)`: Admin deletion of business listing.
+- `requestBusinessChange(formData)`: Public business-card correction request saved for admin review.
+- `updateBusinessChangeRequestStatus(requestId, status, adminNotes)`: Admin review status update for public change requests.
 - `updateCreativeJobFromForm(jobId, formData)`: Admin edit of creative job listing.
 - `deleteCreativeJobEntry(jobId)`: Admin deletion of creative job.
 - `submitBusinessListing(input)`: Business onboarding submission and portfolio upload.

@@ -71,12 +71,9 @@ Admin pages are protected by a simple admin login. Set these environment variabl
 ADMIN_USERNAME=Admin
 ADMIN_PASSWORD=MakeSG
 ADMIN_SESSION_TOKEN=<long-random-secret>
-ADMIN_EMAIL=admin@example.com
 ```
 
 If unset, the default username is `Admin` and the default password is `MakeSG`. Change these before sharing the site widely.
-
-`ADMIN_EMAIL` receives business listing change requests submitted from public directory cards.
 
 ## Enquiry Emails
 
@@ -106,13 +103,14 @@ The app keeps database access out of presentational components. UI components re
    - `supabase/migrations/0002_business_recommendations.sql`
    - `supabase/migrations/0003_media_uploads.sql`
    - `supabase/migrations/0004_endorsements.sql` (legacy compatibility)
+   - all later migrations through `supabase/migrations/0013_business_change_requests.sql`
 8. Run `supabase/seed/seed.sql` only for demo data.
 9. Deploy.
 
 ## Known Limitations
 
 - Demo fallback listings are still bundled so the site can run without Supabase credentials.
-- Public business listing change requests require `ADMIN_EMAIL` plus Resend email configuration.
+- Public business listing change requests require Supabase migration `0013_business_change_requests.sql`.
 - Public enquiries require Resend email configuration for automatic delivery; otherwise the UI shows direct contact details.
 - Public reviews, live chat, payments and AI recommendations are intentionally excluded.
 
@@ -120,6 +118,6 @@ The app keeps database access out of presentational components. UI components re
 
 - Continue replacing fallback-only workflows with Supabase repository functions.
 - Persist public enquiries in Supabase in addition to email delivery.
-- Add admin tooling for request-change inbox triage.
+- Add richer admin tooling for request-change inbox triage and direct editing from each request.
 - Add richer portfolio management and image transformations.
 - Add rate limiting middleware for enquiry endpoints.

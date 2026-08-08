@@ -14,7 +14,9 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Added `business_listing_revisions` migration in `supabase/migrations/0011_business_listing_revisions.sql`.
 - Added private edit link display after business onboarding submission.
 - Added admin review support for pending business edits while live listings remain unchanged.
-- Added public business-card change requests that email `ADMIN_EMAIL`.
+- Added public business-card change requests that save into an admin dashboard queue.
+- Added `business_change_requests` migration in `supabase/migrations/0013_business_change_requests.sql`.
+- Added admin review controls for business listing change requests.
 - Added optional phone number to business onboarding, private business editing, public profile display, and admin review.
 - Added a Recommended label to business cards when a listing has approved recommendations.
 
@@ -25,6 +27,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Changed duplicate-business prompts to direct people to the existing listing instead of using endorsements.
 - Changed website, public email, location, minimum budget, and typical lead time to be optional in business onboarding and private business editing.
 - Changed business onboarding copy to invite community submissions on behalf of businesses.
+- Changed business change requests from email delivery to a persistent admin dashboard workflow.
 
 ### Fixed
 - Fixed the creative job status management panel so it adapts during desktop scrolling.

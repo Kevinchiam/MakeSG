@@ -218,6 +218,27 @@ export async function deleteCreativeJobEntry(jobId: string) {
   return { ok: true };
 }
 
+export async function updateBusinessChangeRequestStatus(requestId: string, status: "reviewed" | "dismissed", adminNotes?: string) {
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("business_change_requests")
+    .update({
+      status,
+      admin_notes: adminNotes?.trim() || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", requestId);
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/change-requests");
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  return { ok: true };
+}
+
 function stringFromFormData(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value : "";
 }
