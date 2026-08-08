@@ -9,6 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 type FieldErrors = Record<string, string>;
+type FormValues = {
+  review: string;
+  recommenderName: string;
+  recommenderEmail: string;
+  permissionToPublishName: boolean;
+};
+
+const minimumReviewCharacters = 20;
 
 const ratingFields = [
   {
@@ -39,6 +47,14 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaCaptions, setMediaCaptions] = useState<Record<string, string>>({});
   const [links, setLinks] = useState(["", "", ""]);
+  const [formValues, setFormValues] = useState<FormValues>({
+    review: "",
+    recommenderName: "",
+    recommenderEmail: "",
+    permissionToPublishName: false,
+  });
+  const reviewLength = formValues.review.trim().length;
+  const reviewCharactersRemaining = Math.max(0, minimumReviewCharacters - reviewLength);
 
   useEffect(() => {
     if (success || submitError) {
@@ -53,6 +69,10 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
     setFieldErrors({});
 
     formData.set("businessId", businessId);
+    formData.set("review", formValues.review);
+    formData.set("recommenderName", formValues.recommenderName);
+    formData.set("recommenderEmail", formValues.recommenderEmail);
+    if (formValues.permissionToPublishName) formData.set("permissionToPublishName", "on");
     Object.entries(ratings).forEach(([name, value]) => formData.set(name, String(value)));
     links.map((link) => link.trim()).filter(Boolean).forEach((link) => formData.append("supportingLinks", link));
     mediaFiles.forEach((file) => {
@@ -70,6 +90,8 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
     }
 
     setSuccess(true);
+    setRatings({ qualityRating: 0, reliabilityRating: 0, collaborationRating: 0 });
+    setFormValues({ review: "", recommenderName: "", recommenderEmail: "", permissionToPublishName: false });
     setMediaFiles([]);
     setMediaCaptions({});
     setLinks(["", "", ""]);
@@ -110,13 +132,30 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
                 description={field.description}
                 value={ratings[field.name]}
                 error={fieldErrors[field.name]}
-                onChange={(value) => setRatings((current) => ({ ...current, [field.name]: value }))}
+                onChange={(value) => {
+                  setFieldErrors((current) => ({ ...current, [field.name]: "" }));
+                  setRatings((current) => ({ ...current, [field.name]: value }));
+                }}
               />
             ))}
           </fieldset>
 
-          <Field label="Short review" error={fieldErrors.review}>
-            <Textarea name="review" placeholder="What made the experience good? Keep it specific and useful for future creatives." />
+          <Field
+            label="Short review"
+            hint={reviewCharactersRemaining > 0
+              ? `${reviewCharactersRemaining} more character${reviewCharactersRemaining === 1 ? "" : "s"} needed.`
+              : `${reviewLength} characters. Good to submit.`}
+            error={fieldErrors.review}
+          >
+            <Textarea
+              name="review"
+              value={formValues.review}
+              onChange={(event) => {
+                setFieldErrors((current) => ({ ...current, review: "" }));
+                setFormValues((current) => ({ ...current, review: event.target.value }));
+              }}
+              placeholder="What made the experience good? Keep it specific and useful for future creatives."
+            />
           </Field>
 
           <FileUploader
@@ -174,15 +213,35 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
 
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Your name" error={fieldErrors.recommenderName}>
-              <Input name="recommenderName" />
+              <Input
+                name="recommenderName"
+                value={formValues.recommenderName}
+                onChange={(event) => {
+                  setFieldErrors((current) => ({ ...current, recommenderName: "" }));
+                  setFormValues((current) => ({ ...current, recommenderName: event.target.value }));
+                }}
+              />
             </Field>
             <Field label="Private email for moderation" error={fieldErrors.recommenderEmail}>
-              <Input name="recommenderEmail" type="email" />
+              <Input
+                name="recommenderEmail"
+                type="email"
+                value={formValues.recommenderEmail}
+                onChange={(event) => {
+                  setFieldErrors((current) => ({ ...current, recommenderEmail: "" }));
+                  setFormValues((current) => ({ ...current, recommenderEmail: event.target.value }));
+                }}
+              />
             </Field>
           </div>
 
           <label className="flex gap-2 text-sm leading-6 text-[#4f493f]">
-            <input name="permissionToPublishName" type="checkbox" />
+            <input
+              name="permissionToPublishName"
+              type="checkbox"
+              checked={formValues.permissionToPublishName}
+              onChange={(event) => setFormValues((current) => ({ ...current, permissionToPublishName: event.target.checked }))}
+            />
             My name may be displayed if this recommendation is approved.
           </label>
 
@@ -234,11 +293,12 @@ function RatingControl({
   );
 }
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({ label, hint, error, children }: { label: string; hint?: string; error?: string; children: React.ReactNode }) {
   return (
     <label className="grid gap-1.5 text-sm font-medium">
       {label}
       {children}
+      {hint ? <span className="text-xs font-normal leading-5 text-[#6d675d]">{hint}</span> : null}
       {error ? <span className="text-[#9c4f35]">{error}</span> : null}
     </label>
   );

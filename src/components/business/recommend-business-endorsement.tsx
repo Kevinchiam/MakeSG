@@ -1,10 +1,9 @@
 "use client";
 
-import { ArrowRight, Search, ThumbsUp } from "lucide-react";
+import { ArrowRight, Search } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { endorseBusiness } from "@/features/businesses/actions";
 import type { ExistingBusinessSuggestion } from "@/lib/business-submissions";
 
 type SuggestionWithScore = ExistingBusinessSuggestion & { score: number };
@@ -17,9 +16,6 @@ export function RecommendBusinessEndorsement({
   initialQuery?: string;
 }) {
   const [query, setQuery] = useState(initialQuery);
-  const [endorsingId, setEndorsingId] = useState<string | null>(null);
-  const [endorsedCounts, setEndorsedCounts] = useState<Record<string, number>>({});
-  const [messageByBusiness, setMessageByBusiness] = useState<Record<string, string>>({});
   const matches = useMemo(() => findBusinessMatches(query, businesses), [businesses, query]);
   const hasQuery = normalizeBusinessName(query).length >= 2;
 
@@ -49,19 +45,14 @@ export function RecommendBusinessEndorsement({
         <div className="grid gap-3" role="status" aria-live="polite">
           {matches.length ? (
             matches.map((business) => {
-              const endorsedCount = endorsedCounts[business.id] ?? business.endorsementCount;
-              const message = messageByBusiness[business.id];
-              const alreadyEndorsed = message === "Thanks. Your endorsement has been recorded.";
-
               return (
                 <article key={business.id} className="grid gap-4 border border-[#ded8cc] bg-[#fbfaf7] p-4 md:grid-cols-[1fr_auto] md:items-center">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-[#9c4f35]">Business already exists</p>
                     <h3 className="mt-1 text-xl font-semibold">{business.name}</h3>
                     <p className="mt-2 text-sm text-[#6d675d]">
-                      {endorsedCount} endorsement{endorsedCount === 1 ? "" : "s"} so far.
+                      Open the profile to review details and recommend this business.
                     </p>
-                    {message ? <p className="mt-2 text-sm font-medium text-[#536343]">{message}</p> : null}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button asChild variant="secondary">
@@ -69,33 +60,7 @@ export function RecommendBusinessEndorsement({
                         View listing <ArrowRight className="h-4 w-4" aria-hidden />
                       </Link>
                     </Button>
-                    <Button
-                      type="button"
-                      disabled={endorsingId === business.id || alreadyEndorsed || business.source !== "supabase"}
-                      onClick={async () => {
-                        setEndorsingId(business.id);
-                        setMessageByBusiness((current) => ({ ...current, [business.id]: "" }));
-                        const result = await endorseBusiness(business.id);
-                        setEndorsingId(null);
-
-                        if (!result.ok) {
-                          setMessageByBusiness((current) => ({ ...current, [business.id]: result.message }));
-                          return;
-                        }
-
-                        setEndorsedCounts((current) => ({ ...current, [business.id]: result.endorsementCount }));
-                        setMessageByBusiness((current) => ({ ...current, [business.id]: "Thanks. Your endorsement has been recorded." }));
-                      }}
-                    >
-                      <ThumbsUp className="h-4 w-4" aria-hidden />
-                      {endorsingId === business.id ? "Endorsing..." : alreadyEndorsed ? "Endorsed" : "Endorse"}
-                    </Button>
                   </div>
-                  {business.source !== "supabase" ? (
-                    <p className="md:col-span-2 text-xs leading-5 text-[#6d675d]">
-                      This seeded listing cannot receive live endorsements yet. Published community listings can be endorsed.
-                    </p>
-                  ) : null}
                 </article>
               );
             })

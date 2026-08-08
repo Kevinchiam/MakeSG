@@ -41,6 +41,17 @@ export async function submitBusinessRecommendation(formData: FormData): Promise<
   }
 
   const mediaFiles = validMediaFiles(formData.getAll("recommendationMedia"));
+  const invalidMediaCount = formData.getAll("recommendationMedia").filter((value) => {
+    return typeof value !== "string" && value.size > 0 && !mediaTypes.has(value.type);
+  }).length;
+  if (invalidMediaCount > 0) {
+    return {
+      ok: false,
+      message: "Upload JPG, PNG, WebP, MP4, MOV or WebM files only.",
+      fieldErrors: { media: "Upload JPG, PNG, WebP, MP4, MOV or WebM files only." },
+    };
+  }
+
   const mediaCaptions = formData.getAll("recommendationMediaCaptions").map((value) => stringFromFormData(value).trim());
   const totalSizeMb = mediaFiles.reduce((total, file) => total + file.size, 0) / 1024 / 1024;
   if (totalSizeMb > 10) {
@@ -77,6 +88,7 @@ export async function submitBusinessRecommendation(formData: FormData): Promise<
   }
 
   const uploadedMedia = [];
+  const uploadedPaths: string[] = [];
   for (const [index, file] of mediaFiles.entries()) {
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload";
     const path = `recommendations/${recommendation.id}/${Date.now()}-${index}.${extension}`;
@@ -86,9 +98,11 @@ export async function submitBusinessRecommendation(formData: FormData): Promise<
     });
 
     if (uploadError) {
+      await cleanupRecommendationSubmission(supabase, recommendation.id, uploadedPaths);
       return { ok: false, message: uploadError.message };
     }
 
+    uploadedPaths.push(path);
     uploadedMedia.push({
       recommendation_id: recommendation.id,
       bucket: "business-portfolios",
@@ -104,6 +118,7 @@ export async function submitBusinessRecommendation(formData: FormData): Promise<
   if (uploadedMedia.length > 0) {
     const { error: mediaError } = await supabase.from("business_recommendation_media").insert(uploadedMedia);
     if (mediaError) {
+      await cleanupRecommendationSubmission(supabase, recommendation.id, uploadedPaths);
       return { ok: false, message: mediaError.message };
     }
   }
@@ -152,4 +167,15 @@ function fieldErrorsFromIssues(issues: z.ZodIssue[]) {
     if (typeof key === "string" && !errors[key]) errors[key] = issue.message;
     return errors;
   }, {});
+}
+
+async function cleanupRecommendationSubmission(
+  supabase: ReturnType<typeof createAdminClient>,
+  recommendationId: string,
+  uploadedPaths: string[],
+) {
+  if (uploadedPaths.length > 0) {
+    await supabase.storage.from("business-portfolios").remove(uploadedPaths);
+  }
+  await supabase.from("business_recommendations").delete().eq("id", recommendationId);
 }
