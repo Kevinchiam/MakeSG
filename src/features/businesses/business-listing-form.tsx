@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Send } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useForm, useWatch, type FieldPath } from "react-hook-form";
 import { z } from "zod";
@@ -9,7 +10,7 @@ import { FileUploader } from "@/components/projects/file-uploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { endorseBusiness, submitBusinessForApproval } from "@/features/businesses/actions";
+import { submitBusinessForApproval } from "@/features/businesses/actions";
 import { services } from "@/lib/data";
 import { businessSchema } from "@/lib/validation";
 import type { ExistingBusinessSuggestion } from "@/lib/business-submissions";
@@ -28,9 +29,6 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
   const [portfolioFiles, setPortfolioFiles] = useState<File[]>([]);
   const [portfolioCaptions, setPortfolioCaptions] = useState<Record<string, string>>({});
   const [otherChecked, setOtherChecked] = useState(false);
-  const [endorsedBusinessId, setEndorsedBusinessId] = useState<string | null>(null);
-  const [endorseError, setEndorseError] = useState<string | null>(null);
-  const [isEndorsing, setIsEndorsing] = useState(false);
   const form = useForm<BusinessInput, unknown, BusinessOutput>({
     resolver: zodResolver(businessSchema),
     defaultValues: { services: [], businessType: "studio", otherService: "" },
@@ -75,7 +73,7 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
       onSubmit={form.handleSubmit(
         async (data) => {
           if (duplicateSuggestion) {
-            setSubmitError("This business already exists. Endorse the existing listing instead of creating a duplicate.");
+            setSubmitError("This business already exists. Open the existing listing instead of creating a duplicate.");
             return;
           }
 
@@ -151,38 +149,12 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
           <div>
             <p className="font-semibold">Do you mean {duplicateSuggestion.name}?</p>
             <p className="mt-1 leading-6">
-              This looks like an existing listing. To avoid duplicates, endorse the business instead.
-            </p>
-            <p className="mt-1 text-xs">
-              {duplicateSuggestion.endorsementCount} endorsement{duplicateSuggestion.endorsementCount === 1 ? "" : "s"} so far.
+              This looks like an existing listing. Open the profile to check it before submitting a duplicate.
             </p>
           </div>
-          {endorsedBusinessId === duplicateSuggestion.id ? (
-            <p className="font-semibold">Thanks. Your endorsement has been recorded.</p>
-          ) : (
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={isEndorsing || duplicateSuggestion.source !== "supabase"}
-              onClick={async () => {
-                setIsEndorsing(true);
-                setEndorseError(null);
-                const result = await endorseBusiness(duplicateSuggestion.id);
-                setIsEndorsing(false);
-
-                if (!result.ok) {
-                  setEndorseError(result.message);
-                  return;
-                }
-
-                setEndorsedBusinessId(duplicateSuggestion.id);
-              }}
-            >
-              {isEndorsing ? "Endorsing..." : "Endorse this business"}
-            </Button>
-          )}
-          {duplicateSuggestion.source !== "supabase" ? <p className="text-xs">Demo businesses cannot receive live endorsements.</p> : null}
-          {endorseError ? <p className="text-[#9c4f35]">{endorseError}</p> : null}
+          <Button asChild variant="secondary">
+            <Link href={`/businesses/${duplicateSuggestion.slug}`}>View existing listing</Link>
+          </Button>
         </div>
       ) : null}
       <Field label="Short summary" error={form.formState.errors.shortDescription?.message}><Input {...form.register("shortDescription")} /></Field>

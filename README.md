@@ -61,7 +61,7 @@ Apply `supabase/migrations/0002_business_recommendations.sql` after the initial 
 
 Apply `supabase/migrations/0003_media_uploads.sql` to allow photo/video uploads for provider portfolios and business recommendations.
 
-Apply `supabase/migrations/0004_endorsements.sql` to add endorsement counts used for duplicate-prevention and lightweight community trust signals.
+`supabase/migrations/0004_endorsements.sql` is a legacy migration kept for existing databases. Endorsement counts are no longer surfaced in the product; business trust is handled through moderated recommendations.
 
 ## Admin Account
 
@@ -102,7 +102,7 @@ The app keeps database access out of presentational components. UI components re
    - `supabase/migrations/0001_initial_schema.sql`
    - `supabase/migrations/0002_business_recommendations.sql`
    - `supabase/migrations/0003_media_uploads.sql`
-   - `supabase/migrations/0004_endorsements.sql`
+   - `supabase/migrations/0004_endorsements.sql` (legacy compatibility)
 8. Run `supabase/seed/seed.sql` only for demo data.
 9. Deploy.
 

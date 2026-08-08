@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ExternalLink, Mail, MapPin, MessageCircleHeart, Star, ThumbsUp } from "lucide-react";
+import { ExternalLink, Mail, MapPin, MessageCircleHeart, Star } from "lucide-react";
 import { MaterialTag } from "@/components/business/material-tag";
 import { RecommendBusinessPanel } from "@/components/business/recommend-business-panel";
 import { Badge } from "@/components/ui/badge";
@@ -61,15 +61,11 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
           <div className="mt-8 flex flex-wrap items-end justify-between gap-4">
             <div>
               <h1 className="mt-2 max-w-4xl font-serif text-5xl font-semibold leading-tight">{business.name}</h1>
-              {(business.endorsementCount || wordOfMouth.length) ? (
+              {wordOfMouth.length ? (
                 <div className="mt-4 flex flex-wrap gap-2">
-                {business.endorsementCount ? <Badge className="border-[#536343] bg-[#eef2e8] text-[#39462d]"><ThumbsUp className="h-3.5 w-3.5" /> {business.endorsementCount} endorsement{business.endorsementCount === 1 ? "" : "s"}</Badge> : null}
-                {wordOfMouth.length ? <Badge className="border-[#536343] bg-[#eef2e8] text-[#39462d]">{wordOfMouth.length} word-of-mouth recommendation{wordOfMouth.length === 1 ? "" : "s"}</Badge> : null}
+                  <Badge className="border-[#536343] bg-[#eef2e8] text-[#39462d]">{wordOfMouth.length} word-of-mouth recommendation{wordOfMouth.length === 1 ? "" : "s"}</Badge>
                 </div>
               ) : null}
-            </div>
-            <div className="w-full max-w-xl lg:w-auto">
-              <RecommendBusinessPanel businessId={business.id} businessName={business.name} />
             </div>
           </div>
           <p className="mt-6 max-w-3xl text-xl leading-8 text-[#4f493f]">{business.shortDescription}</p>
@@ -178,24 +174,27 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
             </section>
           ) : null}
         </div>
-        <aside className="h-fit border border-[#ded8cc] bg-white p-5 lg:sticky lg:top-24">
-          <h2 className="font-serif text-2xl font-semibold">Contact {business.name}</h2>
-          <div className="mt-4 grid gap-3 text-sm text-[#4f493f]">
-            {displayAddress ? <p className="flex items-center gap-2"><MapPin className="h-4 w-4" /> {displayAddress}</p> : null}
-            {business.publicEmail ? (
-              <p className="flex items-center gap-2 break-all">
-                <Mail className="h-4 w-4 shrink-0" aria-hidden />
-                <a href={`mailto:${business.publicEmail}`} className="underline">{business.publicEmail}</a>
-              </p>
-            ) : null}
-            <p>Starts from {formatCurrency(business.minimumBudget)}</p>
-            <p>Typical lead time: {business.typicalLeadTime} days</p>
-            {hasWebsite ? (
-              <Button asChild variant="secondary">
-                <Link href={business.websiteUrl} target="_blank" rel="noreferrer">Website <ExternalLink className="h-4 w-4" /></Link>
-              </Button>
-            ) : null}
+        <aside className="grid h-fit gap-4 lg:sticky lg:top-24">
+          <div className="border border-[#ded8cc] bg-white p-5">
+            <h2 className="font-serif text-2xl font-semibold">Contact {business.name}</h2>
+            <div className="mt-4 grid gap-3 text-sm text-[#4f493f]">
+              {displayAddress ? <p className="flex items-center gap-2"><MapPin className="h-4 w-4" /> {displayAddress}</p> : null}
+              {business.publicEmail ? (
+                <p className="flex items-center gap-2 break-all">
+                  <Mail className="h-4 w-4 shrink-0" aria-hidden />
+                  <a href={`mailto:${business.publicEmail}`} className="underline">{business.publicEmail}</a>
+                </p>
+              ) : null}
+              <p>Starts from {formatCurrency(business.minimumBudget)}</p>
+              <p>Typical lead time: {business.typicalLeadTime} days</p>
+              {hasWebsite ? (
+                <Button asChild variant="secondary">
+                  <Link href={business.websiteUrl} target="_blank" rel="noreferrer">Website <ExternalLink className="h-4 w-4" /></Link>
+                </Button>
+              ) : null}
+            </div>
           </div>
+          <RecommendBusinessPanel businessId={business.id} businessName={business.name} />
         </aside>
       </div>
     </section>

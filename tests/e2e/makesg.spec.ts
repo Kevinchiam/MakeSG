@@ -42,9 +42,9 @@ test("admin approves a listing", async ({ page }) => {
   await expect(page.getByText("Current status: published")).toBeVisible();
 });
 
-test("finds an existing business before endorsement", async ({ page }) => {
+test("finds an existing business before recommendation", async ({ page }) => {
   await page.goto("/recommend-business?business=ubi-formworks-studio");
-  await expect(page.getByRole("heading", { name: "Endorse a business you trust" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Recommend a business you trust" })).toBeVisible();
   await expect(page.getByText("Business already exists")).toBeVisible();
   await expect(page.getByRole("link", { name: /View listing/ })).toBeVisible();
 });

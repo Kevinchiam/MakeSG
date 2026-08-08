@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, Send, Star } from "lucide-react";
+import { Heart, Send, Star, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { submitBusinessRecommendation } from "@/components/business/recommendation-actions";
 import { FileUploader } from "@/components/projects/file-uploader";
@@ -105,11 +105,21 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
 
       {open ? (
         <form action={submit} className="grid gap-5 border border-[#ded8cc] bg-white p-5">
-          <div>
-            <h2 className="font-serif text-2xl font-semibold">Recommend {businessName}</h2>
-            <p className="mt-2 text-sm leading-6 text-[#6d675d]">
-              Share a first-hand review. Recommendations are checked by admin before they appear publicly.
-            </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="font-serif text-2xl font-semibold">Recommend {businessName}</h2>
+              <p className="mt-2 text-sm leading-6 text-[#6d675d]">
+                Share a first-hand review. Recommendations are checked by admin before they appear publicly.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center border border-[#ded8cc] bg-white text-[#211f1b] hover:bg-[#fbfaf7] focus-visible:outline focus-visible:outline-2"
+              aria-label="Close recommendation panel"
+              onClick={() => setOpen(false)}
+            >
+              <X className="h-5 w-5" aria-hidden />
+            </button>
           </div>
 
           {success ? (

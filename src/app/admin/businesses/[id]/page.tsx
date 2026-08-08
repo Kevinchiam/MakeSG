@@ -74,7 +74,6 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
               <InfoRow label="Business type" value={business.businessType} />
               <InfoRow label="Minimum budget" value={formatCurrency(business.minimumBudget)} />
               <InfoRow label="Typical lead time" value={`${business.typicalLeadTime} days`} />
-              <InfoRow label="Endorsements" value={String(business.endorsementCount)} />
               <InfoRow label="Source" value={business.source} />
             </div>
             <div>

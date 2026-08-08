@@ -8,7 +8,7 @@ import type { ExistingBusinessSuggestion } from "@/lib/business-submissions";
 
 type SuggestionWithScore = ExistingBusinessSuggestion & { score: number };
 
-export function RecommendBusinessEndorsement({
+export function RecommendBusinessLookup({
   businesses,
   initialQuery = "",
 }: {
@@ -24,7 +24,7 @@ export function RecommendBusinessEndorsement({
       <div>
         <h2 className="font-serif text-3xl font-semibold">Find the business first</h2>
         <p className="mt-2 text-sm leading-6 text-[#6d675d]">
-          If the business already exists on MakeSG, endorse that listing instead of creating a duplicate. Names are matched without spaces or capital letters, and close typos are tolerated.
+          If the business already exists on MakeSG, open that listing and use the profile recommendation form. Names are matched without spaces or capital letters, and close typos are tolerated.
         </p>
       </div>
 
@@ -68,7 +68,7 @@ export function RecommendBusinessEndorsement({
             <div className="border border-dashed border-[#c9bfb0] bg-[#fbfaf7] p-5 text-sm leading-6 text-[#6d675d]">
               <p className="font-semibold text-[#211f1b]">No existing listing matches that name.</p>
               <p className="mt-1">
-                If the business is not on MakeSG yet, ask them to submit a listing for moderation so future endorsements can attach to the right profile.
+                If the business is not on MakeSG yet, ask them to submit a listing for moderation so future recommendations attach to the right profile.
               </p>
               <Button asChild className="mt-4">
                 <Link href="/for-businesses">Go to business onboarding</Link>
@@ -93,7 +93,7 @@ function findBusinessMatches(query: string, businesses: ExistingBusinessSuggesti
   return businesses
     .map((business): SuggestionWithScore => ({ ...business, score: scoreBusinessMatch(normalizedQuery, queryTokens, business.name) }))
     .filter((business) => business.score > 0)
-    .sort((a, b) => b.score - a.score || b.endorsementCount - a.endorsementCount || a.name.localeCompare(b.name))
+    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
     .slice(0, 6);
 }
 

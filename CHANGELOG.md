@@ -18,9 +18,14 @@ The format loosely follows Keep a Changelog and semantic sections.
 ### Changed
 - Changed business onboarding submission results to return a private manage token.
 - Changed published business edits to save as pending revisions so the existing approved listing stays live until admin approval.
+- Changed the business recommendation panel to open beneath the contact card on business profiles and added a visible close button.
+- Changed duplicate-business prompts to direct people to the existing listing instead of using endorsements.
 
 ### Fixed
 - Fixed the creative job status management panel so it adapts during desktop scrolling.
+
+### Removed
+- Removed endorsement labels, counts, badges, and one-click endorsement actions from public and admin-facing pages.
 
 ### Known Issues
 - Private business manage links are bearer credentials; anyone with the link can edit the listing.

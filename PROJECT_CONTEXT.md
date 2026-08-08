@@ -1,6 +1,6 @@
 # MakeSG Project Context
 
-Last updated: 2026-07-26
+Last updated: 2026-08-08
 
 ## Project Overview
 
@@ -8,7 +8,7 @@ Last updated: 2026-07-26
 MakeSG is a Singapore-focused directory and marketplace prototype that helps creatives find trusted businesses for fabrication, production, photography, videography, design, and specialist making services. It also lets businesses onboard themselves and lets creatives post jobs that businesses can browse.
 
 ### Vision
-MakeSG should become a trusted word-of-mouth layer for Singapore's creative production ecosystem: a place where real makers, studios, suppliers, and service businesses can be discovered through structured listings, recommendations, endorsements, portfolios, and practical job briefs.
+MakeSG should become a trusted word-of-mouth layer for Singapore's creative production ecosystem: a place where real makers, studios, suppliers, and service businesses can be discovered through structured listings, moderated recommendations, portfolios, and practical job briefs.
 
 ### Target Audience
 - Creatives, designers, artists, founders, agencies, and students looking for reliable businesses to help make ideas real.
@@ -23,7 +23,7 @@ Creative production relies heavily on word of mouth, but reliable service discov
 ### MVP Objectives
 - Publish a usable public directory of Singapore creative-production businesses.
 - Allow businesses to submit listings with services, budget, lead time, email, website, and portfolio media.
-- Allow people to recommend and endorse businesses they have tried.
+- Allow people to recommend businesses they have tried.
 - Allow admins to moderate business listings, recommendations, and creative jobs.
 - Allow creatives to post public job listings without account creation.
 - Allow creatives to manage posted jobs through a private manage link.
@@ -41,7 +41,7 @@ Creative production relies heavily on word of mouth, but reliable service discov
 
 ### Success Metrics
 - Number of published businesses.
-- Number of approved recommendations and endorsements.
+- Number of approved recommendations.
 - Number of creative jobs posted.
 - Percentage of creative jobs moved from Open to In discussion or Taken.
 - Search-to-profile and profile-to-contact conversion.
@@ -104,7 +104,7 @@ Creative production relies heavily on word of mouth, but reliable service discov
 - `src/lib/supabase`: Supabase browser, server, and admin client setup.
 - `src/lib/email`: Resend email templates and sending wrapper.
 - `src/lib/analytics`: Analytics event typing placeholder.
-- `supabase/migrations`: Ordered SQL migrations for schema, storage buckets, RLS, recommendations, media, endorsements, creative jobs, and status changes.
+- `supabase/migrations`: Ordered SQL migrations for schema, storage buckets, RLS, recommendations, media, legacy compatibility fields, creative jobs, and status changes.
 - `supabase/seed`: Demo data seed script.
 - `tests/unit`: Vitest unit tests for filtering, permissions, recommendation logic, slugging, and validation.
 - `tests/e2e`: Playwright end-to-end tests for major user flows.
@@ -246,18 +246,18 @@ Future improvements:
 - Persist recommendation media in public display.
 - Add recommendation editing before approval.
 
-### Business Endorsements
+### Business Duplicate Prevention
 Status: Completed
 
-Description: Duplicate-prevention and trust signal for businesses. Similar names can prompt users to endorse existing listings instead of creating duplicates.
+Description: Similar business names prompt users to view an existing listing instead of creating duplicates. The old endorsement UI has been removed so recommendations remain the single public word-of-mouth action.
 
 Relevant files:
 - `src/features/businesses/business-listing-form.tsx`
-- `src/features/businesses/actions.ts`
-- `supabase/migrations/0004_endorsements.sql`
+- `src/app/recommend-business/page.tsx`
+- `src/components/business/recommend-business-lookup.tsx`
 
 Future improvements:
-- Add per-user or per-email duplicate endorsement prevention.
+- Add stronger fuzzy matching and admin merge tools for accidental duplicates.
 
 ### Creative Job Posting
 Status: Completed
@@ -614,7 +614,7 @@ Photos/videos attached to creative jobs. Stores storage bucket/path, public URL,
 - Add richer admin moderation queues.
 - Add map view for businesses.
 - Add AI-assisted search and service matching after enough data is collected.
-- Add public trust badges based on verified recommendations and endorsements.
+- Add public trust badges based on verified recommendations.
 
 ## Outstanding Questions
 
