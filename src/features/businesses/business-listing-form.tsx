@@ -20,7 +20,7 @@ type BusinessOutput = z.output<typeof businessSchema>;
 export function BusinessListingForm({ existingBusinesses = [] }: { existingBusinesses?: ExistingBusinessSuggestion[] }) {
   const successRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
-  const [submitted, setSubmitted] = useState(false);
+  const [submittedManageUrl, setSubmittedManageUrl] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [otherError, setOtherError] = useState<string | null>(null);
   const [portfolioError, setPortfolioError] = useState<string | null>(null);
@@ -43,10 +43,10 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
     : undefined;
 
   useEffect(() => {
-    if (submitted) {
+    if (submittedManageUrl) {
       successRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-  }, [submitted]);
+  }, [submittedManageUrl]);
 
   useEffect(() => {
     if (submitError) {
@@ -54,11 +54,17 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
     }
   }, [submitError]);
 
-  if (submitted) {
+  if (submittedManageUrl) {
     return (
       <div ref={successRef} className="border border-[#536343] bg-[#eef2e8] p-6" tabIndex={-1}>
         <h2 className="text-xl font-semibold">Listing submitted for approval</h2>
-        <p className="mt-2 text-sm leading-6 text-[#39462d]">Thanks. Your listing is pending admin review.</p>
+        <p className="mt-2 text-sm leading-6 text-[#39462d]">
+          Thanks. Your listing is pending admin review. Save this private link so you can edit your business information later.
+        </p>
+        <div className="mt-4 grid gap-2 border border-[#b9c6ae] bg-white p-3 text-sm">
+          <span className="font-semibold">Private edit link</span>
+          <a className="break-all underline" href={submittedManageUrl}>{submittedManageUrl}</a>
+        </div>
       </div>
     );
   }
@@ -116,7 +122,7 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
               return;
             }
 
-            setSubmitted(true);
+            setSubmittedManageUrl(`${window.location.origin}/businesses/manage/${result.manageToken}`);
           } catch {
             setPortfolioError("The upload did not complete. Remove one file or use smaller files, then try again.");
           } finally {

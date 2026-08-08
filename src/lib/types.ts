@@ -32,6 +32,10 @@ export type PortfolioItem = {
   description: string;
   tags: string[];
   imageUrl: string;
+  fileName?: string;
+  storagePath?: string;
+  mimeType?: string;
+  sizeBytes?: number;
 };
 
 export type Business = {

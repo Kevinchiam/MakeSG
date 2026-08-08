@@ -1,6 +1,6 @@
 import { businesses } from "@/lib/data";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { PublicationStatus, VerificationStatus } from "@/lib/types";
+import type { BusinessType, PortfolioItem, PublicationStatus, VerificationStatus } from "@/lib/types";
 
 export type AdminBusinessSummary = {
   id: string;
@@ -26,6 +26,7 @@ type BusinessRow = {
   business_type?: string | null;
   publication_status: PublicationStatus;
   verification_status: VerificationStatus;
+  manage_token?: string | null;
   endorsement_count?: number | null;
   business_services?: { services: { name: string; slug: string } | { name: string; slug: string }[] | null }[];
   portfolio_items?: {
@@ -34,7 +35,29 @@ type BusinessRow = {
     description: string | null;
     image_url: string | null;
     tags: string[] | null;
+    file_name?: string | null;
+    storage_path?: string | null;
+    mime_type?: string | null;
+    size_bytes?: number | null;
   }[];
+};
+
+export type ManagedBusiness = {
+  id: string;
+  name: string;
+  shortDescription: string;
+  description: string;
+  websiteUrl: string;
+  publicEmail: string;
+  location: string;
+  minimumBudget: number;
+  typicalLeadTime: number;
+  businessType: BusinessType;
+  services: string[];
+  portfolio: PortfolioItem[];
+  publicationStatus: PublicationStatus;
+  endorsementCount: number;
+  manageToken: string;
 };
 
 export type ExistingBusinessSuggestion = {
@@ -107,7 +130,7 @@ export async function getAdminBusiness(id: string) {
     const supabase = createAdminClient();
     const { data } = await supabase
       .from("businesses")
-      .select("id, name, short_description, description, website_url, public_email, address, minimum_budget, typical_lead_time, business_type, publication_status, endorsement_count, business_services(services(name, slug)), portfolio_items(id, title, description, image_url, tags)")
+      .select("id, name, short_description, description, website_url, public_email, address, minimum_budget, typical_lead_time, business_type, publication_status, endorsement_count, business_services(services(name, slug)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes)")
       .eq("id", id)
       .single();
 
@@ -136,10 +159,64 @@ export async function getAdminBusiness(id: string) {
         description: item.description ?? "",
         imageUrl: item.image_url ?? "",
         tags: item.tags ?? [],
+        fileName: item.file_name ?? undefined,
+        storagePath: item.storage_path ?? undefined,
+        mimeType: item.mime_type ?? undefined,
+        sizeBytes: item.size_bytes ?? undefined,
       })) ?? [],
       publicationStatus: business.publication_status,
       endorsementCount: business.endorsement_count ?? 0,
       source: "supabase" as const,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function getBusinessByManageToken(token: string): Promise<ManagedBusiness | null> {
+  if (!token) return null;
+
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("businesses")
+      .select("id, name, short_description, description, website_url, public_email, address, minimum_budget, typical_lead_time, business_type, publication_status, manage_token, endorsement_count, business_services(services(name, slug)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes)")
+      .eq("manage_token", token)
+      .single();
+
+    if (error || !data) return null;
+
+    const business = data as unknown as BusinessRow;
+    return {
+      id: business.id,
+      name: business.name,
+      shortDescription: business.short_description,
+      description: business.description ?? "",
+      websiteUrl: business.website_url ?? "",
+      publicEmail: business.public_email ?? "",
+      location: business.address ?? "Singapore",
+      minimumBudget: business.minimum_budget ?? 0,
+      typicalLeadTime: business.typical_lead_time ?? 14,
+      businessType: (business.business_type ?? "studio") as BusinessType,
+      services: business.business_services?.flatMap((join) => {
+        if (!join.services) return [];
+        if (Array.isArray(join.services)) return join.services.map((service) => service.name);
+        return [join.services.name];
+      }) ?? [],
+      portfolio: business.portfolio_items?.filter((item) => Boolean(item.image_url)).map((item) => ({
+        id: item.id,
+        title: item.title,
+        description: item.description ?? "",
+        imageUrl: item.image_url ?? "",
+        tags: item.tags ?? [],
+        fileName: item.file_name ?? undefined,
+        storagePath: item.storage_path ?? undefined,
+        mimeType: item.mime_type ?? undefined,
+        sizeBytes: item.size_bytes ?? undefined,
+      })) ?? [],
+      publicationStatus: business.publication_status,
+      endorsementCount: business.endorsement_count ?? 0,
+      manageToken: business.manage_token ?? token,
     };
   } catch {
     return null;

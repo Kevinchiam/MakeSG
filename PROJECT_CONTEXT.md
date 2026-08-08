@@ -212,17 +212,22 @@ Future improvements:
 ### Business Onboarding
 Status: Completed
 
-Description: Businesses can submit listing details, service options including Other, SGD budget, lead time in days, and portfolio photos/videos. Listings enter moderation before publication.
+Description: Businesses can submit listing details, service options including Other, SGD budget, lead time in days, and portfolio photos/videos. Listings enter moderation before publication. After submission, businesses receive a private edit link that can update listing details and portfolio media. Any edit returns the listing to pending admin moderation.
 
 Relevant files:
 - `src/app/for-businesses/page.tsx`
 - `src/features/businesses/business-listing-form.tsx`
+- `src/app/businesses/manage/[token]/page.tsx`
+- `src/features/businesses/manage-business-details.tsx`
+- `src/features/businesses/manage-business-media.tsx`
 - `src/features/businesses/actions.ts`
 - `src/components/projects/file-uploader.tsx`
 - `supabase/migrations/0003_media_uploads.sql`
+- `supabase/migrations/0010_business_manage_links.sql`
 
 Future improvements:
-- Allow businesses to edit pending submissions through a private link or account.
+- Add regenerate/revoke manage link.
+- Email manage link to the business once email delivery is configured.
 - Add clearer admin rejection feedback loop.
 
 ### Business Recommendations
@@ -587,8 +592,8 @@ Photos/videos attached to creative jobs. Stores storage bucket/path, public URL,
 - Public enquiry submission is not persisted to the `enquiries` table yet.
 - Supabase Auth exists but general user account flows are incomplete.
 - Some dashboard pages are scaffolds and not ready as core product experiences.
-- Creative job private manage links are powerful: anyone with the link can edit the job.
-- Existing creative jobs created before manage-token rollout may not have manage links.
+- Creative job and business private manage links are powerful: anyone with the link can edit the listing.
+- Existing creative jobs and businesses created before manage-token rollout may not have manage links.
 
 ## Technical Debt
 
@@ -601,7 +606,7 @@ Photos/videos attached to creative jobs. Stores storage bucket/path, public URL,
 
 ## Future Ideas
 
-- Email creative job manage links after submission.
+- Email creative job and business manage links after submission.
 - Add job status history and timestamps.
 - Add business response tracking for creative jobs.
 - Add custom domain and verified email sender.
@@ -614,7 +619,7 @@ Photos/videos attached to creative jobs. Stores storage bucket/path, public URL,
 
 - Should creative jobs require moderation before public display?
 - Should private manage links expire or be revocable?
-- Should business owners have account-based editing, or use private links similar to creative jobs?
+- Should business owners eventually move from private-link editing to account-based editing?
 - Should the dashboard/account area be hidden until it is fully connected?
 - What custom domain and email domain will MakeSG use?
 - What map provider should be used if map search becomes important?

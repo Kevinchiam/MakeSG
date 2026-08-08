@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format loosely follows Keep a Changelog and semantic sections.
 
+## [Unreleased] - 2026-08-08
+
+### Added
+- Added private business listing management through `/businesses/manage/[token]`.
+- Added private business listing-detail editing with automatic return to pending moderation after edits.
+- Added private business portfolio media editing for photos/videos and captions.
+- Added business manage tokens and portfolio media metadata migration in `supabase/migrations/0010_business_manage_links.sql`.
+- Added private edit link display after business onboarding submission.
+
+### Changed
+- Changed business onboarding submission results to return a private manage token.
+- Changed edited business listings to require admin approval again before public display.
+
+### Fixed
+- Fixed the creative job status management panel so it adapts during desktop scrolling.
+
+### Known Issues
+- Private business manage links are bearer credentials; anyone with the link can edit the listing.
+- Existing businesses created before this migration may not have private manage links.
+
 ## [Unreleased] - 2026-07-26
 
 ### Added
