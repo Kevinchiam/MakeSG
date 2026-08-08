@@ -8,7 +8,7 @@ import { getPublishedBusinesses } from "@/lib/public-businesses";
 
 export const metadata: Metadata = {
   title: "Browse businesses",
-  description: "Search and filter fictional Singapore creative-services and fabrication businesses.",
+  description: "Search and filter Singapore creative-services and fabrication businesses.",
 };
 
 export const dynamic = "force-dynamic";

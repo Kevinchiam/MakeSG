@@ -7,7 +7,7 @@ export function SiteFooter() {
         <div>
           <p className="font-serif text-3xl font-semibold">MakeSG</p>
           <p className="mt-4 max-w-md text-sm leading-6 text-[#d8d0c4]">
-            A directory for fictional demo data today, designed for Singapore creative services and fabrication workflows tomorrow.
+            A Singapore directory for finding businesses, studios and workshops that help creative ideas get made.
           </p>
         </div>
         <div>

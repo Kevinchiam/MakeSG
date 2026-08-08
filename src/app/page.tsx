@@ -47,7 +47,7 @@ export default function Home() {
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Featured businesses</p>
-              <h2 className="mt-2 font-serif text-4xl font-semibold">Fictional Singapore demo listings</h2>
+              <h2 className="mt-2 font-serif text-4xl font-semibold">Singapore businesses to start with</h2>
             </div>
             <Button asChild variant="secondary"><Link href="/businesses">Browse directory</Link></Button>
           </div>

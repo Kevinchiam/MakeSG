@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ArrowUpRight, Clock, MapPin, MessageCircleHeart, ThumbsUp } from "lucide-react";
 import { MaterialTag } from "@/components/business/material-tag";
 import { SaveBusinessButton } from "@/components/business/save-business-button";
-import { VerificationBadge } from "@/components/business/verification-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getApprovedRecommendationsForBusiness, services } from "@/lib/data";
@@ -28,14 +27,12 @@ export function BusinessCard({ business }: { business: Business }) {
       <div className="flex flex-1 flex-col gap-4 p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-[#9c4f35]">{business.demoNotice}</p>
-            <h2 className="mt-1 text-xl font-semibold tracking-normal">
+            <h2 className="text-xl font-semibold tracking-normal">
               <Link href={`/businesses/${business.slug}`} className="hover:underline">
                 {business.name}
               </Link>
             </h2>
           </div>
-          <VerificationBadge status={business.verificationStatus} />
         </div>
         <p className="text-sm leading-6 text-[#5f594f]">{business.shortDescription}</p>
         <div className="flex flex-wrap gap-2">
