@@ -67,6 +67,7 @@ export type Business = {
   claimed: boolean;
   endorsementCount: number;
   recommendationCount?: number;
+  updatedAt?: string;
   services: string[];
   materials: string[];
   processes: string[];

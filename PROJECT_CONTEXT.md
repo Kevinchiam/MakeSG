@@ -151,15 +151,16 @@ Most mutations use server actions:
 ### Public Home
 Status: Completed
 
-Description: Landing/search entry for MakeSG with editorial visual direction and a prominent provider search form.
+Description: Landing/search entry for MakeSG with editorial visual direction, live directory counts, current platform feature copy, and homepage business highlights ranked by recommendations, featured status, and latest updates.
 
 Relevant files:
 - `src/app/page.tsx`
 - `src/components/site/search-bar.tsx`
+- `src/lib/public-businesses.ts`
 - `src/app/globals.css`
 
 Future improvements:
-- Add stronger dynamic content from featured businesses and creative jobs.
+- Add richer dynamic previews from creative jobs and recommendations.
 - Track search conversion.
 
 ### Business Directory

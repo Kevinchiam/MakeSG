@@ -1,36 +1,48 @@
 import Link from "next/link";
-import { Building2, Compass, Send } from "lucide-react";
+import { BriefcaseBusiness, Building2, ClipboardList, MessageCircleHeart, SearchCheck, ShieldCheck } from "lucide-react";
 import { BusinessGrid } from "@/components/business/business-grid";
 import { SearchBar } from "@/components/site/search-bar";
 import { Button } from "@/components/ui/button";
-import { businesses } from "@/lib/data";
+import { getPublicCreativeJobs } from "@/lib/creative-jobs";
+import { getPublishedBusinesses } from "@/lib/public-businesses";
+import type { Business } from "@/lib/types";
 
-export default function Home() {
-  const featured = businesses.filter((business) => business.featured);
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const [businesses, creativeJobs] = await Promise.all([getPublishedBusinesses(), getPublicCreativeJobs()]);
+  const featured = getHomepageBusinesses(businesses);
+  const openCreativeJobs = creativeJobs.filter((job) => job.status === "open").length;
+  const recommendedBusinesses = businesses.filter((business) => (business.recommendationCount ?? 0) > 0).length;
 
   return (
     <>
       <section className="editorial-grid border-b border-[#ded8cc]">
         <div className="container-shell grid gap-12 py-16 md:grid-cols-[1.15fr_0.85fr] md:py-24">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Singapore creative production directory</p>
+            <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Singapore creative production network</p>
             <h1 className="mt-5 max-w-4xl font-serif text-5xl font-semibold leading-[1.02] tracking-normal md:text-7xl">
-              Find the right people to help make your idea real.
+              Find the businesses that can help make your idea real.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-[#5f594f]">
-              Discover fabricators, craftspeople, creative studios and specialist services across Singapore.
+              Search Singapore makers, studios, photographers, suppliers and workshops. Browse community recommendations, post creative jobs and keep listings accurate together.
             </p>
             <div className="mt-8 max-w-2xl">
-              <SearchBar placeholder="What are you trying to make?" />
+              <SearchBar placeholder="Search by service, material, location or project need" />
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3 text-sm text-[#5f594f]">
+              <span className="border border-[#ded8cc] bg-white px-3 py-2">{businesses.length} listed businesses</span>
+              <span className="border border-[#ded8cc] bg-white px-3 py-2">{recommendedBusinesses} community recommended</span>
+              <span className="border border-[#ded8cc] bg-white px-3 py-2">{openCreativeJobs} open creative jobs</span>
             </div>
           </div>
           <div className="border border-[#211f1b] bg-white p-6 shadow-[12px_12px_0_#d8d0c4]">
-            <h2 className="font-serif text-3xl font-semibold">From idea to made object</h2>
+            <h2 className="font-serif text-3xl font-semibold">How MakeSG works now</h2>
             <div className="mt-6 grid gap-5">
               {[
-                ["Describe", "Turn a loose idea into a clear project brief."],
-                ["Map services", "See the making disciplines likely needed."],
-                ["Contact", "Shortlist Singapore businesses and send a focused enquiry."],
+                ["Find", "Search published businesses by service, need, budget, lead time and location."],
+                ["Verify", "Use moderated word-of-mouth recommendations and portfolio media as trust signals."],
+                ["Act", "Contact a business, post a creative job, recommend one you trust or request a listing correction."],
               ].map(([title, text]) => (
                 <div key={title} className="border-l-2 border-[#315c6b] pl-4">
                   <p className="font-semibold">{title}</p>
@@ -46,8 +58,11 @@ export default function Home() {
         <div className="container-shell">
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Featured businesses</p>
-              <h2 className="mt-2 font-serif text-4xl font-semibold">Singapore businesses to start with</h2>
+              <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Directory highlights</p>
+              <h2 className="mt-2 font-serif text-4xl font-semibold">Recommended and recently updated businesses</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#6d675d]">
+                This list updates from the live directory, prioritising community-recommended, featured and newly updated listings.
+              </p>
             </div>
             <Button asChild variant="secondary"><Link href="/businesses">Browse directory</Link></Button>
           </div>
@@ -56,12 +71,12 @@ export default function Home() {
       </section>
 
       <section className="container-shell py-16">
-        <h2 className="font-serif text-4xl font-semibold">Three project journeys</h2>
+        <h2 className="font-serif text-4xl font-semibold">Three ways people use MakeSG</h2>
         <div className="mt-8 grid gap-5 md:grid-cols-3">
           {[
-            ["Prototype a product", "Match aluminium, electronics and model-making needs before spending on tooling."],
-            ["Build an installation", "Find fabricators, signage makers and creative technologists for a launch or exhibition."],
-            ["Prepare a small batch", "Combine packaging, printing and production partners for a pilot run."],
+            ["Find a business", "Search for fabrication, photography, videography, production, design and specialist services."],
+            ["Post a creative job", "Share what you need made so businesses can browse open work and reach out directly."],
+            ["Strengthen the directory", "Recommend businesses you trust or request corrections when a listing needs updating."],
           ].map(([title, text]) => (
             <article key={title} className="border border-[#ded8cc] bg-white p-6">
               <h3 className="text-xl font-semibold">{title}</h3>
@@ -73,25 +88,47 @@ export default function Home() {
 
       <section className="border-y border-[#ded8cc] bg-white">
         <div className="container-shell grid gap-8 py-14 md:grid-cols-3">
-          <Feature icon={<Compass />} title="Describe your project" text="Use the brief builder to capture outcomes, constraints, materials and references." />
-          <Feature icon={<Building2 />} title="Discover relevant businesses" text="Browse by service, material, location, budget, lead time and production fit." />
-          <Feature icon={<Send />} title="Send focused enquiries" text="Contact businesses with the context they need to respond usefully." />
+          <Feature icon={<SearchCheck />} title="Smart directory search" text="Search across listing words, services, descriptions and portfolios, with light typo tolerance." />
+          <Feature icon={<MessageCircleHeart />} title="Moderated recommendations" text="Community reviews and media are reviewed before they become public trust signals." />
+          <Feature icon={<ClipboardList />} title="Creative job board" text="Creatives can post jobs and manage status through a private link without creating an account." />
         </div>
       </section>
 
       <section className="container-shell py-16">
-        <div className="grid gap-6 border border-[#211f1b] bg-[#211f1b] p-8 text-white md:grid-cols-[1fr_auto] md:items-center">
-          <div>
-            <h2 className="font-serif text-4xl font-semibold">Offer a creative service in Singapore?</h2>
-            <p className="mt-3 max-w-2xl text-[#d8d0c4]">Create a listing for review and help designers, studios and organisations understand what you can make.</p>
-          </div>
-          <Button asChild variant="secondary">
-            <Link href="/for-businesses">Create a listing</Link>
-          </Button>
+        <div className="grid gap-5 md:grid-cols-2">
+          <Callout
+            icon={<Building2 />}
+            title="Know a useful business?"
+            text="Business owners and community members can submit listings. Approved businesses receive a private edit link, while public correction requests go to admin review."
+            href="/for-businesses"
+            label="Submit a business"
+          />
+          <Callout
+            icon={<BriefcaseBusiness />}
+            title="Need help making something?"
+            text="Post a creative job with services needed, reference media and contact details so listed businesses can browse and respond."
+            href="/for-creatives"
+            label="Post a creative job"
+          />
         </div>
       </section>
     </>
   );
+}
+
+function getHomepageBusinesses(businesses: Business[]) {
+  return [...businesses].sort((a, b) => {
+    const recommendationDifference = (b.recommendationCount ?? 0) - (a.recommendationCount ?? 0);
+    if (recommendationDifference) return recommendationDifference;
+
+    if (a.featured !== b.featured) return a.featured ? -1 : 1;
+
+    const aUpdated = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+    const bUpdated = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+    if (aUpdated !== bUpdated) return bUpdated - aUpdated;
+
+    return a.name.localeCompare(b.name);
+  });
 }
 
 function Feature({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
@@ -100,6 +137,23 @@ function Feature({ icon, title, text }: { icon: React.ReactNode; title: string; 
       <div className="mb-4 flex h-10 w-10 items-center justify-center border border-[#315c6b] text-[#315c6b]">{icon}</div>
       <h2 className="text-xl font-semibold">{title}</h2>
       <p className="mt-2 text-sm leading-6 text-[#6d675d]">{text}</p>
+    </div>
+  );
+}
+
+function Callout({ icon, title, text, href, label }: { icon: React.ReactNode; title: string; text: string; href: string; label: string }) {
+  return (
+    <div className="grid gap-5 border border-[#211f1b] bg-[#211f1b] p-8 text-white">
+      <div className="flex h-11 w-11 items-center justify-center border border-[#d8d0c4] text-[#d8d0c4]">{icon}</div>
+      <div>
+        <h2 className="font-serif text-3xl font-semibold">{title}</h2>
+        <p className="mt-3 text-sm leading-6 text-[#d8d0c4]">{text}</p>
+      </div>
+      <Button asChild variant="secondary" className="w-fit">
+        <Link href={href}>
+          {label} <ShieldCheck className="h-4 w-4" aria-hidden />
+        </Link>
+      </Button>
     </div>
   );
 }

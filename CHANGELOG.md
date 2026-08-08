@@ -21,6 +21,8 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Added a Recommended label to business cards when a listing has approved recommendations.
 
 ### Changed
+- Changed the homepage featured business section to use live published listings, ranked by recommendation count, featured status, and latest updates.
+- Refreshed homepage copy and iconography to reflect current platform features: business search, moderated recommendations, creative jobs, public change requests, and private edit links.
 - Changed business onboarding submission results to return a private manage token.
 - Changed published business edits to save as pending revisions so the existing approved listing stays live until admin approval.
 - Changed the business recommendation panel to open beneath the contact card on business profiles and added a visible close button.
