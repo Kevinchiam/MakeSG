@@ -7,6 +7,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 ## [Unreleased] - 2026-08-08
 
 ### Added
+- Added a shared CSS-only platform motion layer for page reveals, card/list staggering, panel opening, form focus feedback, button lift states, header entrance, and footer link motion with reduced-motion support.
 - Added CSS-only homepage animations for entrance reveals, featured business card staggering, hover lift states, icon motion, and a subtle hero-card float with reduced-motion support.
 - Added private business listing management through `/businesses/manage/[token]`.
 - Added private business listing-detail editing with automatic return to pending moderation after edits.

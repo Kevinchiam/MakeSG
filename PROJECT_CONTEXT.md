@@ -541,7 +541,8 @@ Photos/videos attached to creative jobs. Stores storage bucket/path, public URL,
 
 ### Animations
 - Motion is CSS-only and intentionally restrained.
-- Homepage elements use entrance reveals, featured-card staggering, hover lift states, icon motion, and a subtle hero-card float.
+- Platform pages use shared entrance reveals, list/card staggering, button lift, form focus feedback, details-panel opening, and footer link motion.
+- Homepage elements add featured-card staggering, icon motion, and a subtle hero-card float.
 - `html { scroll-behavior: smooth; }` supports feedback scrolling.
 - `prefers-reduced-motion` disables motion-heavy effects.
 

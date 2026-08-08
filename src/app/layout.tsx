@@ -31,7 +31,7 @@ export default function RootLayout({
     >
       <body className="min-h-full">
         <SiteHeader />
-        <main>{children}</main>
+        <main className="platform-motion">{children}</main>
         <SiteFooter />
       </body>
     </html>

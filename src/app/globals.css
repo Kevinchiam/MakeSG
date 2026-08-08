@@ -64,6 +64,138 @@ select {
   margin-inline: auto;
 }
 
+.platform-motion > section,
+.platform-motion > div,
+.platform-motion .container-shell > h1,
+.platform-motion .container-shell > h2,
+.platform-motion .container-shell > p,
+.platform-motion .container-shell > .grid,
+.platform-motion .container-shell > form,
+.platform-motion .container-shell > article,
+.platform-motion .container-shell > details {
+  animation: platform-reveal 580ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.platform-motion .container-shell > *:nth-child(2) {
+  animation-delay: 70ms;
+}
+
+.platform-motion .container-shell > *:nth-child(3) {
+  animation-delay: 120ms;
+}
+
+.platform-motion .container-shell > *:nth-child(4) {
+  animation-delay: 170ms;
+}
+
+.platform-motion :is(article, details, form, section):where([class*="border"]) {
+  transition:
+    border-color 180ms ease,
+    box-shadow 220ms ease,
+    transform 220ms ease;
+}
+
+.platform-motion :is(article, a):where([class*="border"]):hover {
+  border-color: var(--ink);
+  box-shadow: 6px 6px 0 #d8d0c4;
+  transform: translate(-1px, -2px);
+}
+
+.platform-motion :is(button, a[href]):not(:disabled) {
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.platform-motion button:not(:disabled):hover,
+.platform-motion a[href]:where([class*="inline-flex"], [class*="flex"]):hover {
+  transform: translateY(-1px);
+}
+
+.platform-motion :is(button, a[href]):active {
+  transform: translateY(0);
+}
+
+.platform-motion :is(input, textarea, select) {
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+.platform-motion :is(input, textarea, select):focus-visible {
+  border-color: var(--steel);
+  box-shadow: 0 0 0 4px rgba(49, 92, 107, 0.12);
+}
+
+.platform-motion details[open] > :not(summary) {
+  animation: platform-panel-open 260ms ease both;
+}
+
+.platform-motion summary {
+  transition: color 180ms ease;
+}
+
+.platform-motion summary:hover {
+  color: var(--clay);
+}
+
+.platform-motion .grid > article,
+.platform-motion .grid > a,
+.platform-motion .grid > details,
+.platform-motion .grid > form {
+  animation: platform-card-rise 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--step-index, 0) * 55ms);
+}
+
+.platform-motion .grid > :is(article, a, details, form):nth-child(1) {
+  animation-delay: 40ms;
+}
+
+.platform-motion .grid > :is(article, a, details, form):nth-child(2) {
+  animation-delay: 90ms;
+}
+
+.platform-motion .grid > :is(article, a, details, form):nth-child(3) {
+  animation-delay: 140ms;
+}
+
+.platform-motion .grid > :is(article, a, details, form):nth-child(4) {
+  animation-delay: 190ms;
+}
+
+.platform-motion .grid > :is(article, a, details, form):nth-child(5) {
+  animation-delay: 240ms;
+}
+
+.platform-motion .grid > :is(article, a, details, form):nth-child(6) {
+  animation-delay: 290ms;
+}
+
+body > header {
+  animation: platform-header-drop 420ms ease both;
+}
+
+body > footer {
+  animation: platform-reveal 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-timeline: view();
+  animation-range: entry 0% cover 24%;
+}
+
+body > footer a {
+  transition:
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+body > footer a:hover {
+  color: #ffffff;
+  transform: translateX(3px);
+}
+
 .home-reveal {
   animation: home-reveal 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: calc(var(--step-index, 0) * 90ms);
@@ -226,6 +358,50 @@ select {
   }
   50% {
     transform: translateY(-6px) rotate(0.3deg);
+  }
+}
+
+@keyframes platform-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes platform-card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes platform-panel-open {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes platform-header-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
