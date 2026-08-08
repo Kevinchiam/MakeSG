@@ -1,8 +1,8 @@
 # MakeSG
 
-MakeSG is a production-ready MVP scaffold for a Singapore creative-services and fabrication directory. It uses Next.js App Router, TypeScript, Tailwind CSS, shadcn-style primitives, Supabase-ready Postgres/Auth/Storage, React Hook Form, Zod, Lucide, Vitest and Playwright.
+MakeSG is a production-ready MVP for a Singapore creative-services and fabrication directory. It uses Next.js App Router, TypeScript, Tailwind CSS, shadcn-style primitives, Supabase Postgres/Auth/Storage, React Hook Form, Zod, Lucide, Vitest and Playwright.
 
-All included business data is fictional demo data. Images are generated geometric SVG placeholders served locally.
+The app supports real community-submitted business listings, moderated recommendations, creative job posts, private edit links, media uploads and admin review workflows. Demo fallback data remains bundled only so local development still works before Supabase is configured.
 
 ## Run Locally
 
@@ -71,9 +71,12 @@ Admin pages are protected by a simple admin login. Set these environment variabl
 ADMIN_USERNAME=Admin
 ADMIN_PASSWORD=MakeSG
 ADMIN_SESSION_TOKEN=<long-random-secret>
+ADMIN_EMAIL=admin@example.com
 ```
 
 If unset, the default username is `Admin` and the default password is `MakeSG`. Change these before sharing the site widely.
+
+`ADMIN_EMAIL` receives business listing change requests submitted from public directory cards.
 
 ## Enquiry Emails
 
@@ -108,15 +111,15 @@ The app keeps database access out of presentational components. UI components re
 
 ## Known Limitations
 
-- Demo listings are still bundled so the site can run without Supabase credentials.
-- Save actions are local interactive placeholders until wired to server actions.
-- Business recommendations are local interactive placeholders until wired to server actions.
+- Demo fallback listings are still bundled so the site can run without Supabase credentials.
+- Public business listing change requests require `ADMIN_EMAIL` plus Resend email configuration.
+- Public enquiries require Resend email configuration for automatic delivery; otherwise the UI shows direct contact details.
 - Public reviews, live chat, payments and AI recommendations are intentionally excluded.
 
 ## Roadmap
 
-- Replace mock data with Supabase repository functions.
-- Add server actions for projects, enquiries, saved businesses and moderation.
-- Persist business recommendations through Supabase server actions and admin moderation.
+- Continue replacing fallback-only workflows with Supabase repository functions.
+- Persist public enquiries in Supabase in addition to email delivery.
+- Add admin tooling for request-change inbox triage.
 - Add richer portfolio management and image transformations.
 - Add rate limiting middleware for enquiry endpoints.

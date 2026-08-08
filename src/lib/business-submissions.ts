@@ -21,6 +21,7 @@ type BusinessRow = {
   description?: string;
   website_url?: string | null;
   public_email?: string | null;
+  public_phone?: string | null;
   address?: string | null;
   minimum_budget?: number | null;
   typical_lead_time?: number | null;
@@ -65,6 +66,7 @@ type BusinessRevisionRow = {
     description?: string;
     websiteUrl?: string;
     publicEmail?: string;
+    phoneNumber?: string;
     location?: string;
     minimumBudget?: number;
     typicalLeadTime?: number;
@@ -88,6 +90,7 @@ export type ManagedBusiness = {
   description: string;
   websiteUrl: string;
   publicEmail: string;
+  phoneNumber: string;
   location: string;
   minimumBudget: number;
   typicalLeadTime: number;
@@ -156,6 +159,7 @@ export async function getAdminBusiness(id: string) {
       description: demoBusiness.description,
       websiteUrl: demoBusiness.websiteUrl,
       publicEmail: demoBusiness.publicEmail,
+      phoneNumber: demoBusiness.publicPhone ?? "",
       location: demoBusiness.location,
       minimumBudget: demoBusiness.minimumBudget,
       typicalLeadTime: demoBusiness.typicalLeadTime,
@@ -173,7 +177,7 @@ export async function getAdminBusiness(id: string) {
     const supabase = createAdminClient();
     const { data } = await supabase
       .from("businesses")
-      .select("id, name, short_description, description, website_url, public_email, address, minimum_budget, typical_lead_time, business_type, publication_status, endorsement_count, business_services(services(name, slug)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes), business_listing_revisions(id, status, proposed_data, proposed_services, proposed_portfolio)")
+      .select("id, name, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, publication_status, endorsement_count, business_services(services(name, slug)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes), business_listing_revisions(id, status, proposed_data, proposed_services, proposed_portfolio)")
       .eq("id", id)
       .single();
 
@@ -188,7 +192,8 @@ export async function getAdminBusiness(id: string) {
       description: business.description ?? "",
       websiteUrl: business.website_url ?? "",
       publicEmail: business.public_email ?? "",
-      location: business.address ?? "Singapore",
+      phoneNumber: business.public_phone ?? "",
+      location: business.address ?? "",
       minimumBudget: business.minimum_budget ?? 0,
       typicalLeadTime: business.typical_lead_time ?? 0,
       businessType: business.business_type ?? "studio",
@@ -215,7 +220,7 @@ export async function getBusinessByManageToken(token: string): Promise<ManagedBu
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("businesses")
-      .select("id, name, short_description, description, website_url, public_email, address, minimum_budget, typical_lead_time, business_type, publication_status, manage_token, endorsement_count, business_services(services(name, slug)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes), business_listing_revisions(id, status, proposed_data, proposed_services, proposed_portfolio)")
+      .select("id, name, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, publication_status, manage_token, endorsement_count, business_services(services(name, slug)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes), business_listing_revisions(id, status, proposed_data, proposed_services, proposed_portfolio)")
       .eq("manage_token", token)
       .single();
 
@@ -237,7 +242,8 @@ export async function getBusinessByManageToken(token: string): Promise<ManagedBu
       description: displayData?.description ?? business.description ?? "",
       websiteUrl: displayData?.websiteUrl ?? business.website_url ?? "",
       publicEmail: displayData?.publicEmail ?? business.public_email ?? "",
-      location: displayData?.location ?? business.address ?? "Singapore",
+      phoneNumber: displayData?.phoneNumber ?? business.public_phone ?? "",
+      location: displayData?.location ?? business.address ?? "",
       minimumBudget: displayData?.minimumBudget ?? business.minimum_budget ?? 0,
       typicalLeadTime: displayData?.typicalLeadTime ?? business.typical_lead_time ?? 14,
       businessType: (displayData?.businessType ?? business.business_type ?? "studio") as BusinessType,

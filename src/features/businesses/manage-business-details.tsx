@@ -70,14 +70,17 @@ export function ManageBusinessDetails({ token, business }: { token: string; busi
         <Textarea name="description" defaultValue={business.description} required />
       </Field>
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Website" error={fieldErrors.websiteUrl}>
-          <Input name="websiteUrl" defaultValue={business.websiteUrl} required />
+        <Field label="Website (optional)" error={fieldErrors.websiteUrl}>
+          <Input name="websiteUrl" defaultValue={business.websiteUrl} />
         </Field>
-        <Field label="Public email" error={fieldErrors.publicEmail}>
-          <Input name="publicEmail" defaultValue={business.publicEmail} required />
+        <Field label="Public email (optional)" error={fieldErrors.publicEmail}>
+          <Input name="publicEmail" defaultValue={business.publicEmail} />
         </Field>
-        <Field label="Location" error={fieldErrors.location}>
-          <Input name="location" defaultValue={business.location} required />
+        <Field label="Phone number (optional)" error={fieldErrors.phoneNumber}>
+          <Input name="phoneNumber" defaultValue={business.phoneNumber} placeholder="+65 8123 4567" />
+        </Field>
+        <Field label="Location (optional)" error={fieldErrors.location}>
+          <Input name="location" defaultValue={business.location} />
         </Field>
         <Field label="Business type" error={fieldErrors.businessType}>
           <select name="businessType" defaultValue={business.businessType} className="min-h-11 border border-[#ded8cc] bg-white px-3">
@@ -89,11 +92,11 @@ export function ManageBusinessDetails({ token, business }: { token: string; busi
             <option value="supplier">Supplier</option>
           </select>
         </Field>
-        <Field label="Minimum budget (SGD)" hint="Enter the smallest project budget you usually accept, in Singapore dollars." error={fieldErrors.minimumBudget}>
-          <Input name="minimumBudget" defaultValue={business.minimumBudget} inputMode="numeric" required />
+        <Field label="Minimum budget (SGD, optional)" hint="Optional. Enter the smallest project budget usually accepted, in Singapore dollars." error={fieldErrors.minimumBudget}>
+          <Input name="minimumBudget" defaultValue={business.minimumBudget > 0 ? business.minimumBudget : ""} inputMode="numeric" />
         </Field>
-        <Field label="Typical lead time (days)" hint="Enter the usual number of calendar days needed before delivery." error={fieldErrors.typicalLeadTime}>
-          <Input name="typicalLeadTime" defaultValue={business.typicalLeadTime} inputMode="numeric" required />
+        <Field label="Typical lead time (days, optional)" hint="Optional. Enter the usual number of calendar days needed before delivery." error={fieldErrors.typicalLeadTime}>
+          <Input name="typicalLeadTime" defaultValue={business.typicalLeadTime > 0 ? business.typicalLeadTime : ""} inputMode="numeric" />
         </Field>
       </div>
       <fieldset className="grid gap-2">

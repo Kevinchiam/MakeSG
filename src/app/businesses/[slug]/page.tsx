@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ExternalLink, Mail, MapPin, MessageCircleHeart, Star } from "lucide-react";
+import { ExternalLink, Mail, MapPin, MessageCircleHeart, Phone, Star } from "lucide-react";
 import { MaterialTag } from "@/components/business/material-tag";
 import { RecommendBusinessPanel } from "@/components/business/recommend-business-panel";
 import { Badge } from "@/components/ui/badge";
@@ -185,8 +185,14 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
                   <a href={`mailto:${business.publicEmail}`} className="underline">{business.publicEmail}</a>
                 </p>
               ) : null}
-              <p>Starts from {formatCurrency(business.minimumBudget)}</p>
-              <p>Typical lead time: {business.typicalLeadTime} days</p>
+              {business.publicPhone ? (
+                <p className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 shrink-0" aria-hidden />
+                  <a href={`tel:${business.publicPhone}`} className="underline">{business.publicPhone}</a>
+                </p>
+              ) : null}
+              {business.minimumBudget > 0 ? <p>Starts from {formatCurrency(business.minimumBudget)}</p> : null}
+              {business.typicalLeadTime > 0 ? <p>Typical lead time: {business.typicalLeadTime} days</p> : null}
               {hasWebsite ? (
                 <Button asChild variant="secondary">
                   <Link href={business.websiteUrl} target="_blank" rel="noreferrer">Website <ExternalLink className="h-4 w-4" /></Link>

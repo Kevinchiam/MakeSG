@@ -65,7 +65,7 @@ export function renderTemplate(template: EmailTemplate, variables: Record<string
     admin_notification: `Admin note: ${variables.message ?? "A MakeSG action needs review."}`,
   };
 
-  return `<main style="font-family:system-ui,sans-serif;line-height:1.6;color:#211f1b"><h1>${escapeHtml(subjects[template])}</h1><p>${escapeHtml(body[template])}</p></main>`;
+  return `<main style="font-family:system-ui,sans-serif;line-height:1.6;color:#211f1b"><h1>${escapeHtml(subjects[template])}</h1><p>${escapeHtml(body[template]).replace(/\n/g, "<br>")}</p></main>`;
 }
 
 function escapeHtml(value: string) {

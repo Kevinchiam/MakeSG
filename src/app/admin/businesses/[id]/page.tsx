@@ -26,10 +26,11 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
                 <InfoRow label="Short summary" value={business.pendingRevision.data.shortDescription} />
                 <InfoRow label="Website" value={business.pendingRevision.data.websiteUrl} />
                 <InfoRow label="Public email" value={business.pendingRevision.data.publicEmail} />
+                <InfoRow label="Phone number" value={business.pendingRevision.data.phoneNumber} />
                 <InfoRow label="Location" value={business.pendingRevision.data.location} />
                 <InfoRow label="Business type" value={business.pendingRevision.data.businessType} />
-                <InfoRow label="Minimum budget" value={formatCurrency(business.pendingRevision.data.minimumBudget ?? 0)} />
-                <InfoRow label="Typical lead time" value={`${business.pendingRevision.data.typicalLeadTime ?? 0} days`} />
+                <InfoRow label="Minimum budget" value={business.pendingRevision.data.minimumBudget ? formatCurrency(business.pendingRevision.data.minimumBudget) : undefined} />
+                <InfoRow label="Typical lead time" value={business.pendingRevision.data.typicalLeadTime ? `${business.pendingRevision.data.typicalLeadTime} days` : undefined} />
               </div>
               <div>
                 <h2 className="text-sm font-semibold uppercase tracking-wide text-[#6d675d]">Services</h2>
@@ -70,10 +71,11 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
             <div className="grid gap-4 md:grid-cols-2">
               <InfoRow label="Website" value={business.websiteUrl} />
               <InfoRow label="Public email" value={business.publicEmail} />
+              <InfoRow label="Phone number" value={business.phoneNumber} />
               <InfoRow label="Location" value={business.location} />
               <InfoRow label="Business type" value={business.businessType} />
-              <InfoRow label="Minimum budget" value={formatCurrency(business.minimumBudget)} />
-              <InfoRow label="Typical lead time" value={`${business.typicalLeadTime} days`} />
+              <InfoRow label="Minimum budget" value={business.minimumBudget ? formatCurrency(business.minimumBudget) : undefined} />
+              <InfoRow label="Typical lead time" value={business.typicalLeadTime ? `${business.typicalLeadTime} days` : undefined} />
               <InfoRow label="Source" value={business.source} />
             </div>
             <div>

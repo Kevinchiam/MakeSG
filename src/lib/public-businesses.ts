@@ -12,8 +12,8 @@ type PublishedBusinessRow = {
   public_email: string | null;
   public_phone: string | null;
   address: string | null;
-  minimum_budget: number;
-  typical_lead_time: number;
+  minimum_budget: number | null;
+  typical_lead_time: number | null;
   business_type: BusinessType;
   accepts_prototypes: boolean;
   accepts_production: boolean;
@@ -52,7 +52,9 @@ export async function getPublishedBusinesses(): Promise<Business[]> {
 
     if (error) return publishedDemoBusinesses;
 
-    const submittedBusinesses = ((data ?? []) as unknown as PublishedBusinessRow[]).map(rowToBusiness);
+    const submittedRows = (data ?? []) as unknown as PublishedBusinessRow[];
+    const recommendationCounts = await approvedRecommendationCounts(submittedRows.map((business) => business.id));
+    const submittedBusinesses = submittedRows.map((row) => rowToBusiness(row, recommendationCounts.get(row.id) ?? 0));
     return [...submittedBusinesses, ...publishedDemoBusinesses];
   } catch {
     return publishedDemoBusinesses;
@@ -75,13 +77,39 @@ export async function getPublishedBusinessBySlug(slug: string) {
       .single();
 
     if (error || !data) return null;
-    return rowToBusiness(data as unknown as PublishedBusinessRow);
+    const row = data as unknown as PublishedBusinessRow;
+    const recommendationCounts = await approvedRecommendationCounts([row.id]);
+    return rowToBusiness(row, recommendationCounts.get(row.id) ?? 0);
   } catch {
     return null;
   }
 }
 
-function rowToBusiness(row: PublishedBusinessRow): Business {
+async function approvedRecommendationCounts(businessIds: string[]) {
+  const counts = new Map<string, number>();
+  if (!businessIds.length) return counts;
+
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("business_recommendations")
+      .select("business_id")
+      .eq("status", "approved")
+      .in("business_id", businessIds);
+
+    if (error) return counts;
+
+    for (const recommendation of (data ?? []) as Array<{ business_id: string }>) {
+      counts.set(recommendation.business_id, (counts.get(recommendation.business_id) ?? 0) + 1);
+    }
+  } catch {
+    return counts;
+  }
+
+  return counts;
+}
+
+function rowToBusiness(row: PublishedBusinessRow, recommendationCount = 0): Business {
   return {
     id: row.id,
     name: row.name,
@@ -91,11 +119,11 @@ function rowToBusiness(row: PublishedBusinessRow): Business {
     websiteUrl: row.website_url ?? "#",
     publicEmail: row.public_email ?? "",
     publicPhone: row.public_phone ?? undefined,
-    location: row.address ?? "Singapore",
+    location: row.address ?? "",
     address: row.address ?? undefined,
     showFullAddress: false,
-    minimumBudget: row.minimum_budget,
-    typicalLeadTime: row.typical_lead_time,
+    minimumBudget: row.minimum_budget ?? 0,
+    typicalLeadTime: row.typical_lead_time ?? 0,
     businessType: row.business_type,
     acceptsPrototypes: row.accepts_prototypes,
     acceptsProduction: row.accepts_production,
@@ -106,6 +134,7 @@ function rowToBusiness(row: PublishedBusinessRow): Business {
     featured: row.featured,
     claimed: row.claimed,
     endorsementCount: row.endorsement_count ?? 0,
+    recommendationCount,
     services: row.business_services?.flatMap((join) => {
       if (!join.services) return [];
       if (Array.isArray(join.services)) return join.services.map((service) => service.slug);

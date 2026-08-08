@@ -14,18 +14,24 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Added `business_listing_revisions` migration in `supabase/migrations/0011_business_listing_revisions.sql`.
 - Added private edit link display after business onboarding submission.
 - Added admin review support for pending business edits while live listings remain unchanged.
+- Added public business-card change requests that email `ADMIN_EMAIL`.
+- Added optional phone number to business onboarding, private business editing, public profile display, and admin review.
+- Added a Recommended label to business cards when a listing has approved recommendations.
 
 ### Changed
 - Changed business onboarding submission results to return a private manage token.
 - Changed published business edits to save as pending revisions so the existing approved listing stays live until admin approval.
 - Changed the business recommendation panel to open beneath the contact card on business profiles and added a visible close button.
 - Changed duplicate-business prompts to direct people to the existing listing instead of using endorsements.
+- Changed website, public email, location, minimum budget, and typical lead time to be optional in business onboarding and private business editing.
+- Changed business onboarding copy to invite community submissions on behalf of businesses.
 
 ### Fixed
 - Fixed the creative job status management panel so it adapts during desktop scrolling.
 
 ### Removed
 - Removed endorsement labels, counts, badges, and one-click endorsement actions from public and admin-facing pages.
+- Removed the inactive Save button from public business cards.
 
 ### Known Issues
 - Private business manage links are bearer credentials; anyone with the link can edit the listing.

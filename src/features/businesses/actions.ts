@@ -58,11 +58,12 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
       slug,
       short_description: data.shortDescription,
       description: data.description,
-      website_url: data.websiteUrl,
-      public_email: data.publicEmail,
-      address: data.location,
-      minimum_budget: data.minimumBudget,
-      typical_lead_time: data.typicalLeadTime,
+      website_url: data.websiteUrl ?? null,
+      public_email: data.publicEmail ?? null,
+      public_phone: data.phoneNumber ?? null,
+      address: data.location ?? null,
+      minimum_budget: data.minimumBudget ?? 0,
+      typical_lead_time: data.typicalLeadTime ?? 0,
       business_type: data.businessType,
       publication_status: "pending",
       verification_status: "unverified",
@@ -227,11 +228,12 @@ export async function updateBusinessDetailsByToken(token: string, input: unknown
       name: data.name,
       short_description: data.shortDescription,
       description: data.description,
-      website_url: data.websiteUrl,
-      public_email: data.publicEmail,
-      address: data.location,
-      minimum_budget: data.minimumBudget,
-      typical_lead_time: data.typicalLeadTime,
+      website_url: data.websiteUrl ?? null,
+      public_email: data.publicEmail ?? null,
+      public_phone: data.phoneNumber ?? null,
+      address: data.location ?? null,
+      minimum_budget: data.minimumBudget ?? 0,
+      typical_lead_time: data.typicalLeadTime ?? 0,
       business_type: data.businessType,
       publication_status: "pending",
       verification_status: "unverified",
@@ -271,7 +273,7 @@ export async function updateBusinessMediaByToken(token: string, formData: FormDa
 
   const { data: business, error: businessError } = await supabase
     .from("businesses")
-    .select("id, publication_status, name, short_description, description, website_url, public_email, address, minimum_budget, typical_lead_time, business_type, business_services(services(name)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes), business_listing_revisions(id, status, proposed_data, proposed_services, proposed_portfolio)")
+    .select("id, publication_status, name, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, business_services(services(name)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes), business_listing_revisions(id, status, proposed_data, proposed_services, proposed_portfolio)")
     .eq("manage_token", token)
     .single();
 
@@ -475,6 +477,7 @@ function businessInputToRevisionData(data: z.output<typeof businessSchema>) {
     description: data.description,
     websiteUrl: data.websiteUrl,
     publicEmail: data.publicEmail,
+    phoneNumber: data.phoneNumber,
     location: data.location,
     minimumBudget: data.minimumBudget,
     typicalLeadTime: data.typicalLeadTime,
@@ -488,9 +491,10 @@ function businessRowToRevisionData(business: {
   description: string;
   website_url: string | null;
   public_email: string | null;
+  public_phone?: string | null;
   address: string | null;
-  minimum_budget: number;
-  typical_lead_time: number;
+  minimum_budget: number | null;
+  typical_lead_time: number | null;
   business_type: string;
 }) {
   return {
@@ -499,9 +503,10 @@ function businessRowToRevisionData(business: {
     description: business.description,
     websiteUrl: business.website_url ?? "",
     publicEmail: business.public_email ?? "",
-    location: business.address ?? "Singapore",
-    minimumBudget: business.minimum_budget,
-    typicalLeadTime: business.typical_lead_time,
+    phoneNumber: business.public_phone ?? "",
+    location: business.address ?? "",
+    minimumBudget: business.minimum_budget ?? undefined,
+    typicalLeadTime: business.typical_lead_time ?? undefined,
     businessType: business.business_type as z.output<typeof businessSchema>["businessType"],
   };
 }
@@ -601,6 +606,7 @@ function formDataToBusinessInput(formData: FormData) {
     description: stringFromFormData(formData.get("description")),
     websiteUrl: stringFromFormData(formData.get("websiteUrl")),
     publicEmail: stringFromFormData(formData.get("publicEmail")),
+    phoneNumber: stringFromFormData(formData.get("phoneNumber")),
     location: stringFromFormData(formData.get("location")),
     minimumBudget: stringFromFormData(formData.get("minimumBudget")),
     typicalLeadTime: stringFromFormData(formData.get("typicalLeadTime")),

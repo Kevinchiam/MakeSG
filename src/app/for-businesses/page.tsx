@@ -16,10 +16,12 @@ export default async function ForBusinessesPage() {
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Business onboarding</p>
           <h1 className="mt-2 font-serif text-5xl font-semibold">List a creative service or fabrication business</h1>
-          <p className="mt-5 text-lg leading-8 text-[#6d675d]">Create a listing with services, contact details, budget range, lead time and portfolio notes. Businesses submit for approval before publication.</p>
+          <p className="mt-5 text-lg leading-8 text-[#6d675d]">
+            Submit a business you run, work with, or genuinely want the MakeSG community to know about. Add what you know now; optional contact, budget and lead-time details can be filled in later through the private edit link.
+          </p>
           <div className="mt-8 grid gap-4">
             <Step icon={<Building2 />} title="Describe your capabilities" />
-            <Step icon={<Clock />} title="Set indicative budget and lead time" />
+            <Step icon={<Clock />} title="Add contact, budget and lead-time details if known" />
             <Step icon={<CheckCircle2 />} title="Submit for moderation" />
           </div>
         </div>

@@ -5,6 +5,32 @@ const optionalNumber = z.preprocess((value) => {
   return value;
 }, z.coerce.number().min(0, "Budget must be 0 or more.").optional());
 
+const optionalBudget = z.preprocess((value) => {
+  if (value === "" || value === null || value === undefined) return undefined;
+  return value;
+}, z.coerce.number().min(0, "Budget must be 0 or more.").optional());
+
+const optionalLeadTime = z.preprocess((value) => {
+  if (value === "" || value === null || value === undefined) return undefined;
+  return value;
+}, z.coerce.number().min(1, "Lead time must be at least 1 day.").optional());
+
+const optionalUrl = z.preprocess((value) => {
+  if (typeof value === "string" && value.trim() === "") return undefined;
+  return typeof value === "string" ? value.trim() : value;
+}, z.string().url("Use a valid website URL.").optional());
+
+const optionalEmail = z.preprocess((value) => {
+  if (typeof value === "string" && value.trim() === "") return undefined;
+  return typeof value === "string" ? value.trim() : value;
+}, z.string().email("Use a valid public email.").optional());
+
+const optionalText = z.preprocess((value) => {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed.length ? trimmed : undefined;
+}, z.string().optional());
+
 export const projectSchema = z.object({
   title: z.string().min(3, "Add a short project title."),
   description: z.string().min(20, "Describe the idea in at least 20 characters."),
@@ -52,11 +78,12 @@ export const businessSchema = z.object({
   name: z.string().min(2, "Business name is required."),
   shortDescription: z.string().min(20, "Add a concise summary."),
   description: z.string().min(80, "Add more detail for creative clients."),
-  websiteUrl: z.string().url("Use a valid website URL."),
-  publicEmail: z.string().email("Use a valid public email."),
-  location: z.string().min(2, "Choose a Singapore location."),
-  minimumBudget: z.coerce.number().min(0),
-  typicalLeadTime: z.coerce.number().min(1),
+  websiteUrl: optionalUrl,
+  publicEmail: optionalEmail,
+  phoneNumber: optionalText,
+  location: optionalText,
+  minimumBudget: optionalBudget,
+  typicalLeadTime: optionalLeadTime,
   businessType: z.enum(["independent", "studio", "workshop", "consultancy", "manufacturer", "supplier"]),
   services: z.array(z.string()).default([]),
   otherService: z.string().trim().optional().or(z.literal("")),

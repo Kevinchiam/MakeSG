@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, Clock, MapPin, MessageCircleHeart } from "lucide-react";
 import { MaterialTag } from "@/components/business/material-tag";
-import { SaveBusinessButton } from "@/components/business/save-business-button";
+import { RequestBusinessChangePanel } from "@/components/business/request-business-change-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getApprovedRecommendationsForBusiness, services } from "@/lib/data";
@@ -11,7 +11,7 @@ import { formatCurrency } from "@/lib/utils";
 
 export function BusinessCard({ business }: { business: Business }) {
   const topServices = business.services.slice(0, 3).map((slug) => services.find((service) => service.slug === slug)?.name ?? formatServiceSlug(slug));
-  const recommendationCount = getApprovedRecommendationsForBusiness(business.id).length;
+  const recommendationCount = business.recommendationCount ?? getApprovedRecommendationsForBusiness(business.id).length;
 
   return (
     <article className="group flex h-full flex-col border border-[#ded8cc] bg-white">
@@ -36,17 +36,29 @@ export function BusinessCard({ business }: { business: Business }) {
         </div>
         <p className="text-sm leading-6 text-[#5f594f]">{business.shortDescription}</p>
         <div className="flex flex-wrap gap-2">
+          {recommendationCount ? (
+            <Badge className="border-[#536343] bg-[#eef2e8] text-[#39462d]">
+              <MessageCircleHeart className="h-3.5 w-3.5" aria-hidden /> Recommended
+            </Badge>
+          ) : null}
           {topServices.map((service) => (
             <Badge key={service}>{service}</Badge>
           ))}
         </div>
         <div className="mt-auto grid gap-2 text-sm text-[#5f594f]">
-          <span className="inline-flex items-center gap-2">
-            <MapPin className="h-4 w-4" aria-hidden /> {business.location}
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <Clock className="h-4 w-4" aria-hidden /> From {formatCurrency(business.minimumBudget)} · {business.typicalLeadTime} days
-          </span>
+          {business.location ? (
+            <span className="inline-flex items-center gap-2">
+              <MapPin className="h-4 w-4" aria-hidden /> {business.location}
+            </span>
+          ) : null}
+          {(business.minimumBudget > 0 || business.typicalLeadTime > 0) ? (
+            <span className="inline-flex items-center gap-2">
+              <Clock className="h-4 w-4" aria-hidden /> {[
+                business.minimumBudget > 0 ? `From ${formatCurrency(business.minimumBudget)}` : null,
+                business.typicalLeadTime > 0 ? `${business.typicalLeadTime} days` : null,
+              ].filter(Boolean).join(" · ")}
+            </span>
+          ) : null}
           {recommendationCount ? (
             <span className="inline-flex items-center gap-2 text-[#536343]">
               <MessageCircleHeart className="h-4 w-4" aria-hidden /> Recommended by {recommendationCount} maker{recommendationCount === 1 ? "" : "s"}
@@ -64,8 +76,8 @@ export function BusinessCard({ business }: { business: Business }) {
               Open profile <ArrowUpRight className="h-4 w-4" />
             </Link>
           </Button>
-          <SaveBusinessButton businessId={business.id} />
         </div>
+        <RequestBusinessChangePanel businessId={business.id} businessName={business.name} />
       </div>
     </article>
   );

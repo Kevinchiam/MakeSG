@@ -92,11 +92,12 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
             formData.set("name", data.name);
             formData.set("shortDescription", data.shortDescription);
             formData.set("description", data.description);
-            formData.set("websiteUrl", data.websiteUrl);
-            formData.set("publicEmail", data.publicEmail);
-            formData.set("location", data.location);
-            formData.set("minimumBudget", String(data.minimumBudget));
-            formData.set("typicalLeadTime", String(data.typicalLeadTime));
+            setOptionalFormValue(formData, "websiteUrl", data.websiteUrl);
+            setOptionalFormValue(formData, "publicEmail", data.publicEmail);
+            setOptionalFormValue(formData, "phoneNumber", data.phoneNumber);
+            setOptionalFormValue(formData, "location", data.location);
+            setOptionalFormValue(formData, "minimumBudget", data.minimumBudget);
+            setOptionalFormValue(formData, "typicalLeadTime", data.typicalLeadTime);
             formData.set("businessType", data.businessType);
             selectedServices.forEach((service) => formData.append("services", service));
             if (otherChecked && data.otherService) formData.set("otherService", data.otherService);
@@ -160,20 +161,21 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
       <Field label="Short summary" error={form.formState.errors.shortDescription?.message}><Input {...form.register("shortDescription")} /></Field>
       <Field label="Full description" error={form.formState.errors.description?.message}><Textarea {...form.register("description")} /></Field>
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Website" error={form.formState.errors.websiteUrl?.message}><Input {...form.register("websiteUrl")} placeholder="https://example.com" /></Field>
-        <Field label="Public email" error={form.formState.errors.publicEmail?.message}><Input {...form.register("publicEmail")} /></Field>
-        <Field label="Location" error={form.formState.errors.location?.message}><Input {...form.register("location")} placeholder="Ubi" /></Field>
+        <Field label="Website (optional)" error={form.formState.errors.websiteUrl?.message}><Input {...form.register("websiteUrl")} placeholder="https://example.com" /></Field>
+        <Field label="Public email (optional)" error={form.formState.errors.publicEmail?.message}><Input {...form.register("publicEmail")} /></Field>
+        <Field label="Phone number (optional)" error={form.formState.errors.phoneNumber?.message}><Input {...form.register("phoneNumber")} placeholder="+65 8123 4567" /></Field>
+        <Field label="Location (optional)" error={form.formState.errors.location?.message}><Input {...form.register("location")} placeholder="Ubi" /></Field>
         <Field label="Business type"><select {...form.register("businessType")} className="min-h-11 border border-[#ded8cc] bg-white px-3"><option value="independent">Independent</option><option value="studio">Studio</option><option value="workshop">Workshop</option><option value="consultancy">Consultancy</option><option value="manufacturer">Manufacturer</option><option value="supplier">Supplier</option></select></Field>
         <Field
-          label="Minimum budget (SGD)"
-          hint="Enter the smallest project budget you usually accept, in Singapore dollars."
+          label="Minimum budget (SGD, optional)"
+          hint="Optional. Enter the smallest project budget usually accepted, in Singapore dollars."
           error={form.formState.errors.minimumBudget?.message}
         >
           <Input {...form.register("minimumBudget")} inputMode="numeric" placeholder="e.g. 1200" />
         </Field>
         <Field
-          label="Typical lead time (days)"
-          hint="Enter the usual number of calendar days needed before delivery."
+          label="Typical lead time (days, optional)"
+          hint="Optional. Enter the usual number of calendar days needed before delivery."
           error={form.formState.errors.typicalLeadTime?.message}
         >
           <Input {...form.register("typicalLeadTime")} inputMode="numeric" placeholder="e.g. 14" />
@@ -258,6 +260,11 @@ function fileKey(file: File) {
   return `${file.name}-${file.size}-${file.lastModified}`;
 }
 
+function setOptionalFormValue(formData: FormData, key: string, value: string | number | undefined) {
+  if (value === undefined || value === "") return;
+  formData.set(key, String(value));
+}
+
 function isPortfolioError(message: string) {
   const normalized = message.toLowerCase();
   return normalized.includes("upload") || normalized.includes("portfolio") || normalized.includes("file");
@@ -269,6 +276,7 @@ const serverErrorFields = new Set([
   "description",
   "websiteUrl",
   "publicEmail",
+  "phoneNumber",
   "location",
   "minimumBudget",
   "typicalLeadTime",

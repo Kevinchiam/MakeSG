@@ -165,7 +165,7 @@ Future improvements:
 ### Business Directory
 Status: Completed
 
-Description: Browse published businesses with filters, search, cards, pagination, and empty states. Search includes typo-tolerant matching.
+Description: Browse published businesses with filters, search, cards, pagination, empty states, recommendation labels, and public change-request panels that email admin.
 
 Relevant files:
 - `src/app/businesses/page.tsx`
@@ -212,7 +212,7 @@ Future improvements:
 ### Business Onboarding
 Status: Completed
 
-Description: Businesses can submit listing details, service options including Other, SGD budget, lead time in days, and portfolio photos/videos. Listings enter moderation before publication. After submission, businesses receive a private edit link that can update listing details and portfolio media. Edits to already published listings create a pending revision, so the current approved public listing stays live until an admin approves the changes.
+Description: Businesses or community members can submit listing details, service options including Other, optional website/email/phone/location/budget/lead time, and portfolio photos/videos. Listings enter moderation before publication. After submission, submitters receive a private edit link that can update listing details and portfolio media. Edits to already published listings create a pending revision, so the current approved public listing stays live until an admin approves the changes.
 
 Relevant files:
 - `src/app/for-businesses/page.tsx`

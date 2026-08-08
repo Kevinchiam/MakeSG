@@ -40,11 +40,12 @@ export async function approvePendingBusinessRevision(businessId: string) {
     name: string;
     shortDescription: string;
     description: string;
-    websiteUrl: string;
-    publicEmail: string;
-    location: string;
-    minimumBudget: number;
-    typicalLeadTime: number;
+    websiteUrl?: string;
+    publicEmail?: string;
+    phoneNumber?: string;
+    location?: string;
+    minimumBudget?: number;
+    typicalLeadTime?: number;
     businessType: string;
   };
   const proposedServices = (revision.proposed_services ?? []) as string[];
@@ -65,11 +66,12 @@ export async function approvePendingBusinessRevision(businessId: string) {
       name: data.name,
       short_description: data.shortDescription,
       description: data.description,
-      website_url: data.websiteUrl,
-      public_email: data.publicEmail,
-      address: data.location,
-      minimum_budget: data.minimumBudget,
-      typical_lead_time: data.typicalLeadTime,
+      website_url: data.websiteUrl ?? null,
+      public_email: data.publicEmail ?? null,
+      public_phone: data.phoneNumber ?? null,
+      address: data.location ?? null,
+      minimum_budget: data.minimumBudget ?? 0,
+      typical_lead_time: data.typicalLeadTime ?? 0,
       business_type: data.businessType,
       publication_status: "published",
       updated_at: new Date().toISOString(),
