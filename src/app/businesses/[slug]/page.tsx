@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ExternalLink, Mail, MapPin, MessageCircleHeart, ThumbsUp } from "lucide-react";
+import { ExternalLink, Mail, MapPin, MessageCircleHeart, Star, ThumbsUp } from "lucide-react";
 import { MaterialTag } from "@/components/business/material-tag";
+import { RecommendBusinessPanel } from "@/components/business/recommend-business-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getApprovedRecommendationsForBusiness, services } from "@/lib/data";
+import { services } from "@/lib/data";
+import { getApprovedRecommendationsForBusiness } from "@/lib/business-recommendations";
 import { getPublishedBusinessBySlug } from "@/lib/public-businesses";
 import { formatCurrency } from "@/lib/utils";
 
@@ -29,7 +31,7 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
   const business = await getPublishedBusinessBySlug(slug);
   if (!business) notFound();
   const serviceLabels = business.services.map((slug) => services.find((service) => service.slug === slug)?.name ?? formatServiceSlug(slug));
-  const wordOfMouth = getApprovedRecommendationsForBusiness(business.id);
+  const wordOfMouth = await getApprovedRecommendationsForBusiness(business.id);
   const detailSections = [
     { title: "Services", items: serviceLabels },
     { title: "Processes", items: business.processes },
@@ -66,12 +68,8 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
                 </div>
               ) : null}
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button asChild variant="secondary">
-                <Link href={`/recommend-business?business=${business.slug}`}>
-                  <MessageCircleHeart className="h-4 w-4" /> Recommend
-                </Link>
-              </Button>
+            <div className="w-full max-w-xl lg:w-auto">
+              <RecommendBusinessPanel businessId={business.id} businessName={business.name} />
             </div>
           </div>
           <p className="mt-6 max-w-3xl text-xl leading-8 text-[#4f493f]">{business.shortDescription}</p>
@@ -114,9 +112,6 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
                 <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Word of mouth</p>
                 <h2 className="mt-1 font-serif text-3xl font-semibold">Recommended by the community</h2>
               </div>
-              <Button asChild variant="secondary">
-                <Link href={`/recommend-business?business=${business.slug}`}>Recommend this business</Link>
-              </Button>
             </div>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               {wordOfMouth.map((recommendation) => (
@@ -125,18 +120,46 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
                     <MessageCircleHeart className="h-4 w-4" aria-hidden />
                     <p className="text-sm font-semibold">{recommendation.projectContext}</p>
                   </div>
+                  {(recommendation.qualityRating || recommendation.reliabilityRating || recommendation.collaborationRating) ? (
+                    <dl className="mt-4 grid gap-2 text-sm text-[#4f493f] sm:grid-cols-3">
+                      <Rating label="Quality" value={recommendation.qualityRating} />
+                      <Rating label="Reliability" value={recommendation.reliabilityRating} />
+                      <Rating label="Collaboration" value={recommendation.collaborationRating} />
+                    </dl>
+                  ) : null}
                   <p className="mt-3 text-sm leading-6 text-[#4f493f]">“{recommendation.comment}”</p>
-                  {recommendation.mediaUrls?.length ? (
+                  {recommendation.mediaItems?.length ? (
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      {recommendation.mediaItems.slice(0, 2).map((media) => (
+                        <figure key={media.id} className="border border-[#ded8cc] bg-[#fbfaf7]">
+                          {media.mimeType.startsWith("video/") ? (
+                            <video src={media.url} controls className="aspect-video w-full bg-black object-cover" />
+                          ) : (
+                            <Image
+                              src={media.url}
+                              alt={media.caption}
+                              width={420}
+                              height={260}
+                              className="aspect-video object-cover"
+                            />
+                          )}
+                          {media.caption ? <figcaption className="p-2 text-xs leading-5 text-[#6d675d]">{media.caption}</figcaption> : null}
+                        </figure>
+                      ))}
+                    </div>
+                  ) : recommendation.mediaUrls?.length ? (
                     <div className="mt-4 grid grid-cols-2 gap-2">
                       {recommendation.mediaUrls.slice(0, 2).map((mediaUrl) => (
-                        <Image
-                          key={mediaUrl}
-                          src={mediaUrl}
-                          alt=""
-                          width={420}
-                          height={260}
-                          className="aspect-video border border-[#ded8cc] object-cover"
-                        />
+                        <Image key={mediaUrl} src={mediaUrl} alt="" width={420} height={260} className="aspect-video border border-[#ded8cc] object-cover" />
+                      ))}
+                    </div>
+                  ) : null}
+                  {recommendation.supportingLinks?.length ? (
+                    <div className="mt-4 grid gap-1 text-xs">
+                      {recommendation.supportingLinks.slice(0, 3).map((url) => (
+                        <Link key={url} href={url} target="_blank" rel="noreferrer" className="break-all underline">
+                          {url}
+                        </Link>
                       ))}
                     </div>
                   ) : null}
@@ -176,6 +199,19 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
         </aside>
       </div>
     </section>
+  );
+}
+
+function Rating({ label, value }: { label: string; value?: number }) {
+  if (!value) return null;
+  return (
+    <div>
+      <dt className="font-semibold">{label}</dt>
+      <dd className="mt-1 flex items-center gap-1">
+        <Star className="h-3.5 w-3.5 fill-current text-[#9c4f35]" aria-hidden />
+        {value}/5
+      </dd>
+    </div>
   );
 }
 

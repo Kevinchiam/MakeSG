@@ -2,7 +2,7 @@
 
 import { Check, EyeOff, Star, Trash2, X } from "lucide-react";
 import { useState } from "react";
-import { approvePendingBusinessRevision, deleteBusinessEntry, rejectPendingBusinessRevision, updateBusinessPublicationStatus } from "@/components/admin/actions";
+import { approvePendingBusinessRevision, deleteBusinessEntry, rejectPendingBusinessRevision, updateBusinessPublicationStatus, updateBusinessRecommendationStatus } from "@/components/admin/actions";
 import { Button } from "@/components/ui/button";
 import type { PublicationStatus } from "@/lib/types";
 
@@ -12,12 +12,14 @@ export function AdminStatusControls({
   initialStatus = "pending",
   approvedStatus = "published",
   hasPendingRevision = false,
+  recommendationId,
 }: {
   businessId?: string;
   source?: "demo" | "supabase";
   initialStatus?: string;
   approvedStatus?: string;
   hasPendingRevision?: boolean;
+  recommendationId?: string;
 }) {
   const [status, setStatus] = useState(initialStatus);
   const [message, setMessage] = useState<string | null>(null);
@@ -26,6 +28,32 @@ export function AdminStatusControls({
 
   async function setPublicationStatus(nextStatus: PublicationStatus) {
     setMessage(null);
+
+    if (recommendationId) {
+      if (source !== "supabase") {
+        setMessage("Demo recommendations only change on this screen.");
+        return;
+      }
+
+      if (nextStatus !== "published" && nextStatus !== "rejected") {
+        setMessage("Recommendations can be approved or rejected.");
+        return;
+      }
+
+      setIsSaving(true);
+      const result = await updateBusinessRecommendationStatus(recommendationId, nextStatus === "published" ? "approved" : "rejected");
+      setIsSaving(false);
+
+      if (!result.ok) {
+        setMessage(result.message ?? "Could not update this recommendation.");
+        return;
+      }
+
+      const nextRecommendationStatus = nextStatus === "published" ? "approved" : "rejected";
+      setStatus(nextRecommendationStatus);
+      setMessage(nextRecommendationStatus === "approved" ? "Approved. This recommendation can now appear publicly." : "Rejected.");
+      return;
+    }
 
     if (source !== "supabase" || !businessId) {
       setMessage("Demo listings only change on this screen.");
@@ -90,15 +118,19 @@ export function AdminStatusControls({
         <Button type="button" variant="danger" disabled={isSaving} onClick={() => setPublicationStatus("rejected")}>
           <X className="h-4 w-4" /> Reject
         </Button>
-        <Button type="button" variant="secondary" onClick={() => setStatus("featured")}>
-          <Star className="h-4 w-4" /> Feature
-        </Button>
-        <Button type="button" variant="secondary" disabled={isSaving} onClick={() => setPublicationStatus("suspended")}>
-          <EyeOff className="h-4 w-4" /> Unpublish
-        </Button>
-        <Button type="button" variant="danger" disabled={isDeleting} onClick={deleteEntry}>
-          <Trash2 className="h-4 w-4" /> {isDeleting ? "Deleting..." : "Delete"}
-        </Button>
+        {!recommendationId ? (
+          <>
+            <Button type="button" variant="secondary" onClick={() => setStatus("featured")}>
+              <Star className="h-4 w-4" /> Feature
+            </Button>
+            <Button type="button" variant="secondary" disabled={isSaving} onClick={() => setPublicationStatus("suspended")}>
+              <EyeOff className="h-4 w-4" /> Unpublish
+            </Button>
+            <Button type="button" variant="danger" disabled={isDeleting} onClick={deleteEntry}>
+              <Trash2 className="h-4 w-4" /> {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </>
+        ) : null}
       </div>
     </div>
   );

@@ -73,18 +73,16 @@ export const enquirySchema = z.object({
 
 export const businessRecommendationSchema = z.object({
   businessId: z.string().min(1, "Choose a business."),
-  businessName: z.string().optional(),
   recommenderName: z.string().min(2, "Add your name."),
-  recommenderRole: z.string().optional(),
-  recommenderEmail: z.string().email("Use a valid email.").optional().or(z.literal("")),
-  relationship: z.enum(["client", "collaborator", "supplier", "peer", "other"]),
-  projectContext: z.string().min(8, "Share what kind of project you worked on."),
-  recommendedFor: z.array(z.string()).min(1, "Choose at least one strength."),
-  comment: z
+  recommenderEmail: z.string().email("Use a valid private email for moderation."),
+  qualityRating: z.coerce.number().int().min(1, "Rate quality from 1 to 5.").max(5, "Rate quality from 1 to 5."),
+  reliabilityRating: z.coerce.number().int().min(1, "Rate reliability from 1 to 5.").max(5, "Rate reliability from 1 to 5."),
+  collaborationRating: z.coerce.number().int().min(1, "Rate collaboration from 1 to 5.").max(5, "Rate collaboration from 1 to 5."),
+  review: z
     .string()
-    .min(30, "Share a little more about the experience.")
-    .max(500, "Keep recommendations concise."),
-  permissionToContact: z.boolean().default(false),
+    .min(20, "Write a short review with at least 20 characters.")
+    .max(700, "Keep reviews concise."),
+  supportingLinks: z.array(z.string().url("Use valid supporting links.")).max(3, "Add up to three links.").default([]),
   permissionToPublishName: z.boolean().default(false),
 });
 

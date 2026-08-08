@@ -147,6 +147,26 @@ export async function deleteBusinessEntry(businessId: string) {
   return { ok: true };
 }
 
+export async function updateBusinessRecommendationStatus(recommendationId: string, status: "approved" | "rejected") {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("business_recommendations")
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("id", recommendationId)
+    .select("businesses(slug)")
+    .single();
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  const business = Array.isArray(data?.businesses) ? data.businesses[0] : data?.businesses;
+  revalidatePath("/admin");
+  revalidatePath("/admin/recommendations");
+  if (business?.slug) revalidatePath(`/businesses/${business.slug}`);
+  return { ok: true };
+}
+
 export async function updateCreativeJobFromForm(jobId: string, formData: FormData) {
   const supabase = createAdminClient();
   const services = formData.getAll("services").filter((value): value is string => typeof value === "string");

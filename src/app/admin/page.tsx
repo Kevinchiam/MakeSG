@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
-import { businessRecommendations } from "@/lib/data";
+import { getAdminBusinessRecommendations } from "@/lib/business-recommendations";
 import { getAdminBusinesses } from "@/lib/business-submissions";
 import { getAdminCreativeJobs } from "@/lib/creative-jobs";
 
@@ -9,10 +9,11 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const businesses = await getAdminBusinesses();
   const creativeJobs = await getAdminCreativeJobs();
+  const recommendations = await getAdminBusinessRecommendations();
   const pending = businesses.filter((b) => b.publicationStatus === "pending" || b.pendingRevision).length;
   const openCreativeJobs = creativeJobs.filter((job) => job.status === "open").length;
   const inDiscussionCreativeJobs = creativeJobs.filter((job) => job.status === "in_discussion").length;
-  const pendingRecommendations = businessRecommendations.filter((recommendation) => recommendation.status === "pending").length;
+  const pendingRecommendations = recommendations.filter((recommendation) => recommendation.status === "pending").length;
   return (
     <section className="container-shell py-12">
       <AdminPageHeader title="Admin" />

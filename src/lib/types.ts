@@ -85,6 +85,16 @@ export type BusinessRecommendation = {
   projectContext: string;
   recommendedFor: string[];
   comment: string;
+  qualityRating?: number;
+  reliabilityRating?: number;
+  collaborationRating?: number;
+  supportingLinks?: string[];
+  mediaItems?: {
+    id: string;
+    url: string;
+    caption: string;
+    mimeType: string;
+  }[];
   mediaUrls?: string[];
   permissionToContact: boolean;
   permissionToPublishName: boolean;

@@ -37,11 +37,11 @@ describe("form validation", () => {
       businessId: "biz_ubi_formworks",
       recommenderName: "Alicia",
       recommenderEmail: "alicia@example.com",
-      relationship: "client",
-      projectContext: "Exhibition plinth prototype",
-      recommendedFor: ["Clear communication"],
-      comment: "They were clear about materials, timelines and install details throughout the project.",
-      permissionToContact: true,
+      qualityRating: 5,
+      reliabilityRating: 4,
+      collaborationRating: 5,
+      review: "They were clear about materials, timelines and install details throughout the project.",
+      supportingLinks: ["https://example.com/project"],
       permissionToPublishName: false,
     });
 
