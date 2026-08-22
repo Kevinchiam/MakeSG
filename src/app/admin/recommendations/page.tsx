@@ -3,6 +3,7 @@ import Image from "next/image";
 import { MessageCircleHeart, Star } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { AdminStatusControls } from "@/components/admin/admin-status-controls";
+import { ModerationSummary } from "@/components/admin/moderation-summary";
 import { Badge } from "@/components/ui/badge";
 import { getAdminBusinessRecommendations } from "@/lib/business-recommendations";
 
@@ -36,6 +37,14 @@ export default async function AdminRecommendationsPage() {
                 </dl>
               ) : null}
               <p className="mt-3 text-sm leading-6 text-[#4f493f]">“{recommendation.comment}”</p>
+              <div className="mt-4">
+                <ModerationSummary
+                  decision={recommendation.moderationDecision}
+                  risk={recommendation.moderationRisk}
+                  reason={recommendation.moderationReason}
+                  signals={recommendation.moderationSignals}
+                />
+              </div>
               {recommendation.mediaItems?.length ? (
                 <div className="mt-4 grid gap-2 sm:grid-cols-3">
                   {recommendation.mediaItems.map((media) => (

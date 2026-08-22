@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { AdminStatusControls } from "@/components/admin/admin-status-controls";
+import { ModerationSummary } from "@/components/admin/moderation-summary";
 import { getAdminBusiness } from "@/lib/business-submissions";
 import { formatCurrency } from "@/lib/utils";
 
@@ -20,6 +21,12 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
             <summary className="cursor-pointer text-lg font-semibold">Review pending edits</summary>
             <div className="mt-5 grid gap-5">
               <p className="text-sm leading-6 text-[#6d675d]">These edits are waiting for approval. The current public listing remains unchanged until you approve them.</p>
+              <ModerationSummary
+                decision={business.pendingRevision.moderationDecision}
+                risk={business.pendingRevision.moderationRisk}
+                reason={business.pendingRevision.moderationReason}
+                signals={business.pendingRevision.moderationSignals}
+              />
               <InfoRow label="Description" value={business.pendingRevision.data.description} />
               <div className="grid gap-4 md:grid-cols-2">
                 <InfoRow label="Business name" value={business.pendingRevision.data.name} />
@@ -67,6 +74,12 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
         <details className="border border-[#ded8cc] bg-white p-5" open>
           <summary className="cursor-pointer text-lg font-semibold">{business.pendingRevision ? "Current live information" : "Review submitted information"}</summary>
           <div className="mt-5 grid gap-5">
+            <ModerationSummary
+              decision={business.moderationDecision}
+              risk={business.moderationRisk}
+              reason={business.moderationReason}
+              signals={business.moderationSignals}
+            />
             <InfoRow label="Description" value={business.description} />
             <div className="grid gap-4 md:grid-cols-2">
               <InfoRow label="Website" value={business.websiteUrl} />

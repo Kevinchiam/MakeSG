@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { ModerationDecision, ModerationRisk } from "@/lib/types";
 
-export const creativeJobStatuses = ["open", "in_discussion", "taken", "closed", "archived"] as const;
+export const creativeJobStatuses = ["pending_review", "open", "in_discussion", "taken", "closed", "archived"] as const;
 
 export type CreativeJobStatus = typeof creativeJobStatuses[number];
 
@@ -24,6 +25,10 @@ export type PublicCreativeJob = {
   status: CreativeJobStatus;
   manageToken: string | null;
   createdAt: string;
+  moderationDecision: ModerationDecision | null;
+  moderationRisk: ModerationRisk | null;
+  moderationReason: string | null;
+  moderationSignals: string[];
 };
 
 export type CreativeJobReference = {
@@ -56,6 +61,10 @@ type CreativeJobRow = {
   status: CreativeJobStatus;
   manage_token: string | null;
   created_at: string;
+  moderation_decision?: ModerationDecision | null;
+  moderation_risk?: ModerationRisk | null;
+  moderation_reason?: string | null;
+  moderation_signals?: unknown;
 };
 
 type CreativeJobReferenceRow = {
@@ -105,6 +114,10 @@ export async function getPublicCreativeJobs(): Promise<PublicCreativeJob[]> {
     status: job.status,
     manageToken: job.manage_token,
     createdAt: job.created_at,
+    moderationDecision: job.moderation_decision ?? null,
+    moderationRisk: job.moderation_risk ?? null,
+    moderationReason: job.moderation_reason ?? null,
+    moderationSignals: stringArrayFromJson(job.moderation_signals),
   }));
 }
 
@@ -188,11 +201,17 @@ function mapCreativeJob(job: CreativeJobRow): PublicCreativeJob {
     status: job.status,
     manageToken: job.manage_token,
     createdAt: job.created_at,
+    moderationDecision: job.moderation_decision ?? null,
+    moderationRisk: job.moderation_risk ?? null,
+    moderationReason: job.moderation_reason ?? null,
+    moderationSignals: stringArrayFromJson(job.moderation_signals),
   };
 }
 
 export function creativeJobStatusLabel(status: CreativeJobStatus) {
   switch (status) {
+    case "pending_review":
+      return "Pending review";
     case "open":
       return "Open";
     case "in_discussion":
@@ -216,4 +235,8 @@ function mapReferences(references: CreativeJobReferenceRow[] | undefined): Creat
     mimeType: reference.mime_type,
     sizeBytes: reference.size_bytes,
   }));
+}
+
+function stringArrayFromJson(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }

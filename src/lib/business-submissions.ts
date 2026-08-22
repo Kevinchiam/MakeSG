@@ -1,8 +1,8 @@
 import { businesses } from "@/lib/data";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { BusinessType, PortfolioItem, PublicationStatus, VerificationStatus } from "@/lib/types";
+import type { BusinessType, ModerationDecision, ModerationRisk, ModerationTriage, PortfolioItem, PublicationStatus, VerificationStatus } from "@/lib/types";
 
-export type AdminBusinessSummary = {
+export type AdminBusinessSummary = ModerationTriage & {
   id: string;
   name: string;
   shortDescription: string;
@@ -42,6 +42,10 @@ type BusinessRow = {
     mime_type?: string | null;
     size_bytes?: number | null;
   }[];
+  moderation_decision?: ModerationDecision | null;
+  moderation_risk?: ModerationRisk | null;
+  moderation_reason?: string | null;
+  moderation_signals?: unknown;
 };
 
 export type PortfolioRevisionItem = {
@@ -74,9 +78,13 @@ type BusinessRevisionRow = {
   };
   proposed_services: string[] | null;
   proposed_portfolio: PortfolioRevisionItem[] | null;
+  moderation_decision?: ModerationDecision | null;
+  moderation_risk?: ModerationRisk | null;
+  moderation_reason?: string | null;
+  moderation_signals?: unknown;
 };
 
-export type PendingBusinessRevision = {
+export type PendingBusinessRevision = ModerationTriage & {
   id: string;
   data: BusinessRevisionRow["proposed_data"];
   services: string[];
@@ -128,19 +136,23 @@ export async function getAdminBusinesses(): Promise<AdminBusinessSummary[]> {
     const supabase = createAdminClient();
     const { data } = await supabase
       .from("businesses")
-      .select("id, name, short_description, publication_status, verification_status, endorsement_count, business_listing_revisions(status)")
+      .select("id, name, short_description, publication_status, verification_status, endorsement_count, moderation_decision, moderation_risk, moderation_reason, moderation_signals, business_listing_revisions(status, moderation_decision, moderation_risk, moderation_reason, moderation_signals)")
       .order("created_at", { ascending: false });
 
-    const submittedBusinesses = ((data ?? []) as Array<BusinessRow & { business_listing_revisions?: { status: string }[] }>).map((business) => ({
-      id: business.id,
-      name: business.name,
-      shortDescription: business.short_description,
-      publicationStatus: business.publication_status,
-      verificationStatus: business.verification_status,
-      endorsementCount: business.endorsement_count ?? 0,
-      pendingRevision: hasPendingRevision(business.business_listing_revisions),
-      source: "supabase" as const,
-    }));
+    const submittedBusinesses = ((data ?? []) as Array<BusinessRow & { business_listing_revisions?: BusinessRevisionRow[] }>).map((business) => {
+      const pendingRevision = business.business_listing_revisions?.find((revision) => revision.status === "pending");
+      return {
+        id: business.id,
+        name: business.name,
+        shortDescription: business.short_description,
+        publicationStatus: business.publication_status,
+        verificationStatus: business.verification_status,
+        endorsementCount: business.endorsement_count ?? 0,
+        pendingRevision: Boolean(pendingRevision),
+        source: "supabase" as const,
+        ...moderationFields(pendingRevision ?? business),
+      };
+    });
 
     return [...submittedBusinesses, ...demoBusinesses];
   } catch {
@@ -170,6 +182,10 @@ export async function getAdminBusiness(id: string) {
       endorsementCount: demoBusiness.endorsementCount,
       pendingRevision: null,
       source: "demo" as const,
+      moderationDecision: null,
+      moderationRisk: null,
+      moderationReason: null,
+      moderationSignals: [],
     };
   }
 
@@ -177,7 +193,7 @@ export async function getAdminBusiness(id: string) {
     const supabase = createAdminClient();
     const { data } = await supabase
       .from("businesses")
-      .select("id, name, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, publication_status, endorsement_count, business_services(services(name, slug)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes), business_listing_revisions(id, status, proposed_data, proposed_services, proposed_portfolio)")
+      .select("id, name, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, publication_status, endorsement_count, moderation_decision, moderation_risk, moderation_reason, moderation_signals, business_services(services(name, slug)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes), business_listing_revisions(id, status, proposed_data, proposed_services, proposed_portfolio, moderation_decision, moderation_risk, moderation_reason, moderation_signals)")
       .eq("id", id)
       .single();
 
@@ -207,6 +223,7 @@ export async function getAdminBusiness(id: string) {
       endorsementCount: business.endorsement_count ?? 0,
       pendingRevision,
       source: "supabase" as const,
+      ...moderationFields(business),
     };
   } catch {
     return null;
@@ -326,9 +343,24 @@ function pendingRevisionFromRows(rows: BusinessRevisionRow[] | undefined): Pendi
       mimeType: item.mimeType,
       sizeBytes: item.sizeBytes,
     })),
+    ...moderationFields(revision),
   };
 }
 
-function hasPendingRevision(rows: { status: string }[] | undefined) {
-  return Boolean(rows?.some((row) => row.status === "pending"));
+function moderationFields(row: {
+  moderation_decision?: ModerationDecision | null;
+  moderation_risk?: ModerationRisk | null;
+  moderation_reason?: string | null;
+  moderation_signals?: unknown;
+}): ModerationTriage {
+  return {
+    moderationDecision: row.moderation_decision ?? null,
+    moderationRisk: row.moderation_risk ?? null,
+    moderationReason: row.moderation_reason ?? null,
+    moderationSignals: stringArrayFromJson(row.moderation_signals),
+  };
+}
+
+function stringArrayFromJson(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }

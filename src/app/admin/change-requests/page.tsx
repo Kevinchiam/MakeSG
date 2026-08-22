@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BusinessChangeRequestControls } from "@/components/admin/business-change-request-controls";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { ModerationSummary } from "@/components/admin/moderation-summary";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getAdminBusinessChangeRequests } from "@/lib/business-change-requests";
 
@@ -45,6 +46,14 @@ export default async function AdminChangeRequestsPage() {
                   <div className="md:col-span-2">
                     <dt className="font-semibold text-[#211f1b]">Requested change</dt>
                     <dd className="mt-1 whitespace-pre-wrap text-[#5f594f]">{request.reason}</dd>
+                  </div>
+                  <div className="md:col-span-2">
+                    <ModerationSummary
+                      decision={request.moderationDecision}
+                      risk={request.moderationRisk}
+                      reason={request.moderationReason}
+                      signals={request.moderationSignals}
+                    />
                   </div>
                   {request.adminNotes ? (
                     <div className="md:col-span-2">

@@ -1,6 +1,6 @@
 import { businessRecommendations as demoRecommendations, businesses as demoBusinesses } from "@/lib/data";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { BusinessRecommendation, BusinessRecommendationStatus } from "@/lib/types";
+import type { BusinessRecommendation, BusinessRecommendationStatus, ModerationDecision, ModerationRisk, ModerationTriage } from "@/lib/types";
 
 type RecommendationRow = {
   id: string;
@@ -20,6 +20,10 @@ type RecommendationRow = {
   permission_to_publish_name: boolean;
   status: BusinessRecommendationStatus;
   created_at: string;
+  moderation_decision?: ModerationDecision | null;
+  moderation_risk?: ModerationRisk | null;
+  moderation_reason?: string | null;
+  moderation_signals?: unknown;
   business_recommendation_media?: RecommendationMediaRow[];
   businesses?: { name: string; slug: string } | { name: string; slug: string }[] | null;
 };
@@ -78,7 +82,7 @@ export async function getAdminBusinessRecommendations(): Promise<AdminBusinessRe
     const { data, error } = await supabase
       .from("business_recommendations")
       .select(
-        "id, business_id, recommender_name, recommender_role, recommender_email, relationship, project_context, recommended_for, comment, quality_rating, reliability_rating, collaboration_rating, supporting_links, permission_to_contact, permission_to_publish_name, status, created_at, business_recommendation_media(id, bucket, storage_path, file_name, mime_type, caption), businesses(name, slug)",
+        "id, business_id, recommender_name, recommender_role, recommender_email, relationship, project_context, recommended_for, comment, quality_rating, reliability_rating, collaboration_rating, supporting_links, permission_to_contact, permission_to_publish_name, status, created_at, moderation_decision, moderation_risk, moderation_reason, moderation_signals, business_recommendation_media(id, bucket, storage_path, file_name, mime_type, caption), businesses(name, slug)",
       )
       .order("created_at", { ascending: false });
 
@@ -132,5 +136,24 @@ function rowToRecommendation(row: RecommendationRow): BusinessRecommendation {
     permissionToPublishName: row.permission_to_publish_name,
     status: row.status,
     createdAt: row.created_at,
+    ...moderationFields(row),
   };
+}
+
+function moderationFields(row: {
+  moderation_decision?: ModerationDecision | null;
+  moderation_risk?: ModerationRisk | null;
+  moderation_reason?: string | null;
+  moderation_signals?: unknown;
+}): ModerationTriage {
+  return {
+    moderationDecision: row.moderation_decision ?? null,
+    moderationRisk: row.moderation_risk ?? null,
+    moderationReason: row.moderation_reason ?? null,
+    moderationSignals: stringArrayFromJson(row.moderation_signals),
+  };
+}
+
+function stringArrayFromJson(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { updateCreativeJobFromForm } from "@/components/admin/actions";
 import { AdminCreativeJobDeleteButton } from "@/components/admin/admin-creative-job-delete-button";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { ModerationSummary } from "@/components/admin/moderation-summary";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +26,7 @@ export default async function AdminCreativeJobPage({ params }: { params: Promise
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_0.6fr]">
         <form action={updateJob} className="grid gap-5 border border-[#ded8cc] bg-white p-6">
           <h2 className="font-serif text-3xl font-semibold">Listing details</h2>
+          <ModerationSummary decision={job.moderationDecision} risk={job.moderationRisk} reason={job.moderationReason} signals={job.moderationSignals} />
           <Field label="Job title"><Input name="title" defaultValue={job.title} required /></Field>
           <Field label="Description"><Textarea name="description" defaultValue={job.description} required /></Field>
           <div className="grid gap-4 md:grid-cols-2">
@@ -43,6 +45,7 @@ export default async function AdminCreativeJobPage({ params }: { params: Promise
             <Field label="Preferred deadline"><Input name="deadline" type="date" defaultValue={job.deadline ?? ""} /></Field>
             <Field label="Status">
               <select name="status" defaultValue={job.status} className="min-h-11 border border-[#ded8cc] bg-white px-3">
+                <option value="pending_review">Pending review</option>
                 <option value="open">Open</option>
                 <option value="in_discussion">In discussion</option>
                 <option value="taken">Taken</option>

@@ -4,13 +4,14 @@ import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { services as knownServices } from "@/lib/data";
+import { assessModeration, moderationBlockMessage } from "@/lib/moderation";
 import type { CreativeJobStatus } from "@/lib/creative-jobs";
 import { createSlug } from "@/lib/slug";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { creativeJobSchema } from "@/lib/validation";
 
 type SubmitCreativeJobResult =
-  | { ok: true; id: string; slug: string; manageToken: string }
+  | { ok: true; id: string; slug: string; manageToken: string; status: CreativeJobStatus }
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 type UpdateCreativeJobStatusResult =
@@ -51,6 +52,30 @@ export async function submitCreativeJobListing(input: unknown): Promise<SubmitCr
   if (totalReferenceSizeMb > 10) {
     return { ok: false, message: "Reference uploads must be 10MB total or smaller." };
   }
+  const moderation = assessModeration({
+    kind: "creative_job",
+    texts: [
+      data.title,
+      data.description,
+      data.contactName,
+      data.contactEmail,
+      data.companyName,
+      data.projectType,
+      data.otherService,
+      data.referenceLinks,
+      data.notes,
+      ...data.services,
+      ...referenceCaptions,
+    ],
+    filenames: referenceFiles.map((file) => file.name),
+    linkCount: data.referenceLinks ? data.referenceLinks.split(/\s+/).filter((value) => value.startsWith("http")).length : 0,
+    hasContact: Boolean(data.contactEmail),
+    hasMedia: referenceFiles.length > 0,
+  });
+
+  if (moderation.decision === "blocked") {
+    return { ok: false, message: moderationBlockMessage(moderation) };
+  }
 
   const slugBase = createSlug(data.title) || "creative-job";
   const slug = `${slugBase}-${Date.now().toString(36)}`;
@@ -61,6 +86,7 @@ export async function submitCreativeJobListing(input: unknown): Promise<SubmitCr
   const serviceLabels = [...selectedServices];
   if (data.otherService?.trim()) serviceLabels.push(data.otherService.trim());
 
+  const status: CreativeJobStatus = moderation.decision === "auto_approved" ? "open" : "pending_review";
   const { data: job, error } = await supabase
     .from("creative_job_listings")
     .insert({
@@ -80,8 +106,12 @@ export async function submitCreativeJobListing(input: unknown): Promise<SubmitCr
       deadline: data.deadline || null,
       reference_links: data.referenceLinks || null,
       notes: data.notes || null,
-      status: "open",
+      status,
       manage_token: manageToken,
+      moderation_decision: moderation.decision,
+      moderation_risk: moderation.risk,
+      moderation_reason: moderation.reason,
+      moderation_signals: moderation.signals,
     })
     .select("id, slug")
     .single();
@@ -126,11 +156,11 @@ export async function submitCreativeJobListing(input: unknown): Promise<SubmitCr
     await supabase.from("creative_job_reference_files").insert(uploadedReferences);
   }
 
-  return { ok: true, id: job.id, slug: job.slug, manageToken };
+  return { ok: true, id: job.id, slug: job.slug, manageToken, status };
 }
 
 export async function updateCreativeJobStatusByToken(token: string, status: CreativeJobStatus): Promise<UpdateCreativeJobStatusResult> {
-  if (!["open", "in_discussion", "taken"].includes(status)) {
+  if (!["pending_review", "open", "in_discussion", "taken"].includes(status)) {
     return { ok: false, message: "Choose a valid status." };
   }
 
@@ -178,6 +208,28 @@ export async function updateCreativeJobDetailsByToken(token: string, input: unkn
   }
 
   const data = parsed.data;
+  const moderation = assessModeration({
+    kind: "creative_job",
+    texts: [
+      data.title,
+      data.description,
+      data.contactName,
+      data.contactEmail,
+      data.companyName,
+      data.projectType,
+      data.otherService,
+      data.referenceLinks,
+      data.notes,
+      ...data.services,
+    ],
+    linkCount: data.referenceLinks ? data.referenceLinks.split(/\s+/).filter((value) => value.startsWith("http")).length : 0,
+    hasContact: Boolean(data.contactEmail),
+  });
+
+  if (moderation.decision === "blocked") {
+    return { ok: false, message: moderationBlockMessage(moderation) };
+  }
+
   const selectedServices = knownServices
     .filter((service) => data.services.includes(service.slug))
     .map((service) => service.name);
@@ -201,6 +253,11 @@ export async function updateCreativeJobDetailsByToken(token: string, input: unkn
       deadline: data.deadline || null,
       reference_links: data.referenceLinks || null,
       notes: data.notes || null,
+      status: moderation.decision === "auto_approved" ? "open" : "pending_review",
+      moderation_decision: moderation.decision,
+      moderation_risk: moderation.risk,
+      moderation_reason: moderation.reason,
+      moderation_signals: moderation.signals,
       updated_at: new Date().toISOString(),
     })
     .eq("manage_token", token);
@@ -255,6 +312,20 @@ export async function updateCreativeJobMediaByToken(token: string, formData: For
 
   if ((keptSizeBytes + newSizeBytes) / 1024 / 1024 > 10) {
     return { ok: false, message: "Reference uploads must be 10MB total or smaller. Remove a file or upload smaller files." };
+  }
+
+  const moderation = assessModeration({
+    kind: "creative_job",
+    texts: [
+      ...formData.getAll("referenceCaptionUpdates").map((value) => stringFromFormData(value)),
+      ...newCaptions,
+    ],
+    filenames: newFiles.map((file) => file.name),
+    hasMedia: referenceRows.length - deletedIds.size + newFiles.length > 0,
+  });
+
+  if (moderation.decision === "blocked") {
+    return { ok: false, message: moderationBlockMessage(moderation) };
   }
 
   const captionUpdates = formData.getAll("referenceCaptionUpdates").filter((value): value is string => typeof value === "string");
@@ -313,6 +384,18 @@ export async function updateCreativeJobMediaByToken(token: string, formData: For
       return { ok: false, message: insertError.message };
     }
   }
+
+  await supabase
+    .from("creative_job_listings")
+    .update({
+      status: moderation.decision === "auto_approved" ? "open" : "pending_review",
+      moderation_decision: moderation.decision,
+      moderation_risk: moderation.risk,
+      moderation_reason: moderation.reason,
+      moderation_signals: moderation.signals,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", job.id);
 
   revalidatePath("/creative-jobs");
   revalidatePath("/admin");

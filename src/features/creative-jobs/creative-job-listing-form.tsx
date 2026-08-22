@@ -22,6 +22,7 @@ export function CreativeJobListingForm() {
   const errorRef = useRef<HTMLParagraphElement>(null);
   const [submittedSlug, setSubmittedSlug] = useState<string | null>(null);
   const [manageUrl, setManageUrl] = useState<string | null>(null);
+  const [publishedImmediately, setPublishedImmediately] = useState(true);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [otherChecked, setOtherChecked] = useState(false);
@@ -63,9 +64,11 @@ export function CreativeJobListingForm() {
     return (
       <div ref={successRef} className="border border-[#536343] bg-[#eef2e8] p-6" tabIndex={-1}>
         <CheckCircle2 className="h-7 w-7 text-[#536343]" aria-hidden />
-        <h2 className="mt-4 text-xl font-semibold">Job listing published</h2>
+        <h2 className="mt-4 text-xl font-semibold">{publishedImmediately ? "Job listing published" : "Job listing sent for review"}</h2>
         <p className="mt-2 text-sm leading-6 text-[#39462d]">
-          Businesses can now review the listing and reach out using the contact email you provided.
+          {publishedImmediately
+            ? "Businesses can now review the listing and reach out using the contact email you provided."
+            : "This listing is waiting for admin approval because the automated triage found something worth checking."}
         </p>
         <div className="mt-5 border border-[#b9c6ae] bg-white p-4">
           <h3 className="font-semibold">Save your private manage link</h3>
@@ -99,6 +102,7 @@ export function CreativeJobListingForm() {
             form.reset();
             setSubmittedSlug(null);
             setManageUrl(null);
+            setPublishedImmediately(true);
             setCopyMessage(null);
           }}>
             Create another listing
@@ -162,6 +166,7 @@ export function CreativeJobListingForm() {
 
             setSubmittedSlug(result.slug);
             setManageUrl(`${window.location.origin}/creative-jobs/manage/${result.manageToken}`);
+            setPublishedImmediately(result.status === "open");
           } catch {
             setSubmitError("The job listing could not be published right now. Your draft has been saved in this browser.");
           } finally {

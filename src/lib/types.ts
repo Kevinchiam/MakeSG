@@ -11,6 +11,15 @@ export type VerificationStatus = "unverified" | "claimed" | "verified";
 export type ProjectType = "physical" | "digital" | "both";
 export type ProjectScale = "one-off" | "prototype" | "small-batch" | "production" | "installation";
 export type BusinessRecommendationStatus = "pending" | "approved" | "rejected";
+export type ModerationDecision = "auto_approved" | "needs_review" | "blocked";
+export type ModerationRisk = "low" | "medium" | "high";
+
+export type ModerationTriage = {
+  moderationDecision?: ModerationDecision | null;
+  moderationRisk?: ModerationRisk | null;
+  moderationReason?: string | null;
+  moderationSignals?: string[];
+};
 
 export type Service = {
   id: string;
@@ -77,7 +86,7 @@ export type Business = {
   demoNotice: string;
 };
 
-export type BusinessRecommendation = {
+export type BusinessRecommendation = ModerationTriage & {
   id: string;
   businessId: string;
   recommenderName: string;

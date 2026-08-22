@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+import { assessModeration, moderationBlockMessage } from "@/lib/moderation";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type ChangeRequestResult =
@@ -29,6 +30,16 @@ export async function requestBusinessChange(formData: FormData): Promise<ChangeR
     };
   }
 
+  const moderation = assessModeration({
+    kind: "change_request",
+    texts: [parsed.data.requesterEmail, parsed.data.reason],
+    hasContact: Boolean(parsed.data.requesterEmail),
+  });
+
+  if (moderation.decision === "blocked") {
+    return { ok: false, message: moderationBlockMessage(moderation) };
+  }
+
   try {
     const supabase = createAdminClient();
     const { error } = await supabase.from("business_change_requests").insert({
@@ -36,6 +47,10 @@ export async function requestBusinessChange(formData: FormData): Promise<ChangeR
       requester_email: parsed.data.requesterEmail,
       reason: parsed.data.reason,
       status: "open",
+      moderation_decision: moderation.decision,
+      moderation_risk: moderation.risk,
+      moderation_reason: moderation.reason,
+      moderation_signals: moderation.signals,
     });
 
     if (error) {

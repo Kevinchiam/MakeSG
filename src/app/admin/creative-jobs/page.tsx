@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { ModerationSummary } from "@/components/admin/moderation-summary";
 import { creativeJobStatusLabel, getAdminCreativeJobs } from "@/lib/creative-jobs";
 
 export const dynamic = "force-dynamic";
@@ -14,12 +15,15 @@ export default async function AdminCreativeJobsPage() {
       <p className="mt-4 text-sm font-semibold text-[#536343]">{openCount} open job{openCount === 1 ? "" : "s"}</p>
       <div className="mt-8 grid gap-3">
         {jobs.map((job) => (
-          <Link key={job.id} href={`/admin/creative-jobs/${job.id}`} className="grid gap-2 border border-[#ded8cc] bg-white p-4 md:grid-cols-[1fr_auto]">
+          <Link key={job.id} href={`/admin/creative-jobs/${job.id}`} className="grid gap-3 border border-[#ded8cc] bg-white p-4 md:grid-cols-[1fr_auto]">
             <span>
               <span className="block font-semibold">{job.title}</span>
               <span className="mt-1 block text-sm text-[#6d675d]">{job.contactName} · {job.contactEmail}</span>
             </span>
             <span className="text-sm text-[#6d675d]">{creativeJobStatusLabel(job.status)} · {job.projectType === "both" ? "Physical & Digital" : job.projectType}</span>
+            <span className="md:col-span-2">
+              <ModerationSummary compact decision={job.moderationDecision} risk={job.moderationRisk} reason={job.moderationReason} signals={job.moderationSignals} />
+            </span>
           </Link>
         ))}
       </div>

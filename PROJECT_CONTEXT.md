@@ -1,6 +1,6 @@
 # MakeSG Project Context
 
-Last updated: 2026-08-08
+Last updated: 2026-08-22
 
 ## Project Overview
 
@@ -37,6 +37,7 @@ Creative production relies heavily on word of mouth, but reliable service discov
 - Add map/location search once a custom geocoding provider is selected.
 - Add notification emails for creative job submissions and changes.
 - Add rate limiting, abuse detection, and spam protection.
+- Add AI-assisted image/content moderation after a provider and privacy approach are selected.
 - Add analytics for search-to-contact conversion and successful job closure.
 
 ### Success Metrics
@@ -143,8 +144,9 @@ Most mutations use server actions:
 - Public business pages call `getPublishedBusinesses()` or `getPublishedBusinessBySlug()` in `src/lib/public-businesses.ts`.
 - Public creative jobs call `getPublicCreativeJobs()` in `src/lib/creative-jobs.ts`.
 - Business onboarding inserts into Supabase and uploads portfolio media.
-- Creative job submission inserts a job, stores a manage token, uploads reference files, and returns the private manage link.
-- Admin pages call admin data helpers and update moderation status with server actions.
+- Business onboarding, business edits, business recommendations, change requests, and creative jobs run through rule-based moderation triage before saving.
+- Creative job submission inserts a job, stores a manage token, uploads reference files, and returns the private manage link. Low-risk creative jobs auto-publish; higher-risk jobs use `pending_review`.
+- Admin pages call admin data helpers, show automated triage decisions/signals, and update moderation status with server actions.
 
 ## Features
 
@@ -217,7 +219,7 @@ Future improvements:
 ### Business Onboarding
 Status: Completed
 
-Description: Businesses or community members can submit listing details, service options including Other, optional website/email/phone/location/budget/lead time, and portfolio photos/videos. Listings enter moderation before publication. After submission, submitters receive a private edit link that can update listing details and portfolio media. Edits to already published listings create a pending revision, so the current approved public listing stays live until an admin approves the changes.
+Description: Businesses or community members can submit listing details, service options including Other, optional website/email/phone/location/budget/lead time, and portfolio photos/videos. Submissions run through automated triage for abusive/spam wording, suspicious patterns, risky filenames, and low-detail signals, then enter moderation before publication. After submission, submitters receive a private edit link that can update listing details and portfolio media. Edits to already published listings create a pending revision, so the current approved public listing stays live until an admin approves the changes.
 
 Relevant files:
 - `src/app/for-businesses/page.tsx`
@@ -230,6 +232,7 @@ Relevant files:
 - `supabase/migrations/0003_media_uploads.sql`
 - `supabase/migrations/0010_business_manage_links.sql`
 - `supabase/migrations/0011_business_listing_revisions.sql`
+- `supabase/migrations/0014_moderation_triage.sql`
 
 Future improvements:
 - Add regenerate/revoke manage link.
@@ -239,13 +242,14 @@ Future improvements:
 ### Business Recommendations
 Status: Completed
 
-Description: Users can recommend businesses based on real experience. Recommendations are moderated before public use.
+Description: Users can recommend businesses based on real experience. Recommendations are checked for obvious abuse/spam and moderated before public use.
 
 Relevant files:
 - `src/app/recommend-business/page.tsx`
 - `src/components/business/recommend-business-form.tsx`
 - `src/lib/recommendation.ts`
 - `supabase/migrations/0002_business_recommendations.sql`
+- `supabase/migrations/0014_moderation_triage.sql`
 
 Future improvements:
 - Persist recommendation media in public display.
@@ -267,7 +271,7 @@ Future improvements:
 ### Creative Job Posting
 Status: Completed
 
-Description: Creatives can publish public job listings for businesses to browse. Jobs include title, description, contact email, project type, services, optional other service, budget, deadline, notes, and reference uploads with captions.
+Description: Creatives can publish public job listings for businesses to browse. Jobs include title, description, contact email, project type, services, optional other service, budget, deadline, notes, and reference uploads with captions. Low-risk jobs are auto-published after validation and moderation triage; higher-risk jobs are held as `pending_review` for admin approval.
 
 Relevant files:
 - `src/app/for-creatives/page.tsx`
@@ -277,10 +281,11 @@ Relevant files:
 - `src/lib/validation.ts`
 - `supabase/migrations/0005_creative_job_listings.sql`
 - `supabase/migrations/0006_creative_job_references.sql`
+- `supabase/migrations/0014_moderation_triage.sql`
 
 Future improvements:
 - Email the private manage link after submission once sender/domain setup is ready.
-- Add optional moderation if creative jobs need review before public display.
+- Add AI image moderation or third-party trust checks if creative job volume grows.
 
 ### Public Creative Jobs
 Status: Completed
@@ -334,11 +339,12 @@ Future improvements:
 ### Admin Dashboard
 Status: Completed
 
-Description: Admin home with links to business moderation, creative jobs, recommendations, services, and reports.
+Description: Admin home with links to business moderation, creative jobs, recommendations, services, and reports. It highlights pending queues and high-risk automated triage items.
 
 Relevant files:
 - `src/app/admin/page.tsx`
 - `src/components/admin/admin-page-header.tsx`
+- `src/components/admin/moderation-summary.tsx`
 
 Future improvements:
 - Add counts for rejected/suspended items.
@@ -347,26 +353,28 @@ Future improvements:
 ### Admin Business Moderation
 Status: Completed
 
-Description: Admin can review, approve, reject, feature, unpublish, and delete business listings.
+Description: Admin can review, approve, reject, feature, unpublish, and delete business listings. New listings and pending edits show automated triage risk, reason, and signals to streamline review while preserving admin override.
 
 Relevant files:
 - `src/app/admin/businesses/page.tsx`
 - `src/app/admin/businesses/[id]/page.tsx`
 - `src/components/admin/admin-status-controls.tsx`
+- `src/components/admin/moderation-summary.tsx`
 - `src/components/admin/actions.ts`
 
 Future improvements:
-- Add richer review panels and admin notes.
+- Add admin notes and audit history for moderation outcomes.
 
 ### Admin Creative Job Management
 Status: Completed
 
-Description: Admin can view, edit, status-change, archive, and delete creative jobs.
+Description: Admin can view, edit, status-change, archive, and delete creative jobs. Creative jobs flagged by automated triage can be held in `pending_review` until an admin opens or rejects/archives them.
 
 Relevant files:
 - `src/app/admin/creative-jobs/page.tsx`
 - `src/app/admin/creative-jobs/[id]/page.tsx`
 - `src/components/admin/admin-creative-job-delete-button.tsx`
+- `src/components/admin/moderation-summary.tsx`
 - `src/components/admin/actions.ts`
 
 Future improvements:
@@ -403,7 +411,7 @@ Canonical service categories used for businesses and creative job service select
 Original material taxonomy. It still exists in the schema but the current business onboarding UI removed the materials section.
 
 ### `businesses`
-Core business listings with owner, publication status, verification status, contact details, address, budget, lead time, capabilities, and hero image.
+Core business listings with owner, publication status, verification status, contact details, address, budget, lead time, capabilities, hero image, and automated moderation triage metadata.
 
 ### `business_services`
 Many-to-many join between businesses and services.
@@ -433,21 +441,24 @@ Join table for user-saved businesses.
 Stores reported content for admin review.
 
 ### `business_recommendations`
-Word-of-mouth recommendation submissions tied to a business, with recommender details, relationship, strengths, comment, permissions, and moderation status.
+Word-of-mouth recommendation submissions tied to a business, with recommender details, relationship, strengths, comment, permissions, moderation status, and automated triage metadata.
 
 ### `business_recommendation_media`
 Media attached to business recommendations.
 
 ### `business_change_requests`
-Public requests to correct or update an existing business listing. Each request stores the target business, requester email, reason, admin notes, status, and timestamps. Admins review these from `/admin/change-requests` and manually update the listing if the request is valid.
+Public requests to correct or update an existing business listing. Each request stores the target business, requester email, reason, admin notes, status, automated triage metadata, and timestamps. Admins review these from `/admin/change-requests` and manually update the listing if the request is valid.
+
+### `business_listing_revisions`
+Pending edits for published business listings. Stores proposed listing data, proposed services, proposed portfolio media, revision status, and automated triage metadata. Approved revisions overwrite the live listing; rejected revisions leave the live listing unchanged.
 
 ### `creative_job_listings`
-Public creative jobs. Important fields include `title`, `slug`, `description`, `contact_email`, `project_type`, `services`, `service_slugs`, `other_service`, `budget_min`, `budget_max`, `deadline`, `notes`, `status`, and `manage_token`.
+Public creative jobs. Important fields include `title`, `slug`, `description`, `contact_email`, `project_type`, `services`, `service_slugs`, `other_service`, `budget_min`, `budget_max`, `deadline`, `notes`, `status`, `manage_token`, and automated triage metadata.
 
 Relationships:
 - `creative_job_reference_files.job_id` references `creative_job_listings.id`.
 - Public readers can see jobs with `open` or `in_discussion` status.
-- `taken` and `archived` jobs are hidden publicly.
+- `pending_review`, `taken`, `closed`, and `archived` jobs are hidden publicly.
 
 ### `creative_job_reference_files`
 Photos/videos attached to creative jobs. Stores storage bucket/path, public URL, filename, caption, mime type, size, and sort order.
@@ -508,6 +519,7 @@ Photos/videos attached to creative jobs. Stores storage bucket/path, public URL,
 - `ManageCreativeJobMedia`: Private media/caption manager.
 - `FileUploader`: Shared media/reference uploader with previews and client-side image optimisation.
 - `AdminPageHeader`: Admin page heading wrapper.
+- `ModerationSummary`: Shared admin triage panel showing automated decision, risk, reason, and signals.
 - `AdminStatusControls`: Business moderation buttons.
 - `AdminCreativeJobDeleteButton`: Admin deletion confirmation for creative jobs.
 
@@ -608,6 +620,7 @@ Photos/videos attached to creative jobs. Stores storage bucket/path, public URL,
 - Some dashboard pages are scaffolds and not ready as core product experiences.
 - Creative job and business private manage links are powerful: anyone with the link can edit the listing.
 - Existing creative jobs and businesses created before manage-token rollout may not have manage links.
+- Automated moderation currently checks text, captions, links, filenames, contact presence, and simple spam patterns; it does not inspect the visual content of uploaded images/videos.
 
 ## Technical Debt
 
@@ -617,6 +630,7 @@ Photos/videos attached to creative jobs. Stores storage bucket/path, public URL,
 - Enquiry persistence and rate limiting are not implemented.
 - Public profile media and creative job media rely on public Supabase Storage URLs without transformation/CDN strategy.
 - Some migrations overlap because later migrations repair earlier live setup gaps.
+- Moderation triage is rule-based and should eventually be backed by provider-level text/image moderation, rate limiting, and admin audit logs.
 
 ## Future Ideas
 
@@ -625,13 +639,14 @@ Photos/videos attached to creative jobs. Stores storage bucket/path, public URL,
 - Add business response tracking for creative jobs.
 - Add custom domain and verified email sender.
 - Add richer admin moderation queues.
+- Add AI-assisted text and image moderation with configurable admin thresholds.
 - Add map view for businesses.
 - Add AI-assisted search and service matching after enough data is collected.
 - Add public trust badges based on verified recommendations.
 
 ## Outstanding Questions
 
-- Should creative jobs require moderation before public display?
+- What external moderation provider should be used for actual image/video content checks?
 - Should private manage links expire or be revocable?
 - Should business owners eventually move from private-link editing to account-based editing?
 - Should the dashboard/account area be hidden until it is fully connected?

@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 The format loosely follows Keep a Changelog and semantic sections.
 
+## [Unreleased] - 2026-08-22
+
+### Added
+- Added rule-based automated moderation triage for business listings, business listing edits, creative job listings, business recommendations, and business change requests.
+- Added pre-save blocking for obvious abusive, adult, spam, unsafe, or inappropriate wording in submitted text, captions, supporting links, and uploaded filenames.
+- Added moderation metadata migration in `supabase/migrations/0014_moderation_triage.sql`.
+- Added `pending_review` support for creative jobs, allowing low-risk jobs to auto-publish while flagged jobs wait for admin review.
+- Added shared `ModerationSummary` admin UI to show automated decision, risk, reason, and signals across moderation queues.
+- Added high-risk triage visibility to the admin dashboard.
+
+### Changed
+- Changed creative job submission success copy so auto-published jobs and jobs held for review show accurate feedback.
+- Changed admin business, creative job, recommendation, and change-request queues to show moderation triage context.
+- Changed business submission service upsert logic to use the shared Supabase helper consistently.
+
+### Fixed
+- Fixed an old nested business service helper that could conflict with shared business submission logic.
+- Fixed creative job status handling so admin can see and set `pending_review`.
+
+### Removed
+- Removed no user-facing features.
+
+### Known Issues
+- Automated moderation is currently rule-based and does not inspect the actual pixels/content of uploaded images or videos.
+- Full image/video safety moderation will require a third-party or AI moderation API and a privacy/cost decision.
+
 ## [Unreleased] - 2026-08-08
 
 ### Added

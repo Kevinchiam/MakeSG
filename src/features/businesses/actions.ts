@@ -4,6 +4,7 @@ import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { services as knownServices } from "@/lib/data";
+import { assessModeration, moderationBlockMessage, type ModerationResult } from "@/lib/moderation";
 import type { PortfolioRevisionItem } from "@/lib/business-submissions";
 import { createSlug } from "@/lib/slug";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -47,6 +48,29 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
   if (totalPortfolioSizeMb > 10) {
     return { ok: false, message: "Portfolio uploads must be 10MB total or smaller." };
   }
+  const moderation = assessModeration({
+    kind: "business",
+    texts: [
+      data.name,
+      data.shortDescription,
+      data.description,
+      data.websiteUrl,
+      data.publicEmail,
+      data.phoneNumber,
+      data.location,
+      data.otherService,
+      ...data.services,
+      ...portfolioCaptions,
+    ],
+    filenames: portfolioFiles.map((file) => file.name),
+    hasContact: Boolean(data.publicEmail || data.phoneNumber || data.websiteUrl),
+    hasMedia: portfolioFiles.length > 0,
+  });
+
+  if (moderation.decision === "blocked") {
+    return { ok: false, message: moderationBlockMessage(moderation) };
+  }
+
   const slugBase = createSlug(data.name) || "business";
   const slug = `${slugBase}-${Date.now().toString(36)}`;
   const manageToken = createManageToken();
@@ -70,6 +94,10 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
       claimed: false,
       featured: false,
       manage_token: manageToken,
+      moderation_decision: moderation.decision,
+      moderation_risk: moderation.risk,
+      moderation_reason: moderation.reason,
+      moderation_signals: moderation.signals,
     })
     .select("id")
     .single();
@@ -94,7 +122,7 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
   }
 
   if (serviceSlugs.length > 0) {
-    await upsertKnownServices(serviceSlugs);
+    await upsertKnownServices(supabase, serviceSlugs);
     const { data: serviceRows } = await supabase.from("services").select("id, slug").in("slug", serviceSlugs);
     const joins = (serviceRows ?? []).map((service) => ({
       business_id: business.id,
@@ -142,21 +170,6 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
   }
 
   return { ok: true, id: business.id, manageToken };
-
-  async function upsertKnownServices(slugs: string[]) {
-    const selectedServices = knownServices
-      .filter((service) => slugs.includes(service.slug))
-      .map((service) => ({
-        slug: service.slug,
-        name: service.name,
-        description: service.description,
-        service_group: service.group,
-      }));
-
-    if (selectedServices.length > 0) {
-      await supabase.from("services").upsert(selectedServices, { onConflict: "slug" });
-    }
-  }
 }
 
 export async function updateBusinessDetailsByToken(token: string, input: unknown): Promise<UpdateBusinessResult> {
@@ -179,6 +192,26 @@ export async function updateBusinessDetailsByToken(token: string, input: unknown
   }
 
   const data = parsed.data;
+  const moderation = assessModeration({
+    kind: "business",
+    texts: [
+      data.name,
+      data.shortDescription,
+      data.description,
+      data.websiteUrl,
+      data.publicEmail,
+      data.phoneNumber,
+      data.location,
+      data.otherService,
+      ...data.services,
+    ],
+    hasContact: Boolean(data.publicEmail || data.phoneNumber || data.websiteUrl),
+  });
+
+  if (moderation.decision === "blocked") {
+    return { ok: false, message: moderationBlockMessage(moderation) };
+  }
+
   const { data: business, error: businessError } = await supabase
     .from("businesses")
     .select("id, publication_status, business_services(services(name)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes), business_listing_revisions(id, status, proposed_data, proposed_services, proposed_portfolio)")
@@ -212,6 +245,7 @@ export async function updateBusinessDetailsByToken(token: string, input: unknown
       proposedData: businessInputToRevisionData(data),
       proposedServices: serviceLabels,
       proposedPortfolio: pendingRevision?.proposed_portfolio ?? currentPortfolio,
+      moderation,
     });
 
     if (revisionError) {
@@ -237,6 +271,10 @@ export async function updateBusinessDetailsByToken(token: string, input: unknown
       business_type: data.businessType,
       publication_status: "pending",
       verification_status: "unverified",
+      moderation_decision: moderation.decision,
+      moderation_risk: moderation.risk,
+      moderation_reason: moderation.reason,
+      moderation_signals: moderation.signals,
       updated_at: new Date().toISOString(),
     })
     .eq("id", business.id);
@@ -308,6 +346,24 @@ export async function updateBusinessMediaByToken(token: string, formData: FormDa
       return { ok: false, message: "Portfolio uploads must be 10MB total or smaller. Remove a file or upload smaller files." };
     }
 
+    const moderation = assessModeration({
+      kind: "business",
+      texts: [
+        business.name,
+        business.short_description,
+        business.description,
+        ...keptPortfolio.map((item) => item.title),
+        ...newCaptions,
+      ],
+      filenames: newFiles.map((file) => file.name),
+      hasContact: Boolean(business.public_email || business.public_phone || business.website_url),
+      hasMedia: keptPortfolio.length + newFiles.length > 0,
+    });
+
+    if (moderation.decision === "blocked") {
+      return { ok: false, message: moderationBlockMessage(moderation) };
+    }
+
     const uploadedItems: PortfolioRevisionItem[] = [];
     for (const [index, file] of newFiles.entries()) {
       const caption = newCaptions[index] ?? "";
@@ -341,6 +397,7 @@ export async function updateBusinessMediaByToken(token: string, formData: FormDa
       proposedData: pendingRevision?.proposed_data ?? businessRowToRevisionData(business),
       proposedServices: pendingRevision?.proposed_services ?? servicesFromBusinessRow(business),
       proposedPortfolio: [...keptPortfolio, ...uploadedItems],
+      moderation,
     });
 
     if (revisionError) {
@@ -371,6 +428,24 @@ export async function updateBusinessMediaByToken(token: string, formData: FormDa
 
   if ((keptSizeBytes + newSizeBytes) / 1024 / 1024 > 10) {
     return { ok: false, message: "Portfolio uploads must be 10MB total or smaller. Remove a file or upload smaller files." };
+  }
+
+  const moderation = assessModeration({
+    kind: "business",
+    texts: [
+      business.name,
+      business.short_description,
+      business.description,
+      ...formData.getAll("portfolioCaptionUpdates").map((value) => stringFromFormData(value)),
+      ...newCaptions,
+    ],
+    filenames: newFiles.map((file) => file.name),
+    hasContact: Boolean(business.public_email || business.public_phone || business.website_url),
+    hasMedia: itemRows.length - deletedIds.size + newFiles.length > 0,
+  });
+
+  if (moderation.decision === "blocked") {
+    return { ok: false, message: moderationBlockMessage(moderation) };
   }
 
   const captionUpdates = formData.getAll("portfolioCaptionUpdates").filter((value): value is string => typeof value === "string");
@@ -447,6 +522,10 @@ export async function updateBusinessMediaByToken(token: string, formData: FormDa
       hero_image_url: heroImage,
       publication_status: "pending",
       verification_status: "unverified",
+      moderation_decision: moderation.decision,
+      moderation_risk: moderation.risk,
+      moderation_reason: moderation.reason,
+      moderation_signals: moderation.signals,
       updated_at: new Date().toISOString(),
     })
     .eq("id", business.id);
@@ -574,6 +653,7 @@ async function savePendingBusinessRevision(
     proposedData: ReturnType<typeof businessInputToRevisionData>;
     proposedServices: string[];
     proposedPortfolio: PortfolioRevisionItem[];
+    moderation?: ModerationResult;
   },
 ) {
   const { data: existing } = await supabase
@@ -589,6 +669,10 @@ async function savePendingBusinessRevision(
     proposed_data: payload.proposedData,
     proposed_services: payload.proposedServices,
     proposed_portfolio: payload.proposedPortfolio,
+    moderation_decision: payload.moderation?.decision ?? "needs_review",
+    moderation_risk: payload.moderation?.risk ?? "low",
+    moderation_reason: payload.moderation?.reason ?? "Ready for admin review.",
+    moderation_signals: payload.moderation?.signals ?? ["Pending business edit."],
     updated_at: new Date().toISOString(),
   };
 

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { assessModeration, moderationBlockMessage } from "@/lib/moderation";
 import { businessRecommendationSchema } from "@/lib/validation";
 
 type SubmitRecommendationResult =
@@ -62,6 +63,26 @@ export async function submitBusinessRecommendation(formData: FormData): Promise<
     };
   }
 
+  const moderation = assessModeration({
+    kind: "recommendation",
+    texts: [
+      data.recommenderName,
+      data.recommenderEmail,
+      data.review,
+      ...data.supportingLinks,
+      ...mediaCaptions,
+      ...ratingLabels(data),
+    ],
+    filenames: mediaFiles.map((file) => file.name),
+    linkCount: data.supportingLinks.length,
+    hasContact: Boolean(data.recommenderEmail),
+    hasMedia: mediaFiles.length > 0,
+  });
+
+  if (moderation.decision === "blocked") {
+    return { ok: false, message: moderationBlockMessage(moderation) };
+  }
+
   const { data: recommendation, error: recommendationError } = await supabase
     .from("business_recommendations")
     .insert({
@@ -79,6 +100,10 @@ export async function submitBusinessRecommendation(formData: FormData): Promise<
       permission_to_contact: true,
       permission_to_publish_name: data.permissionToPublishName,
       status: "pending",
+      moderation_decision: moderation.decision,
+      moderation_risk: moderation.risk,
+      moderation_reason: moderation.reason,
+      moderation_signals: moderation.signals,
     })
     .select("id")
     .single();

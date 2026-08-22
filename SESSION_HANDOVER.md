@@ -1,309 +1,205 @@
 # Session Handover
 
-Date: 2026-08-08
+Date: 2026-08-22
 
 ## Session Summary
 
-Today's work continued the MakeSG product polish and platform maturity push. The focus was on business listing self-management, homepage freshness, copy clarity, and motion. Businesses now have private manage-link editing with moderation-safe revisions, the homepage reflects current platform features with dynamic highlights, and motion has been applied consistently across the app through a shared CSS-only layer.
+Today's work added a first-line automated moderation triage system for MakeSG. Public submission flows now screen obvious abusive, adult, unsafe, or spam-like wording before saving. Admin queues now show a consistent automated triage summary, so business listings, business edits, creative jobs, recommendations, and change requests can be reviewed faster while the admin still keeps final override control.
 
 ## Objectives Completed
 
-- [x] Made the creative job manage status container adaptive during desktop scrolling.
-- [x] Extended private manage-link logic to business listings.
-- [x] Added business listing edit pages for details and portfolio media.
-- [x] Preserved the old approved business listing while edits wait for admin approval.
-- [x] Removed superfluous public business-card labels such as unverified/demo-style language.
-- [x] Updated homepage copy to reflect the current real platform direction.
-- [x] Updated footer/about copy away from fictional demo language.
-- [x] Removed the old recommendation form page experience and moved recommendations into business profiles.
-- [x] Added business profile recommendation panel with ratings, review, optional media, captions, supporting links, moderation details, and contributor display preference.
-- [x] Removed endorsement language across the platform.
-- [x] Added public business change requests on business cards and business profile pages.
-- [x] Routed business change requests into the admin dashboard instead of email.
-- [x] Made business onboarding contact/budget fields optional and added optional phone number.
-- [x] Updated business onboarding copy so community members can submit listings on behalf of businesses.
-- [x] Refreshed the homepage with live platform feature copy and iconography.
-- [x] Made homepage featured businesses dynamic and capped directory highlights at six businesses.
-- [x] Added homepage-specific animations.
-- [x] Added shared platform-wide CSS-only animations.
-- [x] Updated `PROJECT_CONTEXT.md` and `CHANGELOG.md` for today's work.
+- [x] Added rule-based moderation triage utility.
+- [x] Blocked obvious abusive/spam/adult/unsafe terms before saving submissions.
+- [x] Checked captions, supporting text, links, filenames, contact presence, and low-detail signals.
+- [x] Added moderation metadata to business listings, pending business revisions, recommendations, change requests, and creative jobs.
+- [x] Added `pending_review` creative job status for flagged jobs.
+- [x] Auto-published low-risk creative jobs while holding higher-risk jobs for admin review.
+- [x] Kept business listings, business edits, recommendations, and change requests in admin review by default.
+- [x] Added shared admin triage UI across moderation queues.
+- [x] Updated project documentation and changelog.
+- [x] Ran lint, TypeScript, production build, and diff checks successfully.
 
 ## Files Created
 
-### `src/app/businesses/manage/[token]/page.tsx`
-Private business listing management page. It lets a submitter revisit a business listing using a manage token and edit details/media without requiring an account.
+### `src/lib/moderation.ts`
+Rule-based moderation helper. It returns `auto_approved`, `needs_review`, or `blocked`, plus risk level, reason, and review signals.
 
-### `src/features/businesses/manage-business-details.tsx`
-Private business listing detail editor. Edits to an already published listing create a pending revision rather than immediately changing the live public listing.
+### `src/components/admin/moderation-summary.tsx`
+Shared admin UI for displaying automated triage decision, risk, reason, and signal tags.
 
-### `src/features/businesses/manage-business-media.tsx`
-Private business portfolio media editor. Supports add/remove/update flows for submitted portfolio photos/videos and captions.
-
-### `src/lib/business-change-requests.ts`
-Data access helper for public requests to correct listed business information.
-
-### `src/components/business/request-business-change-panel.tsx`
-Reusable public UI panel for requesting a change to a listed business.
-
-### `src/components/business/change-request-actions.ts`
-Server action bridge for saving public business change requests.
-
-### `src/components/admin/business-change-request-controls.tsx`
-Admin controls for marking change requests as reviewed, accepted, or rejected.
-
-### `src/app/admin/change-requests/page.tsx`
-Admin inbox for reviewing public business change requests.
-
-### `supabase/migrations/0010_business_manage_links.sql`
-Adds business manage-token support and metadata needed for private editing.
-
-### `supabase/migrations/0011_business_listing_revisions.sql`
-Adds pending revision support so edits to published businesses do not overwrite the live listing before approval.
-
-### `supabase/migrations/0013_business_change_requests.sql`
-Adds the `business_change_requests` table for admin-visible public correction requests.
+### `supabase/migrations/0014_moderation_triage.sql`
+Adds moderation metadata columns and `pending_review` creative job status support.
 
 ## Files Modified
 
-### `src/app/page.tsx`
-Homepage now uses current product copy, live directory counts, live creative job counts, dynamic ranked business highlights, a six-business highlight cap, updated feature callouts, and homepage animation classes.
-
-### `src/app/layout.tsx`
-Added the `platform-motion` class to the main app shell so platform-wide animation styles can be scoped safely.
-
-### `src/app/globals.css`
-Added the shared CSS-only motion layer for page reveals, card/list staggering, hover lifts, form focus feedback, details panel opening, header entrance, and footer link motion. The existing reduced-motion media query continues to disable motion-heavy effects.
-
-### `src/app/about/page.tsx`
-Updated copy so the page describes MakeSG as a real Singapore creative-production directory rather than fictional demo content.
-
-### `src/components/site/site-footer.tsx`
-Updated footer language and navigation to reflect the current product direction.
-
-### `src/components/business/business-card.tsx`
-Removed inactive/superfluous labels and buttons, added recommendation label when applicable, and added request-change access.
-
-### `src/app/businesses/page.tsx`
-Supports the updated business directory cards, search, live data, and change-request workflow.
-
-### `src/app/businesses/[slug]/page.tsx`
-Cleaned up public profile presentation, added direct contact fallback, recommendation panel placement, and request-change access.
-
-### `src/app/for-businesses/page.tsx`
-Updated onboarding copy so both business owners and community members understand they can submit businesses.
-
-### `src/features/businesses/business-listing-form.tsx`
-Supports optional website, public email, location, minimum budget, typical lead time, optional phone number, duplicate prevention, portfolio media/captions, and private manage-link result.
-
 ### `src/features/businesses/actions.ts`
-Handles business onboarding, private business edits, pending revisions, media updates, and moderation-safe revalidation.
+Business onboarding and private business edit flows now run moderation before saving. Published edits store moderation metadata on pending revisions. Also fixed the business service helper usage.
+
+### `src/features/creative-jobs/actions.ts`
+Creative job creation and private edits now run moderation. Low-risk submissions auto-publish; flagged submissions become `pending_review`.
+
+### `src/features/creative-jobs/creative-job-listing-form.tsx`
+Success message now distinguishes between published jobs and jobs sent for admin review.
+
+### `src/lib/creative-jobs.ts`
+Creative job types and labels now include `pending_review`, plus moderation metadata mapping.
+
+### `src/lib/business-submissions.ts`
+Admin business data now includes moderation metadata for listings and pending revisions.
+
+### `src/lib/business-recommendations.ts`
+Admin recommendation data now includes moderation metadata.
+
+### `src/lib/business-change-requests.ts`
+Admin change-request data now includes moderation metadata.
+
+### `src/components/business/recommendation-actions.ts`
+Business recommendation submissions now run moderation before saving.
+
+### `src/components/business/change-request-actions.ts`
+Business change requests now run moderation before saving.
 
 ### `src/app/admin/page.tsx`
-Admin home now links to the business change-request queue.
+Admin home now surfaces high-risk triage counts and pending creative jobs.
+
+### `src/app/admin/businesses/page.tsx`
+Business moderation list now shows triage context.
 
 ### `src/app/admin/businesses/[id]/page.tsx`
-Admin business review supports pending revisions and updated listing/contact/media fields.
+Business detail review now shows triage context for current submissions and pending edits.
 
-### `src/app/recommend-business/page.tsx`
-Old standalone form flow was removed/reworked so recommendations happen from existing business contexts.
+### `src/app/admin/creative-jobs/page.tsx`
+Creative job admin list now shows triage context.
 
-### `src/components/business/recommend-business-panel.tsx`
-Business recommendation panel now includes rating categories, review text, optional uploads with captions, supporting links, contributor identity fields, moderation requirements, and close behaviour.
+### `src/app/admin/creative-jobs/[id]/page.tsx`
+Creative job admin detail page now shows triage context and supports `pending_review`.
 
-### `src/components/business/recommend-business-lookup.tsx`
-Existing-business lookup now focuses people on viewing existing listings rather than endorsement actions.
+### `src/app/admin/recommendations/page.tsx`
+Recommendation queue now shows triage context.
 
-### `src/lib/public-businesses.ts`
-Public business mapping includes updated fields, recommendation counts, media/contact data, and `updatedAt` for homepage ranking.
+### `src/app/admin/change-requests/page.tsx`
+Change-request queue now shows triage context.
 
 ### `src/lib/types.ts`
-Business-related types expanded for phone, updated timestamps, revision-aware flows, and recommendation/change-request surfaces.
+Added shared moderation decision/risk/triage types.
 
 ### `PROJECT_CONTEXT.md`
-Updated to describe the current platform state, business management flow, homepage highlight cap, shared animations, and known risks.
+Updated to describe automated moderation, new schema metadata, and current limitations.
 
 ### `CHANGELOG.md`
-Updated with semantic entries for business management, business change requests, homepage updates, and platform-wide motion.
+Added the 2026-08-22 semantic changelog entry.
 
 ## Database Changes
 
-- Business listings now support private manage-token editing.
-- Published business edits are stored as pending revisions until admin approval.
-- Business change requests are stored in `business_change_requests` for admin review.
-- Business contact details now include optional phone number.
-- No database changes were needed for platform-wide animations or the six-business homepage highlight cap.
+- Added moderation columns to:
+  - `businesses`
+  - `business_listing_revisions`
+  - `business_recommendations`
+  - `business_change_requests`
+  - `creative_job_listings`
+- Added `pending_review` to creative job status constraints.
+- Kept `closed` in the status constraint for backward compatibility with any old rows.
+- Updated public creative job policies so only `open` and `in_discussion` jobs remain public.
+- Added moderation indexes for admin queue filtering.
 
 ## API Changes
 
-Server actions added or expanded:
-
-- `submitBusinessListing(...)`: now returns private manage-link information and handles optional fields.
-- Private business detail/media update actions: update by manage token and send published listings back through moderation via pending revisions.
-- `requestBusinessChange(formData)`: saves public change requests for admin review.
-- `updateBusinessChangeRequestStatus(...)`: lets admins manage the change-request queue.
-
-No new public REST-style route handlers were introduced today.
+- Business submission/edit actions now return a blocking message when moderation rejects obvious unsafe content.
+- Creative job submission now returns the saved status so the UI can show either published or review-pending feedback.
+- Recommendation and change-request actions now block obvious unsafe submissions before saving.
 
 ## UI Changes
 
-- Homepage now reflects the current platform: businesses, creative jobs, recommendations, change requests, and private edit links.
-- Directory highlights on the homepage are limited to six ranked businesses.
-- Platform-wide motion now covers page sections, cards, forms, links, buttons, expandable panels, header, and footer.
-- Business cards are cleaner and no longer show confusing unverified/community-submitted phrasing.
-- Business profiles show recommendation and request-change actions in context.
-- Business onboarding explains that community members can submit on behalf of businesses.
-- Business edit/manage pages now mirror the low-friction creative job manage-link experience.
+- Admin queues now show automated triage panels with risk, decision, reason, and signal tags.
+- Admin home now flags high-risk items.
+- Creative job submission success copy now matches whether the job was published or sent for review.
 
 ## Bugs Fixed
 
-- Fixed desktop creative job management layout where the status container stayed fixed instead of adapting with the page.
-- Fixed stale fictional/demo copy across visible areas such as about/footer/home.
-- Fixed confusing endorsement terminology by removing endorsement UI and consolidating around recommendations.
-- Fixed homepage highlights showing more businesses than intended by capping the section at six.
+- Fixed a duplicated/nested business service upsert helper that conflicted with the shared helper signature.
+- Fixed creative job status handling to support `pending_review` in admin views.
 
 ## Bugs Remaining
 
-- Public enquiries are not persisted in the `enquiries` table yet.
-- Email delivery depends on Resend configuration and a verified sender/domain; without that, direct email fallback is used.
-- Some dashboard/account pages remain scaffolds.
-- Existing businesses or creative jobs created before manage-token migrations may not have private manage links.
-- Private manage links are bearer credentials; anyone with the link can edit the related listing/job.
+- Uploaded image/video content is not visually inspected yet. Current moderation checks metadata, captions, text, filenames, links, and file type/size only.
+- Public forms still need rate limiting.
+- Admin moderation does not yet have an audit log or admin notes for every queue type.
 
 ## Technical Decisions
 
-- Kept private manage links instead of account requirements to preserve low-friction MVP workflows.
-- Used pending business revisions so live approved business pages stay stable while edits wait for admin review.
-- Routed public change requests to the admin dashboard instead of email so moderation remains visible even without email infrastructure.
-- Added animations through scoped global CSS rather than per-page JavaScript animation libraries to keep performance strong and dependencies low.
-- Capped homepage highlights after ranking rather than changing data retrieval, so the ranking logic remains reusable.
+- Used conservative rule-based triage first to avoid adding dependencies and to keep decisions transparent.
+- Auto-approval is limited to creative jobs because these are lower-risk public classifieds.
+- Business listings, business edits, recommendations, and change requests still require admin review because they affect business reputation and directory trust.
+- `pending_review` hides flagged creative jobs from public listing pages until admin approval.
 
 ## Lessons Learned
 
-- The product language needs to keep pace with feature maturity; old demo wording quickly becomes trust-eroding.
-- Private-link workflows are effective for early-stage UX but need clear recovery, revocation, and email-delivery plans.
-- Homepage content should be dynamic but editorially constrained so it feels curated rather than endless.
-- Motion works best here as a quiet system layer, not as flashy page-specific decoration.
+- Automation should reduce admin reading time without hiding admin control.
+- Business reputation workflows need stricter human review than creative job classifieds.
+- If image safety becomes important, metadata checks are not enough; a real moderation API will be needed.
 
 ## Risks
 
-- Private manage tokens should be treated as sensitive URLs.
-- Business pending revisions add moderation complexity and should be tested whenever schema changes are made.
-- Public change requests could be spammed without rate limiting.
-- Broad CSS motion selectors should be watched during future UI additions so important layouts do not feel jumpy.
-- Supabase production must have all latest migrations applied before relying on business edit/change-request workflows.
+- Rule-based filtering can miss nuanced abuse or produce occasional false positives.
+- Some blocked terms may need tuning as real users submit edge cases.
+- Production Supabase must run `0014_moderation_triage.sql` before the deployed code relies on moderation columns.
 
 ## Things To Watch
 
-- Whether users understand they should save private manage links after business onboarding.
-- Whether admins need a clearer queue for pending business revisions versus new submissions.
-- Whether change-request volume requires notifications or filtering.
-- Whether homepage animations feel smooth on mobile devices with real production data.
-- Whether recommendation media should be surfaced more richly on public business profiles.
+- Whether many submissions become medium/high risk due to low-detail signals.
+- Whether creative jobs should stay auto-published or become admin-review-first as volume grows.
+- Whether business submissions need clearer wording when blocked by moderation.
 
 ## Suggested Refactoring
 
-- Extract shared private manage-link patterns between business listings and creative jobs.
-- Extract shared media upload/caption/edit helpers between business and creative job flows.
-- Create generated Supabase database types for safer schema evolution.
-- Consolidate service selection UI between business onboarding, business editing, and creative job posting.
-- Add a reusable feedback-scroll hook for all long-form save flows.
+- Generate Supabase database types and replace manual row casts.
+- Add a reusable admin queue shell with filters for risk/status/date.
+- Extract shared media moderation input builders between business and creative job flows.
 
 ## Performance Considerations
 
-- Platform-wide animations are CSS-only and respect `prefers-reduced-motion`.
-- Homepage still fetches full published businesses before ranking and slicing to six; acceptable for MVP, but a database-side limit/ranking query may be needed as data grows.
-- Public business search remains in-memory over loaded listings and should move toward indexed search for scale.
-- Media files use Supabase public URLs without a dedicated transformation strategy.
+- Moderation is synchronous and lightweight string matching, so it adds negligible runtime cost.
+- No new dependencies were added.
+- Future image moderation would add latency and cost, so it should be async or clearly communicated in UI.
 
 ## Accessibility Considerations
 
-- The global reduced-motion rule protects users who prefer less motion.
-- Focus styling on form fields was strengthened through global focus animation.
-- Recommendation and change-request panels should remain keyboard-tested after future visual edits.
-- Hover lift should never be the only signal for interaction; links/buttons still use text, borders, and focus outlines.
+- Moderation summary uses semantic section labels and text, not colour alone.
+- Blocked submission errors reuse existing accessible alert/error patterns.
 
 ## Security Considerations
 
-- Keep `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_TOKEN` server-only.
-- Add rate limiting for public forms: onboarding, recommendations, change requests, enquiries, and admin login.
-- Private manage links should eventually support revoke/regenerate flows.
-- Admin should eventually move from static credentials to role-based Supabase authentication.
+- This is not a security boundary. It is an abuse-reduction and admin-triage layer.
+- Add rate limiting to public forms before substantial public launch.
+- Keep admin override protected by the existing admin login flow.
 
 ## Testing Completed
-
-Completed during today's session:
 
 - `pnpm lint`
 - `pnpm typecheck`
 - `pnpm build`
 - `git diff --check`
 
-Note: The regular shell could not find Node during one check, so Codex's bundled Node runtime was used to run the final successful checks.
+The bundled Codex Node runtime was used because the regular shell could not find `node`.
 
 ## Testing Still Needed
 
-- Manual Vercel smoke test after deployment.
-- E2E test for business onboarding, private manage link, pending edit, and admin approval.
-- E2E test for business profile recommendation submission.
-- E2E test for business change request submission and admin review.
-- Mobile visual QA for the platform-wide animation layer.
-- Regression test to ensure homepage highlights never exceed six cards.
+- Run `supabase/migrations/0014_moderation_triage.sql` in production.
+- Deploy to Vercel and smoke test:
+  - Business onboarding blocks obvious unsafe text but preserves valid submissions.
+  - Creative jobs auto-publish when low risk.
+  - Suspicious creative jobs show as pending review in admin.
+  - Admin queues show triage panels.
+  - Public creative jobs do not show `pending_review`.
 
 ## Recommended Next Tasks
 
-1. Push today's changes to GitHub and redeploy on Vercel.
-2. Run any unapplied Supabase migrations in production.
-3. Smoke test production:
-   - Homepage highlights show no more than six businesses.
-   - Business profile recommendation panel opens/closes and preserves form state on errors.
-   - Request-change panel works on business cards and profile pages.
-   - Business manage link can submit edits without changing the live listing before approval.
-4. Add rate limiting to public mutation actions.
-5. Add automated tests for business manage-link and change-request workflows.
-6. Decide whether scaffold dashboard/account pages should be hidden until fully connected.
+1. Apply the Supabase migration in production.
+2. Push and redeploy on Vercel.
+3. Add admin filters by moderation risk/status.
+4. Add public form rate limiting.
+5. Decide whether to add external image/video moderation.
 
 ## Ready-to-use Prompt for Next Session
 
-Paste this into a fresh Codex chat:
-
-```text
-Before writing code, read AI_RULES.md, PROJECT_CONTEXT.md, and SESSION_HANDOVER.md.
-
-We are working on MakeSG, a Next.js 16 + TypeScript + Tailwind + Supabase + Vercel platform for Singapore creatives to find businesses, recommend trusted businesses, and post creative jobs.
-
-The latest session on 2026-08-08 added:
-- private business manage links,
-- business listing edits that create pending revisions while the old approved listing stays live,
-- business portfolio media editing,
-- public request-change panels saved to an admin dashboard queue,
-- cleaned-up business cards and profile copy,
-- refreshed homepage copy/iconography,
-- dynamic homepage directory highlights capped at six businesses,
-- CSS-only homepage and platform-wide animations with reduced-motion support.
-
-Important architecture decisions:
-- Use private manage tokens for low-friction editing instead of requiring accounts for now.
-- Keep live approved business listings unchanged while edits wait for admin approval.
-- Route public change requests into the admin dashboard, not email.
-- Keep motion CSS-only and scoped through `platform-motion` in src/app/layout.tsx plus rules in src/app/globals.css.
-- Continue using server actions for mutations and Supabase admin client only in server-side code.
-
-Read these files first:
-- AI_RULES.md
-- PROJECT_CONTEXT.md
-- SESSION_HANDOVER.md
-- src/app/page.tsx
-- src/app/globals.css
-- src/features/businesses/actions.ts
-- src/features/businesses/business-listing-form.tsx
-- src/app/businesses/manage/[token]/page.tsx
-- src/app/admin/businesses/[id]/page.tsx
-- src/components/business/request-business-change-panel.tsx
-- src/app/admin/change-requests/page.tsx
-
-Recommended next work:
-1. Add rate limiting to public server actions.
-2. Add automated tests for business manage links, pending revisions, and public change requests.
-3. Smoke test production after Vercel redeploy and Supabase migrations.
-4. Decide whether dashboard/account scaffold pages should be hidden until account workflows are complete.
-```
+Continue the MakeSG project in `/Users/kevinchiam/Documents/Design Directory`. Before coding, read `AI_RULES.md`, `PROJECT_CONTEXT.md`, and `SESSION_HANDOVER.md`. Today’s last work added rule-based automated moderation triage across business listings, business edits, creative jobs, business recommendations, and business change requests. Key files to read first: `src/lib/moderation.ts`, `src/components/admin/moderation-summary.tsx`, `src/features/businesses/actions.ts`, `src/features/creative-jobs/actions.ts`, `src/lib/business-submissions.ts`, `src/lib/creative-jobs.ts`, and `supabase/migrations/0014_moderation_triage.sql`. The next likely task is to apply the migration, smoke test production, and consider admin risk/status filters or real image moderation. Remember: creative jobs can auto-publish when low risk; business reputation content still requires admin review.
