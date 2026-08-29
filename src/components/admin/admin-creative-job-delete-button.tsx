@@ -1,13 +1,16 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { deleteCreativeJobEntry } from "@/components/admin/actions";
 import { Button } from "@/components/ui/button";
+import { useFeedbackFocus } from "@/lib/use-feedback-focus";
 
 export function AdminCreativeJobDeleteButton({ jobId }: { jobId: string }) {
+  const messageRef = useRef<HTMLParagraphElement>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  useFeedbackFocus(messageRef, message);
 
   async function deleteJob() {
     setMessage(null);
@@ -32,7 +35,7 @@ export function AdminCreativeJobDeleteButton({ jobId }: { jobId: string }) {
         <Trash2 className="h-4 w-4" />
         {isDeleting ? "Deleting..." : "Delete creative job"}
       </Button>
-      {message ? <p className="text-sm text-[#9c4f35]" role="alert">{message}</p> : null}
+      {message ? <p ref={messageRef} tabIndex={-1} className="text-sm text-[#9c4f35] focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#315c6b]" role="alert">{message}</p> : null}
     </div>
   );
 }

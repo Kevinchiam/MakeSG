@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { updateCreativeJobStatusByToken } from "@/features/creative-jobs/actions";
 import { creativeJobStatusLabel, type CreativeJobStatus } from "@/lib/creative-jobs";
+import { useFeedbackFocus } from "@/lib/use-feedback-focus";
 
 const statuses: Array<{ value: CreativeJobStatus; label: string }> = [
   { value: "open", label: "Open" },
@@ -12,9 +13,11 @@ const statuses: Array<{ value: CreativeJobStatus; label: string }> = [
 ];
 
 export function ManageCreativeJobStatus({ token, initialStatus }: { token: string; initialStatus: CreativeJobStatus }) {
+  const messageRef = useRef<HTMLParagraphElement>(null);
   const [status, setStatus] = useState<CreativeJobStatus>(initialStatus);
   const [message, setMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  useFeedbackFocus(messageRef, message);
 
   async function updateStatus(nextStatus: CreativeJobStatus) {
     setIsSaving(true);
@@ -37,7 +40,7 @@ export function ManageCreativeJobStatus({ token, initialStatus }: { token: strin
         <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Current status</p>
         <p className="mt-1 text-2xl font-semibold">{creativeJobStatusLabel(status)}</p>
       </div>
-      {message ? <p className="mt-4 border border-[#b9c6ae] bg-[#eef2e8] p-3 text-sm text-[#39462d]" role="status">{message}</p> : null}
+      {message ? <p ref={messageRef} tabIndex={-1} className="mt-4 border border-[#b9c6ae] bg-[#eef2e8] p-3 text-sm text-[#39462d] focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#315c6b]" role="status">{message}</p> : null}
       <div className="mt-5 grid grid-cols-3 border border-[#ded8cc]">
         {statuses.map((item) => (
           <button

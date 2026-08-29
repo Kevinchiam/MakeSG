@@ -2,15 +2,18 @@
 
 import { RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { restoreTrashItem } from "@/components/admin/actions";
 import { Button } from "@/components/ui/button";
 import type { AdminTrashKind } from "@/lib/admin-trash";
+import { useFeedbackFocus } from "@/lib/use-feedback-focus";
 
 export function RestoreTrashItemButton({ id, kind }: { id: string; kind: AdminTrashKind }) {
   const router = useRouter();
+  const messageRef = useRef<HTMLParagraphElement>(null);
   const [isRestoring, setIsRestoring] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  useFeedbackFocus(messageRef, message);
 
   async function restore() {
     setMessage(null);
@@ -33,7 +36,7 @@ export function RestoreTrashItemButton({ id, kind }: { id: string; kind: AdminTr
         <RotateCcw className="h-4 w-4" aria-hidden />
         {isRestoring ? "Restoring..." : "Restore"}
       </Button>
-      {message ? <p className="max-w-48 text-sm text-[#536343] md:text-right" role="status">{message}</p> : null}
+      {message ? <p ref={messageRef} tabIndex={-1} className="max-w-48 text-sm text-[#536343] focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#315c6b] md:text-right" role="status">{message}</p> : null}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { FileUploader } from "@/components/projects/file-uploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updateBusinessMediaByToken } from "@/features/businesses/actions";
+import { useFeedbackFocus } from "@/lib/use-feedback-focus";
 import type { PortfolioItem } from "@/lib/types";
 
 export function ManageBusinessMedia({ token, portfolio }: { token: string; portfolio: PortfolioItem[] }) {
@@ -19,6 +20,7 @@ export function ManageBusinessMedia({ token, portfolio }: { token: string; portf
   const [message, setMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const visibleItems = portfolio.filter((item) => !deletedIds.includes(item.id));
+  useFeedbackFocus(messageRef, message);
 
   async function updateMedia(formData: FormData) {
     setIsSaving(true);
@@ -36,14 +38,12 @@ export function ManageBusinessMedia({ token, portfolio }: { token: string; portf
 
     if (!result.ok) {
       setMessage({ tone: "error", text: result.message });
-      window.setTimeout(() => messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
       return;
     }
 
     setNewFiles([]);
     setNewCaptions({});
     setMessage({ tone: "success", text: "Portfolio updated. Your listing is waiting for review again." });
-    window.setTimeout(() => messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
   }
 
   return (
@@ -54,7 +54,7 @@ export function ManageBusinessMedia({ token, portfolio }: { token: string; portf
         <p className="mt-2 text-sm leading-6 text-[#6d675d]">Changes to portfolio media are reviewed before they appear publicly.</p>
       </div>
       {message ? (
-        <p ref={messageRef} className={`border p-3 text-sm ${message.tone === "success" ? "border-[#b9c6ae] bg-[#eef2e8] text-[#39462d]" : "border-[#e2b8a7] bg-[#fff6f1] text-[#8a3c24]"}`} role={message.tone === "error" ? "alert" : "status"}>
+        <p ref={messageRef} tabIndex={-1} className={`border p-3 text-sm focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#315c6b] ${message.tone === "success" ? "border-[#b9c6ae] bg-[#eef2e8] text-[#39462d]" : "border-[#e2b8a7] bg-[#fff6f1] text-[#8a3c24]"}`} role={message.tone === "error" ? "alert" : "status"}>
           {message.text}
         </p>
       ) : null}

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { updateBusinessDetailsByToken } from "@/features/businesses/actions";
 import { services } from "@/lib/data";
+import { useFeedbackFocus } from "@/lib/use-feedback-focus";
 import type { ManagedBusiness } from "@/lib/business-submissions";
 
 export function ManageBusinessDetails({ token, business }: { token: string; business: ManagedBusiness }) {
@@ -19,12 +20,12 @@ export function ManageBusinessDetails({ token, business }: { token: string; busi
   const [message, setMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
+  useFeedbackFocus(messageRef, message);
 
   async function updateDetails(formData: FormData) {
     if (otherChecked && !otherService.trim()) {
       setFieldErrors({ otherService: "Describe the other service, or uncheck Other." });
       setMessage({ tone: "error", text: "Check the highlighted fields and try again." });
-      window.setTimeout(() => messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
       return;
     }
 
@@ -41,12 +42,10 @@ export function ManageBusinessDetails({ token, business }: { token: string; busi
     if (!result.ok) {
       setFieldErrors(result.fieldErrors ?? {});
       setMessage({ tone: "error", text: result.message });
-      window.setTimeout(() => messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
       return;
     }
 
     setMessage({ tone: "success", text: "Listing details updated. Your changes are waiting for review." });
-    window.setTimeout(() => messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
   }
 
   return (
@@ -56,7 +55,7 @@ export function ManageBusinessDetails({ token, business }: { token: string; busi
         <h2 className="mt-1 text-2xl font-semibold">Edit your business listing</h2>
       </div>
       {message ? (
-        <p ref={messageRef} className={`border p-3 text-sm ${message.tone === "success" ? "border-[#b9c6ae] bg-[#eef2e8] text-[#39462d]" : "border-[#e2b8a7] bg-[#fff6f1] text-[#8a3c24]"}`} role={message.tone === "error" ? "alert" : "status"}>
+        <p ref={messageRef} tabIndex={-1} className={`border p-3 text-sm focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#315c6b] ${message.tone === "success" ? "border-[#b9c6ae] bg-[#eef2e8] text-[#39462d]" : "border-[#e2b8a7] bg-[#fff6f1] text-[#8a3c24]"}`} role={message.tone === "error" ? "alert" : "status"}>
           {message.text}
         </p>
       ) : null}

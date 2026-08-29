@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Send } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useForm, useWatch, type FieldPath } from "react-hook-form";
 import { z } from "zod";
 import { FileUploader } from "@/components/projects/file-uploader";
@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { submitBusinessForApproval } from "@/features/businesses/actions";
 import { services } from "@/lib/data";
+import { useFeedbackFocus } from "@/lib/use-feedback-focus";
 import { businessSchema } from "@/lib/validation";
 import type { ExistingBusinessSuggestion } from "@/lib/business-submissions";
 
@@ -39,22 +40,12 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
   const duplicateSuggestion = normalizedName.length >= 3
     ? existingBusinesses.find((business) => normalizeBusinessName(business.name) === normalizedName)
     : undefined;
-
-  useEffect(() => {
-    if (submittedManageUrl) {
-      successRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  }, [submittedManageUrl]);
-
-  useEffect(() => {
-    if (submitError) {
-      errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  }, [submitError]);
+  useFeedbackFocus(successRef, submittedManageUrl);
+  useFeedbackFocus(errorRef, submitError);
 
   if (submittedManageUrl) {
     return (
-      <div ref={successRef} className="border border-[#536343] bg-[#eef2e8] p-6" tabIndex={-1}>
+      <div ref={successRef} className="border border-[#536343] bg-[#eef2e8] p-6 focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#315c6b]" role="status" tabIndex={-1}>
         <h2 className="text-xl font-semibold">Thanks, the listing has been sent for review</h2>
         <p className="mt-2 text-sm leading-6 text-[#39462d]">
           Save this private link so you can update the business information later. Changes still go through review before they appear publicly.
@@ -135,7 +126,7 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
     >
       <h2 className="font-serif text-3xl font-semibold">Tell us about the business</h2>
       {submitError ? (
-        <p ref={errorRef} className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24]" role="alert">
+        <p ref={errorRef} tabIndex={-1} className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24] focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#315c6b]" role="alert">
           {submitError}
         </p>
       ) : null}

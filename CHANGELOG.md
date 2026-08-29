@@ -20,10 +20,12 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Changed creative job archive wording to “Move to trash” and archived status display to “In trash.”
 - Changed upload helper copy so contributors know blank captions can be filled automatically.
 - Changed the business directory filter from “Verified only” to “Recommended only” and wired it to approved recommendation counts.
+- Changed edit, submission, recommendation, change-request, restore, and admin review feedback notices to scroll and focus after they render.
 
 ### Fixed
 - Fixed blank media captions by generating simple fallback captions before records are saved.
 - Fixed active admin queue clutter by moving rejected/dismissed items into a dedicated trash view.
+- Fixed save confirmations that could appear above the current scroll position after editing listing details or portfolio media.
 
 ### Removed
 - Removed no public-facing features.

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updateCreativeJobMediaByToken } from "@/features/creative-jobs/actions";
 import type { CreativeJobReference } from "@/lib/creative-jobs";
+import { useFeedbackFocus } from "@/lib/use-feedback-focus";
 
 export function ManageCreativeJobMedia({ token, references }: { token: string; references: CreativeJobReference[] }) {
   const router = useRouter();
@@ -21,6 +22,7 @@ export function ManageCreativeJobMedia({ token, references }: { token: string; r
   const [newCaptions, setNewCaptions] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  useFeedbackFocus(messageRef, message);
 
   async function updateMedia() {
     setIsSaving(true);
@@ -41,7 +43,6 @@ export function ManageCreativeJobMedia({ token, references }: { token: string; r
 
     if (!result.ok) {
       setMessage({ tone: "error", text: result.message });
-      window.setTimeout(() => messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
       return;
     }
 
@@ -50,7 +51,6 @@ export function ManageCreativeJobMedia({ token, references }: { token: string; r
     setDeletedIds([]);
     setMessage({ tone: "success", text: "Photos and videos updated." });
     router.refresh();
-    window.setTimeout(() => messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
   }
 
   function removeExisting(reference: CreativeJobReference) {
@@ -66,7 +66,7 @@ export function ManageCreativeJobMedia({ token, references }: { token: string; r
         <p className="mt-2 text-sm leading-6 text-[#6d675d]">Add, remove or caption the photos and videos shown with this creative job.</p>
       </div>
       {message ? (
-        <p ref={messageRef} className={`border p-3 text-sm ${message.tone === "success" ? "border-[#b9c6ae] bg-[#eef2e8] text-[#39462d]" : "border-[#e2b8a7] bg-[#fff6f1] text-[#8a3c24]"}`} role={message.tone === "error" ? "alert" : "status"}>
+        <p ref={messageRef} tabIndex={-1} className={`border p-3 text-sm focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#315c6b] ${message.tone === "success" ? "border-[#b9c6ae] bg-[#eef2e8] text-[#39462d]" : "border-[#e2b8a7] bg-[#fff6f1] text-[#8a3c24]"}`} role={message.tone === "error" ? "alert" : "status"}>
           {message.text}
         </p>
       ) : null}

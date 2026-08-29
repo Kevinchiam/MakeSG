@@ -1,12 +1,13 @@
 "use client";
 
 import { Heart, Send, Star, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { submitBusinessRecommendation } from "@/components/business/recommendation-actions";
 import { FileUploader } from "@/components/projects/file-uploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useFeedbackFocus } from "@/lib/use-feedback-focus";
 
 type FieldErrors = Record<string, string>;
 type FormValues = {
@@ -55,12 +56,7 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
   });
   const reviewLength = formValues.review.trim().length;
   const reviewCharactersRemaining = Math.max(0, minimumReviewCharacters - reviewLength);
-
-  useEffect(() => {
-    if (success || submitError) {
-      feedbackRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  }, [success, submitError]);
+  useFeedbackFocus(feedbackRef, success || submitError);
 
   async function submit(formData: FormData) {
     setIsSubmitting(true);
@@ -123,12 +119,12 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
           </div>
 
           {success ? (
-            <p ref={feedbackRef} className="border border-[#b9c6ae] bg-[#eef2e8] p-3 text-sm leading-6 text-[#39462d]" role="status">
+            <p ref={feedbackRef} tabIndex={-1} className="border border-[#b9c6ae] bg-[#eef2e8] p-3 text-sm leading-6 text-[#39462d] focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#315c6b]" role="status">
               Thanks, your recommendation has been sent for review.
             </p>
           ) : null}
           {submitError ? (
-            <p ref={feedbackRef} className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24]" role="alert">
+            <p ref={feedbackRef} tabIndex={-1} className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24] focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#315c6b]" role="alert">
               {submitError}
             </p>
           ) : null}

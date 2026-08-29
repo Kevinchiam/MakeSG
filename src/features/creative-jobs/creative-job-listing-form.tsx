@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, Copy, Send } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useForm, useWatch, type FieldPath } from "react-hook-form";
 import { z } from "zod";
 import { FileUploader } from "@/components/projects/file-uploader";
@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { submitCreativeJobListing } from "@/features/creative-jobs/actions";
 import { services } from "@/lib/data";
+import { useFeedbackFocus } from "@/lib/use-feedback-focus";
 import { creativeJobSchema } from "@/lib/validation";
 
 type CreativeJobInput = z.input<typeof creativeJobSchema>;
@@ -47,22 +48,12 @@ export function CreativeJobListingForm() {
   });
   const watched = useWatch({ control: form.control }) as CreativeJobInput;
   const selectedServices = watched.services ?? [];
-
-  useEffect(() => {
-    if (submittedSlug) {
-      successRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  }, [submittedSlug]);
-
-  useEffect(() => {
-    if (submitError) {
-      errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  }, [submitError]);
+  useFeedbackFocus(successRef, submittedSlug);
+  useFeedbackFocus(errorRef, submitError);
 
   if (submittedSlug && manageUrl) {
     return (
-      <div ref={successRef} className="border border-[#536343] bg-[#eef2e8] p-6" tabIndex={-1}>
+      <div ref={successRef} className="border border-[#536343] bg-[#eef2e8] p-6 focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#315c6b]" role="status" tabIndex={-1}>
         <CheckCircle2 className="h-7 w-7 text-[#536343]" aria-hidden />
         <h2 className="mt-4 text-xl font-semibold">{publishedImmediately ? "Job listing published" : "Job listing sent for review"}</h2>
         <p className="mt-2 text-sm leading-6 text-[#39462d]">
@@ -178,7 +169,7 @@ export function CreativeJobListingForm() {
     >
       <h2 className="font-serif text-3xl font-semibold">Post a creative job</h2>
       {submitError ? (
-        <p ref={errorRef} className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24]" role="alert">
+        <p ref={errorRef} tabIndex={-1} className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24] focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#315c6b]" role="alert">
           {submitError}
         </p>
       ) : null}

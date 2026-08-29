@@ -6,6 +6,7 @@ import { requestBusinessChange } from "@/components/business/change-request-acti
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useFeedbackFocus } from "@/lib/use-feedback-focus";
 
 type FieldErrors = Record<string, string>;
 
@@ -17,6 +18,7 @@ export function RequestBusinessChangePanel({ businessId, businessName }: { busin
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [requesterEmail, setRequesterEmail] = useState("");
   const [reason, setReason] = useState("");
+  useFeedbackFocus(feedbackRef, message);
 
   async function submit(formData: FormData) {
     setIsSubmitting(true);
@@ -28,7 +30,6 @@ export function RequestBusinessChangePanel({ businessId, businessName }: { busin
 
     const result = await requestBusinessChange(formData);
     setIsSubmitting(false);
-    window.setTimeout(() => feedbackRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 0);
 
     if (!result.ok) {
       setFieldErrors(result.fieldErrors ?? {});
@@ -65,7 +66,8 @@ export function RequestBusinessChangePanel({ businessId, businessName }: { busin
           {message ? (
             <p
               ref={feedbackRef}
-              className={`border p-3 text-sm leading-6 ${message.tone === "success" ? "border-[#b9c6ae] bg-[#eef2e8] text-[#39462d]" : "border-[#e2b8a7] bg-[#fff6f1] text-[#8a3c24]"}`}
+              tabIndex={-1}
+              className={`border p-3 text-sm leading-6 focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#315c6b] ${message.tone === "success" ? "border-[#b9c6ae] bg-[#eef2e8] text-[#39462d]" : "border-[#e2b8a7] bg-[#fff6f1] text-[#8a3c24]"}`}
               role={message.tone === "error" ? "alert" : "status"}
             >
               {message.text}
