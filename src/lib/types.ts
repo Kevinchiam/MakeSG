@@ -83,7 +83,6 @@ export type Business = {
   projectTypes: ProjectScale[];
   portfolio: PortfolioItem[];
   heroImage: string;
-  demoNotice: string;
 };
 
 export type BusinessRecommendation = ModerationTriage & {

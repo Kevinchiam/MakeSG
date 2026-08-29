@@ -28,7 +28,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Fixed save confirmations that could appear above the current scroll position after editing listing details or portfolio media.
 
 ### Removed
-- Removed no public-facing features.
+- Removed bundled demo business listings and demo recommendation listings from public and admin data flows.
 
 ### Known Issues
 - Trash cleanup is triggered from admin dashboard/trash access, not from an independent scheduled job yet.

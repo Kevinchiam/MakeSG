@@ -1,4 +1,3 @@
-import { businesses as demoBusinesses } from "@/lib/data";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Business, BusinessType, PublicationStatus, VerificationStatus } from "@/lib/types";
 
@@ -39,8 +38,6 @@ type PublishedBusinessRow = {
 const fallbackImage = "/demo/bukit-merah-photo.svg";
 
 export async function getPublishedBusinesses(): Promise<Business[]> {
-  const publishedDemoBusinesses = demoBusinesses.filter((business) => business.publicationStatus === "published");
-
   try {
     const supabase = createAdminClient();
     const { data, error } = await supabase
@@ -51,21 +48,17 @@ export async function getPublishedBusinesses(): Promise<Business[]> {
       .eq("publication_status", "published")
       .order("updated_at", { ascending: false });
 
-    if (error) return publishedDemoBusinesses;
+    if (error) return [];
 
     const submittedRows = (data ?? []) as unknown as PublishedBusinessRow[];
     const recommendationCounts = await approvedRecommendationCounts(submittedRows.map((business) => business.id));
-    const submittedBusinesses = submittedRows.map((row) => rowToBusiness(row, recommendationCounts.get(row.id) ?? 0));
-    return [...submittedBusinesses, ...publishedDemoBusinesses];
+    return submittedRows.map((row) => rowToBusiness(row, recommendationCounts.get(row.id) ?? 0));
   } catch {
-    return publishedDemoBusinesses;
+    return [];
   }
 }
 
 export async function getPublishedBusinessBySlug(slug: string) {
-  const demoBusiness = demoBusinesses.find((business) => business.slug === slug && business.publicationStatus === "published");
-  if (demoBusiness) return demoBusiness;
-
   try {
     const supabase = createAdminClient();
     const { data, error } = await supabase
@@ -153,6 +146,5 @@ function rowToBusiness(row: PublishedBusinessRow, recommendationCount = 0): Busi
       imageUrl: item.image_url ?? "",
     })) ?? [],
     heroImage: row.hero_image_url ?? fallbackImage,
-    demoNotice: "Listed business.",
   };
 }

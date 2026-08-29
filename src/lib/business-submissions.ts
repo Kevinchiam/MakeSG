@@ -1,4 +1,3 @@
-import { businesses } from "@/lib/data";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { BusinessType, ModerationDecision, ModerationRisk, ModerationTriage, PortfolioItem, PublicationStatus, VerificationStatus } from "@/lib/types";
 
@@ -8,7 +7,7 @@ export type AdminBusinessSummary = ModerationTriage & {
   shortDescription: string;
   publicationStatus: PublicationStatus;
   verificationStatus: VerificationStatus;
-  source: "supabase" | "demo";
+  source: "supabase";
   endorsementCount: number;
   pendingRevision: boolean;
 };
@@ -117,21 +116,10 @@ export type ExistingBusinessSuggestion = {
   slug: string;
   publicationStatus: PublicationStatus;
   endorsementCount: number;
-  source: "supabase" | "demo";
+  source: "supabase";
 };
 
 export async function getAdminBusinesses(): Promise<AdminBusinessSummary[]> {
-  const demoBusinesses = businesses.map((business) => ({
-    id: business.id,
-    name: business.name,
-    shortDescription: business.shortDescription,
-    publicationStatus: business.publicationStatus,
-    verificationStatus: business.verificationStatus,
-    endorsementCount: business.endorsementCount,
-    pendingRevision: false,
-    source: "demo" as const,
-  }));
-
   try {
     const supabase = createAdminClient();
     const { data } = await supabase
@@ -155,41 +143,13 @@ export async function getAdminBusinesses(): Promise<AdminBusinessSummary[]> {
       };
     });
 
-    return [...submittedBusinesses, ...demoBusinesses];
+    return submittedBusinesses;
   } catch {
-    return demoBusinesses;
+    return [];
   }
 }
 
 export async function getAdminBusiness(id: string) {
-  const demoBusiness = businesses.find((business) => business.id === id);
-
-  if (demoBusiness) {
-    return {
-      id: demoBusiness.id,
-      name: demoBusiness.name,
-      shortDescription: demoBusiness.shortDescription,
-      description: demoBusiness.description,
-      websiteUrl: demoBusiness.websiteUrl,
-      publicEmail: demoBusiness.publicEmail,
-      phoneNumber: demoBusiness.publicPhone ?? "",
-      location: demoBusiness.location,
-      minimumBudget: demoBusiness.minimumBudget,
-      typicalLeadTime: demoBusiness.typicalLeadTime,
-      businessType: demoBusiness.businessType,
-      services: demoBusiness.services,
-      portfolio: demoBusiness.portfolio,
-      publicationStatus: demoBusiness.publicationStatus,
-      endorsementCount: demoBusiness.endorsementCount,
-      pendingRevision: null,
-      source: "demo" as const,
-      moderationDecision: null,
-      moderationRisk: null,
-      moderationReason: null,
-      moderationSignals: [],
-    };
-  }
-
   try {
     const supabase = createAdminClient();
     const { data } = await supabase
@@ -278,15 +238,6 @@ export async function getBusinessByManageToken(token: string): Promise<ManagedBu
 }
 
 export async function getExistingBusinessSuggestions(): Promise<ExistingBusinessSuggestion[]> {
-  const demoSuggestions = businesses.map((business) => ({
-    id: business.id,
-    name: business.name,
-    slug: business.slug,
-    publicationStatus: business.publicationStatus,
-    endorsementCount: business.endorsementCount,
-    source: "demo" as const,
-  }));
-
   try {
     const supabase = createAdminClient();
     const { data, error } = await supabase
@@ -294,7 +245,7 @@ export async function getExistingBusinessSuggestions(): Promise<ExistingBusiness
       .select("id, name, slug, publication_status, endorsement_count")
       .order("created_at", { ascending: false });
 
-    if (error) return demoSuggestions;
+    if (error) return [];
 
     const submittedSuggestions = ((data ?? []) as BusinessRow[]).map((business) => ({
       id: business.id,
@@ -305,9 +256,9 @@ export async function getExistingBusinessSuggestions(): Promise<ExistingBusiness
       source: "supabase" as const,
     }));
 
-    return [...submittedSuggestions, ...demoSuggestions];
+    return submittedSuggestions;
   } catch {
-    return demoSuggestions;
+    return [];
   }
 }
 

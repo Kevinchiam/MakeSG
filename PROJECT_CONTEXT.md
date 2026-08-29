@@ -32,7 +32,7 @@ Creative production relies heavily on word of mouth, but reliable service discov
 - Provide direct contact routes through visible email or mailto links, with Resend support when configured.
 
 ### Future Roadmap
-- Replace remaining demo/dashboard placeholders with fully persisted Supabase workflows.
+- Replace remaining dashboard placeholders with fully persisted Supabase workflows.
 - Add robust user accounts for business owners and optional creative accounts.
 - Add moderation queues with richer status history and admin notes.
 - Add stronger search ranking, synonyms, and possibly AI-assisted service matching.
@@ -104,7 +104,7 @@ Creative production relies heavily on word of mouth, but reliable service discov
 - `src/features`: Feature-specific workflows that combine UI and server actions.
 - `src/features/businesses`: Business onboarding form and submission action.
 - `src/features/creative-jobs`: Creative job posting, private job management, status management, listing-detail editing, media editing, and server actions.
-- `src/lib`: Shared data access, types, validation, permissions, filters, Supabase clients, email utilities, media caption helpers, admin trash cleanup, slugging, and fallback demo data.
+- `src/lib`: Shared data access, types, validation, permissions, filters, Supabase clients, email utilities, media caption helpers, admin trash cleanup, slugging, service data, and lightweight local placeholders.
 - `src/lib/admin-trash.ts`: Admin-only trash-bin aggregation and seven-day cleanup helper for rejected/dismissed listings and media.
 - `src/lib/media-captions.ts`: Shared smart fallback caption helper for uploaded photos/videos.
 - `src/lib/supabase`: Supabase browser, server, and admin client setup.
@@ -115,7 +115,7 @@ Creative production relies heavily on word of mouth, but reliable service discov
 - `tests/unit`: Vitest unit tests for filtering, permissions, recommendation logic, slugging, and validation.
 - `tests/e2e`: Playwright end-to-end tests for major user flows.
 - `docs`: Planning and implementation notes.
-- `public`: Public static assets. The current app mostly uses generated/local demo assets.
+- `public`: Public static assets.
 - `AI_RULES.md`: Repository-level AI collaboration rules for long-term product quality, design consistency, documentation discipline, and implementation standards.
 
 ## Architecture
@@ -663,7 +663,7 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 
 ## Technical Debt
 
-- Demo fallback data still ships in `src/lib/data.ts`.
+- Public business and recommendation listings no longer fall back to bundled demo records.
 - Admin auth is a static credential/cookie system rather than role-based Supabase auth.
 - Business materials schema remains though the current UI removed material onboarding.
 - Enquiry persistence and rate limiting are not implemented.

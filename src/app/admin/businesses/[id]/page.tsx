@@ -89,7 +89,6 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
               <InfoRow label="Business type" value={business.businessType} />
               <InfoRow label="Minimum budget" value={business.minimumBudget ? formatCurrency(business.minimumBudget) : undefined} />
               <InfoRow label="Typical lead time" value={business.typicalLeadTime ? `${business.typicalLeadTime} days` : undefined} />
-              <InfoRow label="Source" value={business.source} />
             </div>
             <div>
               <h2 className="text-sm font-semibold uppercase tracking-wide text-[#6d675d]">Services</h2>
@@ -122,7 +121,7 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
             </div>
           </div>
         </details>
-        <AdminStatusControls businessId={business.id} source={business.source} initialStatus={business.publicationStatus} hasPendingRevision={Boolean(business.pendingRevision)} />
+        <AdminStatusControls businessId={business.id} initialStatus={business.publicationStatus} hasPendingRevision={Boolean(business.pendingRevision)} />
       </div>
     </section>
   );

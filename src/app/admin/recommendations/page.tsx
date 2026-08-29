@@ -22,7 +22,7 @@ export default async function AdminRecommendationsPage() {
 
       <div className="mt-8 grid gap-4">
         {recommendations.map((recommendation) => (
-          <article key={`${recommendation.source}-${recommendation.id}`} className="grid gap-4 border border-[#ded8cc] bg-white p-5 lg:grid-cols-[1fr_280px]">
+          <article key={recommendation.id} className="grid gap-4 border border-[#ded8cc] bg-white p-5 lg:grid-cols-[1fr_280px]">
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <MessageCircleHeart className="h-4 w-4 text-[#536343]" aria-hidden />
@@ -69,7 +69,6 @@ export default async function AdminRecommendationsPage() {
                 <div><dt className="font-semibold text-[#211f1b]">Recommended by</dt><dd>{recommendation.recommenderName}</dd></div>
                 <div><dt className="font-semibold text-[#211f1b]">Private email</dt><dd>{recommendation.recommenderEmail ?? "Not supplied"}</dd></div>
                 <div><dt className="font-semibold text-[#211f1b]">Name display</dt><dd>{recommendation.permissionToPublishName ? "Allowed" : "Hide name"}</dd></div>
-                <div><dt className="font-semibold text-[#211f1b]">Source</dt><dd>{recommendation.source}</dd></div>
               </dl>
               {recommendation.supportingLinks?.length ? (
                 <div className="mt-4 grid gap-1 text-sm">
@@ -82,7 +81,6 @@ export default async function AdminRecommendationsPage() {
               {recommendation.businessSlug ? <Link href={`/businesses/${recommendation.businessSlug}`} className="mt-4 inline-block text-sm underline">View business profile</Link> : null}
             </div>
             <AdminStatusControls
-              source={recommendation.source}
               recommendationId={recommendation.id}
               initialStatus={recommendation.status}
               approvedStatus="published"

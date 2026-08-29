@@ -9,14 +9,12 @@ import { useFeedbackFocus } from "@/lib/use-feedback-focus";
 
 export function AdminStatusControls({
   businessId,
-  source = "demo",
   initialStatus = "pending",
   approvedStatus = "published",
   hasPendingRevision = false,
   recommendationId,
 }: {
   businessId?: string;
-  source?: "demo" | "supabase";
   initialStatus?: string;
   approvedStatus?: string;
   hasPendingRevision?: boolean;
@@ -33,11 +31,6 @@ export function AdminStatusControls({
     setMessage(null);
 
     if (recommendationId) {
-      if (source !== "supabase") {
-        setMessage("Demo recommendations only change on this screen.");
-        return;
-      }
-
       if (nextStatus !== "published" && nextStatus !== "rejected") {
         setMessage("Recommendations can be approved or rejected.");
         return;
@@ -58,8 +51,8 @@ export function AdminStatusControls({
       return;
     }
 
-    if (source !== "supabase" || !businessId) {
-      setMessage("Demo listings only change on this screen.");
+    if (!businessId) {
+      setMessage("This listing cannot be updated from here.");
       return;
     }
 
@@ -91,8 +84,8 @@ export function AdminStatusControls({
   async function deleteEntry() {
     setMessage(null);
 
-    if (source !== "supabase" || !businessId) {
-      setMessage("Demo listings cannot be deleted.");
+    if (!businessId) {
+      setMessage("This listing cannot be deleted from here.");
       return;
     }
 

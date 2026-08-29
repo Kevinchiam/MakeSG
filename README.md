@@ -2,7 +2,7 @@
 
 MakeSG is a production-ready MVP for a Singapore creative-services and fabrication directory. It uses Next.js App Router, TypeScript, Tailwind CSS, shadcn-style primitives, Supabase Postgres/Auth/Storage, React Hook Form, Zod, Lucide, Vitest and Playwright.
 
-The app supports real community-submitted business listings, moderated recommendations, creative job posts, private edit links, media uploads and admin review workflows. Demo fallback data remains bundled only so local development still works before Supabase is configured.
+The app supports real community-submitted business listings, moderated recommendations, creative job posts, private edit links, media uploads and admin review workflows. Public listings now come from Supabase rather than bundled demo records.
 
 ## Run Locally
 
@@ -39,7 +39,7 @@ pnpm e2e
 2. Copy `.env.example` to `.env.local`.
 3. Fill `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 4. Apply the Supabase migrations in order from `supabase/migrations`.
-5. Run `supabase/seed/seed.sql` for demo service, material and business records.
+5. Run `supabase/seed/seed.sql` only if you want to seed shared lookup data such as services and materials.
 6. Enable email magic links in Supabase Auth.
 7. For Google OAuth, create OAuth credentials, add the Supabase callback URL in Google Cloud, then add the client ID and secret in Supabase Auth providers.
 
@@ -104,12 +104,12 @@ The app keeps database access out of presentational components. UI components re
    - `supabase/migrations/0003_media_uploads.sql`
    - `supabase/migrations/0004_endorsements.sql` (legacy compatibility)
    - all later migrations through `supabase/migrations/0013_business_change_requests.sql`
-8. Run `supabase/seed/seed.sql` only for demo data.
+8. Run `supabase/seed/seed.sql` only if the production database still needs shared lookup data.
 9. Deploy.
 
 ## Known Limitations
 
-- Demo fallback listings are still bundled so the site can run without Supabase credentials.
+- Without Supabase credentials or published database records, listing pages intentionally show empty states.
 - Public business listing change requests require Supabase migration `0013_business_change_requests.sql`.
 - Public enquiries require Resend email configuration for automatic delivery; otherwise the UI shows direct contact details.
 - Public reviews, live chat, payments and AI recommendations are intentionally excluded.

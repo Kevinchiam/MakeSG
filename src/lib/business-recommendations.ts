@@ -1,4 +1,3 @@
-import { businessRecommendations as demoRecommendations, businesses as demoBusinesses } from "@/lib/data";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { BusinessRecommendation, BusinessRecommendationStatus, ModerationDecision, ModerationRisk, ModerationTriage } from "@/lib/types";
 
@@ -40,14 +39,10 @@ type RecommendationMediaRow = {
 export type AdminBusinessRecommendation = BusinessRecommendation & {
   businessName: string;
   businessSlug?: string;
-  source: "supabase" | "demo";
+  source: "supabase";
 };
 
 export async function getApprovedRecommendationsForBusiness(businessId: string): Promise<BusinessRecommendation[]> {
-  const demo = demoRecommendations.filter(
-    (recommendation) => recommendation.businessId === businessId && recommendation.status === "approved",
-  );
-
   try {
     const supabase = createAdminClient();
     const { data, error } = await supabase
@@ -59,24 +54,14 @@ export async function getApprovedRecommendationsForBusiness(businessId: string):
       .eq("status", "approved")
       .order("created_at", { ascending: false });
 
-    if (error) return demo;
-    return [...((data ?? []) as unknown as RecommendationRow[]).map(rowToRecommendation), ...demo];
+    if (error) return [];
+    return ((data ?? []) as unknown as RecommendationRow[]).map(rowToRecommendation);
   } catch {
-    return demo;
+    return [];
   }
 }
 
 export async function getAdminBusinessRecommendations(): Promise<AdminBusinessRecommendation[]> {
-  const demo = demoRecommendations.map((recommendation) => {
-    const business = demoBusinesses.find((item) => item.id === recommendation.businessId);
-    return {
-      ...recommendation,
-      businessName: business?.name ?? "Unknown business",
-      businessSlug: business?.slug,
-      source: "demo" as const,
-    };
-  });
-
   try {
     const supabase = createAdminClient();
     const { data, error } = await supabase
@@ -87,7 +72,7 @@ export async function getAdminBusinessRecommendations(): Promise<AdminBusinessRe
       .neq("status", "rejected")
       .order("created_at", { ascending: false });
 
-    if (error) return demo;
+    if (error) return [];
 
     const submitted = ((data ?? []) as unknown as RecommendationRow[]).map((row) => {
       const business = Array.isArray(row.businesses) ? row.businesses[0] : row.businesses;
@@ -99,9 +84,9 @@ export async function getAdminBusinessRecommendations(): Promise<AdminBusinessRe
       };
     });
 
-    return [...submitted, ...demo];
+    return submitted;
   } catch {
-    return demo;
+    return [];
   }
 }
 
