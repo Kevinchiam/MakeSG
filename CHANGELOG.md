@@ -12,6 +12,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Added restore controls in the admin trash bin so admins can return trashed items to the right review queue before deletion.
 - Added seven-day trash retention cleanup that permanently deletes expired trash rows and associated Supabase Storage objects when admin trash cleanup runs.
 - Added trash-retention indexes in `supabase/migrations/0015_admin_trash_retention.sql`.
+- Added database-backed rotating portfolio media to the home and About pages so refreshes can show different published work.
 
 ### Changed
 - Changed homepage, About, business onboarding, creative job posting, recommendation, management, and moderation copy to feel warmer, clearer, and less formal.

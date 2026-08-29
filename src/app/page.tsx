@@ -168,7 +168,7 @@ type HomeMedia = {
 };
 
 function getHomepageMedia(businesses: Business[]): HomeMedia[] {
-  return getHomepageBusinesses(businesses)
+  const media = businesses
     .flatMap((business) => {
       const portfolioMedia = business.portfolio.map((item) => ({
         id: item.id,
@@ -187,8 +187,9 @@ function getHomepageMedia(businesses: Business[]): HomeMedia[] {
             imageUrl: business.heroImage,
           }];
     })
-    .filter((item) => Boolean(item.imageUrl))
-    .slice(0, 6);
+    .filter((item) => Boolean(item.imageUrl));
+
+  return shuffleItems(media).slice(0, 6);
 }
 
 function getMovingServices(businesses: Business[]) {
@@ -235,6 +236,17 @@ function formatServiceSlug(slug: string) {
     .filter(Boolean)
     .map((word) => word[0]?.toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+function shuffleItems<T>(items: T[]) {
+  const shuffled = [...items];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+
+  return shuffled;
 }
 
 function Feature({ icon, title, text, index }: { icon: React.ReactNode; title: string; text: string; index: number }) {

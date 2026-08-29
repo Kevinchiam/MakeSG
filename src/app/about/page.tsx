@@ -76,7 +76,7 @@ type AboutMedia = {
 };
 
 function getAboutMedia(businesses: Business[]): AboutMedia[] {
-  return businesses
+  const media = businesses
     .flatMap((business) => {
       const portfolio = business.portfolio.map((item) => ({
         id: item.id,
@@ -93,10 +93,11 @@ function getAboutMedia(businesses: Business[]): AboutMedia[] {
             title: business.shortDescription,
             businessName: business.name,
             imageUrl: business.heroImage,
-          }];
+        }];
     })
-    .filter((item) => Boolean(item.imageUrl))
-    .slice(0, 3);
+    .filter((item) => Boolean(item.imageUrl));
+
+  return shuffleItems(media).slice(0, 3);
 }
 
 function AboutMediaTile({ media, className }: { media?: AboutMedia; className?: string }) {
@@ -143,4 +144,15 @@ function AboutStep({ icon, title, text }: { icon: React.ReactNode; title: string
       <p className="mt-3 text-sm leading-6 text-[#6d675d]">{text}</p>
     </article>
   );
+}
+
+function shuffleItems<T>(items: T[]) {
+  const shuffled = [...items];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+
+  return shuffled;
 }

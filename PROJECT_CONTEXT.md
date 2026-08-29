@@ -160,7 +160,7 @@ Most mutations use server actions:
 ### Public Home
 Status: Completed
 
-Description: Landing/search entry for MakeSG with editorial visual direction, CSS-only motion, live directory counts, current platform feature copy, and up to six homepage business highlights ranked by recommendations, featured status, and latest updates.
+Description: Landing/search entry for MakeSG with editorial visual direction, CSS-only motion, live directory counts, current platform feature copy, rotating portfolio media from published businesses, and up to six homepage business highlights ranked by recommendations, featured status, and latest updates.
 
 Relevant files:
 - `src/app/page.tsx`
@@ -170,6 +170,7 @@ Relevant files:
 
 Future improvements:
 - Add richer dynamic previews from creative jobs and recommendations.
+- Add analytics to understand which rotating media drives profile visits.
 - Track search conversion.
 
 ### Business Directory

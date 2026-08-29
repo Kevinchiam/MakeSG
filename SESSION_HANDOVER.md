@@ -6,6 +6,8 @@ Date: 2026-08-29
 
 Today’s work made MakeSG feel more forgiving and easier to maintain. Uploaded media now receives a useful fallback caption when contributors leave captions blank. The public copy was softened across key pages so the platform sounds more welcoming and less formal. Admin moderation now has a trash-bin workflow: rejected or dismissed items leave the active queues, remain visible to admins for seven days, and are then permanently cleaned up with related storage files.
 
+Later in the session, the home and About pages were given a more visual editorial treatment using approved business portfolio media. That media now rotates from the database on each server render so refreshes can surface different published work.
+
 ## Objectives Completed
 
 - [x] Added smart fallback captions for uncaptained uploads.
@@ -16,6 +18,7 @@ Today’s work made MakeSG feel more forgiving and easier to maintain. Uploaded 
 - [x] Moved rejected/dismissed/archived admin items out of active queues.
 - [x] Added seven-day trash retention cleanup for database rows and related storage files.
 - [x] Added Supabase migration indexes to support trash cleanup queries.
+- [x] Added rotating live portfolio media to the home and About pages.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 
@@ -63,10 +66,10 @@ Creative job posting copy is friendlier. Reference upload copy mentions automati
 Recommendation panel copy now uses “review” language instead of “moderation” and explains optional media captions more gently.
 
 ### `src/app/page.tsx`
-Homepage copy now reflects MakeSG as a practical community platform for finding businesses, posting jobs, requesting changes, and sharing recommendations.
+Homepage copy now reflects MakeSG as a practical community platform for finding businesses, posting jobs, requesting changes, and sharing recommendations. The hero now uses a richer media-led visual panel, and the selected photos/videos shuffle from published business media on refresh.
 
 ### `src/app/about/page.tsx`
-About page copy no longer describes the product as fictional and now explains the platform in simpler, friendlier language.
+About page copy no longer describes the product as fictional and now explains the platform in simpler, friendlier language. It also uses rotating published business media so the page feels less static.
 
 ### `src/app/for-businesses/page.tsx`
 Business submission page now invites both business owners and community members to share useful businesses.
@@ -147,6 +150,7 @@ Added the 2026-08-29 changelog entry.
 - Added `/admin/trash` as a new admin page.
 - Added restore buttons to `/admin/trash`.
 - Added a Trash bin card on admin home.
+- Added rotating database-backed portfolio media to the home and About pages.
 - Rejected/dismissed items no longer clutter normal review queues.
 - Upload helper text now reassures users that blank captions are fine.
 - Major public-facing copy was softened across home, About, business submission, creative job posting, recommendation, and private management pages.
