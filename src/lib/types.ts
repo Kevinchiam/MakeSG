@@ -143,5 +143,5 @@ export type BusinessFilters = {
   leadTime?: number;
   businessType?: BusinessType;
   delivery?: "onsite" | "remote";
-  verified?: boolean;
+  recommended?: boolean;
 };

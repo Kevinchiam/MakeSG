@@ -93,8 +93,8 @@ export function FilterPanel() {
           </select>
         </Field>
         <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="verified" value="true" defaultChecked={searchParams.get("verified") === "true"} />
-          Verified only
+          <input type="checkbox" name="recommended" value="true" defaultChecked={searchParams.get("recommended") === "true" || searchParams.get("verified") === "true"} />
+          Recommended only
         </label>
       </div>
       <div className="mt-5 flex gap-2">

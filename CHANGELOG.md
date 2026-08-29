@@ -18,6 +18,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Changed reject/dismiss admin feedback to tell admins that items move to trash for seven days.
 - Changed creative job archive wording to “Move to trash” and archived status display to “In trash.”
 - Changed upload helper copy so contributors know blank captions can be filled automatically.
+- Changed the business directory filter from “Verified only” to “Recommended only” and wired it to approved recommendation counts.
 
 ### Fixed
 - Fixed blank media captions by generating simple fallback captions before records are saved.

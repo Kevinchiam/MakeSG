@@ -175,7 +175,7 @@ Future improvements:
 ### Business Directory
 Status: Completed
 
-Description: Browse published businesses with filters, search, cards, pagination, empty states, recommendation labels, and public change-request panels that save into the admin dashboard.
+Description: Browse published businesses with filters, typo-tolerant search, cards, pagination, empty states, a Recommended-only filter, recommendation labels, and public change-request panels that save into the admin dashboard.
 
 Relevant files:
 - `src/app/businesses/page.tsx`

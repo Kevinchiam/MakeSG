@@ -1,4 +1,4 @@
-import { services } from "@/lib/data";
+import { getApprovedRecommendationsForBusiness, services } from "@/lib/data";
 import type { Business, BusinessFilters } from "@/lib/types";
 
 export function parseFilters(searchParams: Record<string, string | string[] | undefined>): BusinessFilters {
@@ -17,7 +17,7 @@ export function parseFilters(searchParams: Record<string, string | string[] | un
     leadTime: get("leadTime") ? Number(get("leadTime")) : undefined,
     businessType: asBusinessType(get("businessType")),
     delivery: asDelivery(get("delivery")),
-    verified: get("verified") === "true" ? true : undefined,
+    recommended: get("recommended") === "true" || get("verified") === "true" ? true : undefined,
   };
 }
 
@@ -37,7 +37,7 @@ export function filterBusinesses(businesses: Business[], filters: BusinessFilter
     if (filters.businessType && business.businessType !== filters.businessType) return false;
     if (filters.delivery === "onsite" && !business.offersOnsiteService) return false;
     if (filters.delivery === "remote" && !business.offersRemoteService) return false;
-    if (filters.verified && business.verificationStatus !== "verified") return false;
+    if (filters.recommended && !hasRecommendations(business)) return false;
     return true;
   });
 
@@ -52,6 +52,10 @@ export function toQueryString(filters: BusinessFilters) {
     if (value !== undefined && value !== "" && value !== false) params.set(key, String(value));
   });
   return params.toString();
+}
+
+function hasRecommendations(business: Business) {
+  return (business.recommendationCount ?? getApprovedRecommendationsForBusiness(business.id).length) > 0;
 }
 
 function asMode(value?: string): BusinessFilters["mode"] {
