@@ -109,7 +109,7 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
             <div>
               <h2 className="font-serif text-2xl font-semibold">Recommend {businessName}</h2>
               <p className="mt-2 text-sm leading-6 text-[#6d675d]">
-                Share a first-hand review. Recommendations are checked by admin before they appear publicly.
+                Share a first-hand review. Admin checks recommendations before they appear publicly.
               </p>
             </div>
             <button
@@ -124,7 +124,7 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
 
           {success ? (
             <p ref={feedbackRef} className="border border-[#b9c6ae] bg-[#eef2e8] p-3 text-sm leading-6 text-[#39462d]" role="status">
-              Recommendation submitted for admin approval.
+              Thanks, your recommendation has been sent for review.
             </p>
           ) : null}
           {submitError ? (
@@ -186,11 +186,12 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
               setMediaFiles(files);
             }}
             label="Add photos or videos"
-            description="Optional. Uploads must be 10MB total or smaller."
+            description="Optional. Uploads must be 10MB total or smaller. Leave captions blank and MakeSG will add a simple one."
           />
           {mediaFiles.length ? (
             <fieldset className="grid gap-3">
               <legend className="text-sm font-medium">Captions</legend>
+              <p className="text-xs leading-5 text-[#6d675d]">Add a caption if it helps. If you leave it blank, MakeSG will add a simple caption after upload.</p>
               {mediaFiles.map((file, index) => {
                 const key = fileKey(file);
                 return (
@@ -232,7 +233,7 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
                 }}
               />
             </Field>
-            <Field label="Private email for moderation" error={fieldErrors.recommenderEmail}>
+            <Field label="Private email for review" error={fieldErrors.recommenderEmail}>
               <Input
                 name="recommenderEmail"
                 type="email"
@@ -256,7 +257,7 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
           </label>
 
           <Button type="submit" disabled={isSubmitting}>
-            <Send className="h-4 w-4" aria-hidden /> {isSubmitting ? "Submitting..." : "Submit for admin approval"}
+            <Send className="h-4 w-4" aria-hidden /> {isSubmitting ? "Sending..." : "Send for review"}
           </Button>
         </form>
       ) : null}

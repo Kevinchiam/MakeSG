@@ -1,6 +1,6 @@
 # MakeSG Project Context
 
-Last updated: 2026-08-22
+Last updated: 2026-08-29
 
 ## Project Overview
 
@@ -27,6 +27,8 @@ Creative production relies heavily on word of mouth, but reliable service discov
 - Allow admins to moderate business listings, recommendations, and creative jobs.
 - Allow creatives to post public job listings without account creation.
 - Allow creatives to manage posted jobs through a private manage link.
+- Add helpful fallback captions for uploaded media when contributors leave captions blank.
+- Keep rejected and dismissed items in an admin-only trash bin before permanent cleanup.
 - Provide direct contact routes through visible email or mailto links, with Resend support when configured.
 
 ### Future Roadmap
@@ -37,7 +39,8 @@ Creative production relies heavily on word of mouth, but reliable service discov
 - Add map/location search once a custom geocoding provider is selected.
 - Add notification emails for creative job submissions and changes.
 - Add rate limiting, abuse detection, and spam protection.
-- Add AI-assisted image/content moderation after a provider and privacy approach are selected.
+- Add scheduled trash cleanup through Vercel Cron or Supabase scheduled jobs.
+- Add AI-assisted image captioning and image/content moderation after a provider and privacy approach are selected.
 - Add analytics for search-to-contact conversion and successful job closure.
 
 ### Success Metrics
@@ -101,7 +104,9 @@ Creative production relies heavily on word of mouth, but reliable service discov
 - `src/features`: Feature-specific workflows that combine UI and server actions.
 - `src/features/businesses`: Business onboarding form and submission action.
 - `src/features/creative-jobs`: Creative job posting, private job management, status management, listing-detail editing, media editing, and server actions.
-- `src/lib`: Shared data access, types, validation, permissions, filters, Supabase clients, email utilities, slugging, and fallback demo data.
+- `src/lib`: Shared data access, types, validation, permissions, filters, Supabase clients, email utilities, media caption helpers, admin trash cleanup, slugging, and fallback demo data.
+- `src/lib/admin-trash.ts`: Admin-only trash-bin aggregation and seven-day cleanup helper for rejected/dismissed listings and media.
+- `src/lib/media-captions.ts`: Shared smart fallback caption helper for uploaded photos/videos.
 - `src/lib/supabase`: Supabase browser, server, and admin client setup.
 - `src/lib/email`: Resend email templates and sending wrapper.
 - `src/lib/analytics`: Analytics event typing placeholder.
@@ -145,6 +150,8 @@ Most mutations use server actions:
 - Public creative jobs call `getPublicCreativeJobs()` in `src/lib/creative-jobs.ts`.
 - Business onboarding inserts into Supabase and uploads portfolio media.
 - Business onboarding, business edits, business recommendations, change requests, and creative jobs run through rule-based moderation triage before saving.
+- Blank upload captions receive a simple, context-aware fallback before media records are saved.
+- Rejected business listings, rejected listing edits, rejected recommendations, dismissed change requests, and archived creative jobs are treated as trash-bin items and are permanently deleted after seven days when the admin dashboard or trash page runs cleanup.
 - Creative job submission inserts a job, stores a manage token, uploads reference files, and returns the private manage link. Low-risk creative jobs auto-publish; higher-risk jobs use `pending_review`.
 - Admin pages call admin data helpers, show automated triage decisions/signals, and update moderation status with server actions.
 
@@ -219,7 +226,7 @@ Future improvements:
 ### Business Onboarding
 Status: Completed
 
-Description: Businesses or community members can submit listing details, service options including Other, optional website/email/phone/location/budget/lead time, and portfolio photos/videos. Submissions run through automated triage for abusive/spam wording, suspicious patterns, risky filenames, and low-detail signals, then enter moderation before publication. After submission, submitters receive a private edit link that can update listing details and portfolio media. Edits to already published listings create a pending revision, so the current approved public listing stays live until an admin approves the changes.
+Description: Businesses or community members can submit listing details, service options including Other, optional website/email/phone/location/budget/lead time, and portfolio photos/videos. Submissions run through automated triage for abusive/spam wording, suspicious patterns, risky filenames, and low-detail signals, then enter review before publication. Blank media captions are filled with a simple smart fallback based on the filename and business context. After submission, submitters receive a private edit link that can update listing details and portfolio media. Edits to already published listings create a pending revision, so the current approved public listing stays live until an admin approves the changes.
 
 Relevant files:
 - `src/app/for-businesses/page.tsx`
@@ -229,6 +236,7 @@ Relevant files:
 - `src/features/businesses/manage-business-media.tsx`
 - `src/features/businesses/actions.ts`
 - `src/components/projects/file-uploader.tsx`
+- `src/lib/media-captions.ts`
 - `supabase/migrations/0003_media_uploads.sql`
 - `supabase/migrations/0010_business_manage_links.sql`
 - `supabase/migrations/0011_business_listing_revisions.sql`
@@ -242,11 +250,14 @@ Future improvements:
 ### Business Recommendations
 Status: Completed
 
-Description: Users can recommend businesses based on real experience. Recommendations are checked for obvious abuse/spam and moderated before public use.
+Description: Users can recommend businesses based on real experience. Recommendations are checked for obvious abuse/spam and reviewed before public use. Recommendation media also receives a smart fallback caption when contributors leave captions blank.
 
 Relevant files:
 - `src/app/recommend-business/page.tsx`
 - `src/components/business/recommend-business-form.tsx`
+- `src/components/business/recommend-business-panel.tsx`
+- `src/components/business/recommendation-actions.ts`
+- `src/lib/media-captions.ts`
 - `src/lib/recommendation.ts`
 - `supabase/migrations/0002_business_recommendations.sql`
 - `supabase/migrations/0014_moderation_triage.sql`
@@ -271,13 +282,14 @@ Future improvements:
 ### Creative Job Posting
 Status: Completed
 
-Description: Creatives can publish public job listings for businesses to browse. Jobs include title, description, contact email, project type, services, optional other service, budget, deadline, notes, and reference uploads with captions. Low-risk jobs are auto-published after validation and moderation triage; higher-risk jobs are held as `pending_review` for admin approval.
+Description: Creatives can publish public job listings for businesses to browse. Jobs include title, description, contact email, project type, services, optional other service, budget, deadline, notes, and reference uploads with captions. Blank reference captions are auto-filled with a friendly fallback. Low-risk jobs are auto-published after validation and moderation triage; higher-risk jobs are held as `pending_review` for admin approval.
 
 Relevant files:
 - `src/app/for-creatives/page.tsx`
 - `src/features/creative-jobs/creative-job-listing-form.tsx`
 - `src/features/creative-jobs/actions.ts`
 - `src/lib/creative-jobs.ts`
+- `src/lib/media-captions.ts`
 - `src/lib/validation.ts`
 - `supabase/migrations/0005_creative_job_listings.sql`
 - `supabase/migrations/0006_creative_job_references.sql`
@@ -339,21 +351,22 @@ Future improvements:
 ### Admin Dashboard
 Status: Completed
 
-Description: Admin home with links to business moderation, creative jobs, recommendations, services, and reports. It highlights pending queues and high-risk automated triage items.
+Description: Admin home with links to business moderation, creative jobs, recommendations, services, reports, and the trash bin. It highlights pending queues, high-risk automated triage items, and trashed items waiting for seven-day cleanup.
 
 Relevant files:
 - `src/app/admin/page.tsx`
+- `src/app/admin/trash/page.tsx`
 - `src/components/admin/admin-page-header.tsx`
 - `src/components/admin/moderation-summary.tsx`
+- `src/lib/admin-trash.ts`
 
 Future improvements:
-- Add counts for rejected/suspended items.
 - Add activity feed.
 
 ### Admin Business Moderation
 Status: Completed
 
-Description: Admin can review, approve, reject, feature, unpublish, and delete business listings. New listings and pending edits show automated triage risk, reason, and signals to streamline review while preserving admin override.
+Description: Admin can review, approve, reject, feature, unpublish, and delete business listings. New listings and pending edits show automated triage risk, reason, and signals to streamline review while preserving admin override. Rejected listings and rejected pending edits move out of the main queues into the admin trash bin for seven days before cleanup.
 
 Relevant files:
 - `src/app/admin/businesses/page.tsx`
@@ -368,7 +381,7 @@ Future improvements:
 ### Admin Creative Job Management
 Status: Completed
 
-Description: Admin can view, edit, status-change, archive, and delete creative jobs. Creative jobs flagged by automated triage can be held in `pending_review` until an admin opens or rejects/archives them.
+Description: Admin can view, edit, status-change, move to trash, and delete creative jobs. Creative jobs flagged by automated triage can be held in `pending_review` until an admin opens or moves them to trash.
 
 Relevant files:
 - `src/app/admin/creative-jobs/page.tsx`
@@ -380,6 +393,25 @@ Relevant files:
 Future improvements:
 - Add media editing from admin.
 - Add job activity timeline.
+
+### Admin Trash Bin
+Status: Completed
+
+Description: Admin-only trash view that collects rejected business listings, rejected business listing edits, rejected recommendations, dismissed change requests, and creative jobs moved to trash. Items remain visible for seven days, then the cleanup helper permanently deletes expired rows and associated Supabase Storage objects when the admin dashboard or trash page is visited.
+
+Relevant files:
+- `src/app/admin/trash/page.tsx`
+- `src/lib/admin-trash.ts`
+- `src/app/admin/page.tsx`
+- `src/components/admin/actions.ts`
+- `src/components/admin/admin-status-controls.tsx`
+- `src/components/admin/business-change-request-controls.tsx`
+- `supabase/migrations/0015_admin_trash_retention.sql`
+
+Future improvements:
+- Move cleanup to a scheduled Vercel Cron or Supabase scheduled job.
+- Add restore buttons for accidental rejections.
+- Add an audit log that records who moved each item to trash.
 
 ### Dashboard Pages
 Status: In Progress
@@ -411,7 +443,7 @@ Canonical service categories used for businesses and creative job service select
 Original material taxonomy. It still exists in the schema but the current business onboarding UI removed the materials section.
 
 ### `businesses`
-Core business listings with owner, publication status, verification status, contact details, address, budget, lead time, capabilities, hero image, and automated moderation triage metadata.
+Core business listings with owner, publication status, verification status, contact details, address, budget, lead time, capabilities, hero image, and automated moderation triage metadata. Rejected rows are treated as trash-bin items and are permanently deleted after the seven-day retention period.
 
 ### `business_services`
 Many-to-many join between businesses and services.
@@ -441,19 +473,19 @@ Join table for user-saved businesses.
 Stores reported content for admin review.
 
 ### `business_recommendations`
-Word-of-mouth recommendation submissions tied to a business, with recommender details, relationship, strengths, comment, permissions, moderation status, and automated triage metadata.
+Word-of-mouth recommendation submissions tied to a business, with recommender details, relationship, strengths, comment, permissions, moderation status, and automated triage metadata. Rejected rows appear in the admin trash bin before cleanup.
 
 ### `business_recommendation_media`
-Media attached to business recommendations.
+Media attached to business recommendations. Blank captions receive fallback captions before save; media for expired rejected recommendations is removed from storage during trash cleanup.
 
 ### `business_change_requests`
-Public requests to correct or update an existing business listing. Each request stores the target business, requester email, reason, admin notes, status, automated triage metadata, and timestamps. Admins review these from `/admin/change-requests` and manually update the listing if the request is valid.
+Public requests to correct or update an existing business listing. Each request stores the target business, requester email, reason, admin notes, status, automated triage metadata, and timestamps. Admins review these from `/admin/change-requests` and manually update the listing if the request is valid. Dismissed rows appear in the admin trash bin before cleanup.
 
 ### `business_listing_revisions`
-Pending edits for published business listings. Stores proposed listing data, proposed services, proposed portfolio media, revision status, and automated triage metadata. Approved revisions overwrite the live listing; rejected revisions leave the live listing unchanged.
+Pending edits for published business listings. Stores proposed listing data, proposed services, proposed portfolio media, revision status, and automated triage metadata. Approved revisions overwrite the live listing; rejected revisions leave the live listing unchanged and appear in the admin trash bin before cleanup.
 
 ### `creative_job_listings`
-Public creative jobs. Important fields include `title`, `slug`, `description`, `contact_email`, `project_type`, `services`, `service_slugs`, `other_service`, `budget_min`, `budget_max`, `deadline`, `notes`, `status`, `manage_token`, and automated triage metadata.
+Public creative jobs. Important fields include `title`, `slug`, `description`, `contact_email`, `project_type`, `services`, `service_slugs`, `other_service`, `budget_min`, `budget_max`, `deadline`, `notes`, `status`, `manage_token`, and automated triage metadata. Archived rows are treated as trash-bin items and are permanently deleted after the seven-day retention period.
 
 Relationships:
 - `creative_job_reference_files.job_id` references `creative_job_listings.id`.
@@ -461,13 +493,15 @@ Relationships:
 - `pending_review`, `taken`, `closed`, and `archived` jobs are hidden publicly.
 
 ### `creative_job_reference_files`
-Photos/videos attached to creative jobs. Stores storage bucket/path, public URL, filename, caption, mime type, size, and sort order.
+Photos/videos attached to creative jobs. Stores storage bucket/path, public URL, filename, caption, mime type, size, and sort order. Blank captions receive fallback captions before save; media for expired archived jobs is removed from storage during trash cleanup.
 
 ### Storage Buckets
 - `avatars`: public profile avatars.
 - `business-portfolios`: public business and recommendation media.
 - `project-references`: private project files.
 - `creative-job-references`: public creative job reference media.
+
+Trash cleanup removes related files from `business-portfolios` and `creative-job-references` before deleting expired database rows.
 
 ## API Endpoints
 
@@ -482,6 +516,7 @@ Photos/videos attached to creative jobs. Stores storage bucket/path, public URL,
 - `loginAdmin(formData)`: Validates admin credentials and sets `makesg_admin` cookie.
 - `updateBusinessPublicationStatus(businessId, status)`: Admin moderation of business publication status.
 - `deleteBusinessEntry(businessId)`: Admin deletion of business listing.
+- `getAdminTrashItems({ purgeExpired })`: Admin helper that lists trash-bin items and optionally purges expired rows/media.
 - `requestBusinessChange(formData)`: Public business-card correction request saved for admin review.
 - `updateBusinessChangeRequestStatus(requestId, status, adminNotes)`: Admin review status update for public change requests.
 - `updateCreativeJobFromForm(jobId, formData)`: Admin edit of creative job listing.
@@ -492,6 +527,7 @@ Photos/videos attached to creative jobs. Stores storage bucket/path, public URL,
 - `updateCreativeJobDetailsByToken(token, input)`: Private listing-detail update for creative jobs.
 - `updateCreativeJobMediaByToken(token, formData)`: Private creative job media add/remove/caption update.
 - `sendBusinessEnquiry(input)`: Sends enquiry email or returns contact fallback.
+- `smartMediaCaption(input)`: Shared server/client-safe helper used by upload flows to preserve contributor captions or generate fallback captions.
 
 ## UI Components
 
@@ -522,6 +558,7 @@ Photos/videos attached to creative jobs. Stores storage bucket/path, public URL,
 - `ModerationSummary`: Shared admin triage panel showing automated decision, risk, reason, and signals.
 - `AdminStatusControls`: Business moderation buttons.
 - `AdminCreativeJobDeleteButton`: Admin deletion confirmation for creative jobs.
+- `Admin Trash Page`: Admin-only queue for rejected/dismissed/archived items waiting for seven-day cleanup.
 
 ## Design System
 
@@ -621,6 +658,8 @@ Photos/videos attached to creative jobs. Stores storage bucket/path, public URL,
 - Creative job and business private manage links are powerful: anyone with the link can edit the listing.
 - Existing creative jobs and businesses created before manage-token rollout may not have manage links.
 - Automated moderation currently checks text, captions, links, filenames, contact presence, and simple spam patterns; it does not inspect the visual content of uploaded images/videos.
+- Smart auto-captioning is filename/context-based; it does not inspect the actual image or video content yet.
+- Trash cleanup currently runs when admin pages call the cleanup helper, not on an independent schedule.
 
 ## Technical Debt
 
@@ -631,6 +670,8 @@ Photos/videos attached to creative jobs. Stores storage bucket/path, public URL,
 - Public profile media and creative job media rely on public Supabase Storage URLs without transformation/CDN strategy.
 - Some migrations overlap because later migrations repair earlier live setup gaps.
 - Moderation triage is rule-based and should eventually be backed by provider-level text/image moderation, rate limiting, and admin audit logs.
+- Trash retention should move from admin-visit-triggered cleanup to a scheduled job before higher-volume usage.
+- Smart captions should eventually use actual image understanding instead of filename/context fallback.
 
 ## Future Ideas
 
@@ -640,6 +681,8 @@ Photos/videos attached to creative jobs. Stores storage bucket/path, public URL,
 - Add custom domain and verified email sender.
 - Add richer admin moderation queues.
 - Add AI-assisted text and image moderation with configurable admin thresholds.
+- Add AI-generated image/video captions and alt text for stronger accessibility.
+- Add scheduled trash cleanup and optional restore.
 - Add map view for businesses.
 - Add AI-assisted search and service matching after enough data is collected.
 - Add public trust badges based on verified recommendations.

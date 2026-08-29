@@ -14,15 +14,15 @@ export default async function ForBusinessesPage() {
     <section className="container-shell py-12">
       <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Business onboarding</p>
-          <h1 className="mt-2 font-serif text-5xl font-semibold">List a creative service or fabrication business</h1>
+          <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Share a business</p>
+          <h1 className="mt-2 font-serif text-5xl font-semibold">Help people discover a good creative business</h1>
           <p className="mt-5 text-lg leading-8 text-[#6d675d]">
-            Submit a business you run, work with, or genuinely want the MakeSG community to know about. Add what you know now; optional contact, budget and lead-time details can be filled in later through the private edit link.
+            Add a business you run, have worked with, or think the MakeSG community should know about. Share what you know now; the optional details can be updated later with a private edit link.
           </p>
           <div className="mt-8 grid gap-4">
-            <Step icon={<Building2 />} title="Describe your capabilities" />
-            <Step icon={<Clock />} title="Add contact, budget and lead-time details if known" />
-            <Step icon={<CheckCircle2 />} title="Submit for moderation" />
+            <Step icon={<Building2 />} title="Describe what the business does" />
+            <Step icon={<Clock />} title="Add contact, budget and timing details if you know them" />
+            <Step icon={<CheckCircle2 />} title="Send it for review" />
           </div>
         </div>
         <BusinessListingForm existingBusinesses={existingBusinesses} />

@@ -42,6 +42,7 @@ export async function getAdminBusinessChangeRequests(): Promise<AdminBusinessCha
     const { data, error } = await supabase
       .from("business_change_requests")
       .select("id, business_id, requester_email, reason, status, admin_notes, created_at, updated_at, moderation_decision, moderation_risk, moderation_reason, moderation_signals, businesses(name, slug, manage_token)")
+      .neq("status", "dismissed")
       .order("created_at", { ascending: false });
 
     if (error) return [];

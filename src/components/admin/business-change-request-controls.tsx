@@ -33,7 +33,7 @@ export function BusinessChangeRequestControls({
     }
 
     setStatus(nextStatus);
-    setMessage(nextStatus === "reviewed" ? "Marked reviewed." : "Dismissed.");
+    setMessage(nextStatus === "reviewed" ? "Marked reviewed." : "Dismissed. It has been moved to the trash bin for seven days.");
   }
 
   return (

@@ -61,7 +61,7 @@ export function assessModeration(input: ModerationInput): ModerationResult {
     return {
       decision: "blocked",
       risk: "high",
-      reason: "Blocked because the submission contains abusive, adult, spam or unsafe language.",
+      reason: "Some wording or file names are not suitable for MakeSG.",
       signals: [`Blocked term detected: ${blockedMatch}`],
     };
   }
@@ -90,7 +90,7 @@ export function assessModeration(input: ModerationInput): ModerationResult {
     return {
       decision: "needs_review",
       risk,
-      reason: "Held for admin review because the submission has multiple risk signals.",
+      reason: "This needs an admin to take a closer look before it goes public.",
       signals,
     };
   }
@@ -99,7 +99,7 @@ export function assessModeration(input: ModerationInput): ModerationResult {
     return {
       decision: "needs_review",
       risk,
-      reason: "Held for admin review because the submission has one or more moderation signals.",
+      reason: "This needs a quick admin check before it goes public.",
       signals,
     };
   }
@@ -108,7 +108,7 @@ export function assessModeration(input: ModerationInput): ModerationResult {
     return {
       decision: "auto_approved",
       risk: "low",
-      reason: "Auto-approved because the creative job passed validation and moderation checks.",
+      reason: "Looks good and can go public right away.",
       signals: ["Clean creative job submission."],
     };
   }
@@ -116,13 +116,13 @@ export function assessModeration(input: ModerationInput): ModerationResult {
   return {
     decision: "needs_review",
     risk: "low",
-    reason: "Ready for admin review. No significant moderation issues were detected.",
+    reason: "Ready for admin review.",
     signals: ["Clean submission."],
   };
 }
 
 export function moderationBlockMessage(result: ModerationResult) {
-  return `${result.reason} Please revise the wording or uploaded file names and try again.`;
+  return `${result.reason} Please update the wording or uploaded file names, then try again.`;
 }
 
 function minimumUsefulLength(kind: SubmissionKind) {

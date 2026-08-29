@@ -45,7 +45,7 @@ export function ManageBusinessDetails({ token, business }: { token: string; busi
       return;
     }
 
-    setMessage({ tone: "success", text: "Listing details updated. Your changes are pending admin approval." });
+    setMessage({ tone: "success", text: "Listing details updated. Your changes are waiting for review." });
     window.setTimeout(() => messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
   }
 

@@ -67,13 +67,13 @@ export function CreativeJobListingForm() {
         <h2 className="mt-4 text-xl font-semibold">{publishedImmediately ? "Job listing published" : "Job listing sent for review"}</h2>
         <p className="mt-2 text-sm leading-6 text-[#39462d]">
           {publishedImmediately
-            ? "Businesses can now review the listing and reach out using the contact email you provided."
-            : "This listing is waiting for admin approval because the automated triage found something worth checking."}
+            ? "Businesses can now read the listing and reach out using the contact email you provided."
+            : "This listing is waiting for admin review because something needs a quick check first."}
         </p>
         <div className="mt-5 border border-[#b9c6ae] bg-white p-4">
           <h3 className="font-semibold">Save your private manage link</h3>
           <p className="mt-2 text-sm leading-6 text-[#39462d]">
-            Use this link later to edit the listing or mark the job as in discussion, taken or open again. Anyone with this link can manage this job.
+            Use this link later to edit the listing or mark the job as open, in discussion or taken. Anyone with this link can manage this job.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Input readOnly value={manageUrl} className="min-w-0 flex-1" />
@@ -176,7 +176,7 @@ export function CreativeJobListingForm() {
         () => setSubmitError("Check the highlighted fields and try again."),
       )}
     >
-      <h2 className="font-serif text-3xl font-semibold">Creative job listing</h2>
+      <h2 className="font-serif text-3xl font-semibold">Post a creative job</h2>
       {submitError ? (
         <p ref={errorRef} className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24]" role="alert">
           {submitError}
@@ -263,12 +263,12 @@ export function CreativeJobListingForm() {
           setReferenceFiles(files);
         }}
         label="Upload reference photos or videos"
-        description="Upload photos or videos that help businesses understand the job. Uploads must be 10MB total or smaller."
+        description="Upload photos or videos that help businesses understand the job. Uploads must be 10MB total or smaller. Leave captions blank and MakeSG will add a simple one."
       />
       {referenceFiles.length ? (
         <fieldset className="grid gap-3">
           <legend className="text-sm font-medium">Reference captions</legend>
-          <p className="text-xs leading-5 text-[#6d675d]">Add an optional caption for each uploaded photo or video. Captions will appear with the reference files.</p>
+          <p className="text-xs leading-5 text-[#6d675d]">Add a caption if it helps. If you leave it blank, MakeSG will add a simple caption after upload.</p>
           {referenceFiles.map((file, index) => {
             const key = fileKey(file);
             return (
@@ -288,7 +288,7 @@ export function CreativeJobListingForm() {
       </Field>
       <Button type="submit" disabled={isSubmitting}>
         <Send className="h-4 w-4" />
-        {isSubmitting ? "Publishing..." : "Publish job listing"}
+        {isSubmitting ? "Posting..." : "Post job listing"}
       </Button>
     </form>
   );

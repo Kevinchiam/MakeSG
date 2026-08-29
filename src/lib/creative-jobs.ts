@@ -132,6 +132,7 @@ export async function getAdminCreativeJobs(): Promise<PublicCreativeJob[]> {
   const { data, error } = await supabase
     .from("creative_job_listings")
     .select("*, creative_job_reference_files(id, file_name, caption, file_url, storage_path, mime_type, size_bytes)")
+    .neq("status", "archived")
     .order("created_at", { ascending: false })
     .limit(100);
 
@@ -221,7 +222,7 @@ export function creativeJobStatusLabel(status: CreativeJobStatus) {
     case "closed":
       return "Taken";
     case "archived":
-      return "Archived";
+      return "In trash";
   }
 }
 

@@ -25,7 +25,7 @@ export default async function Home() {
               Find the businesses that can help make your idea real.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-[#5f594f]">
-              Search Singapore makers, studios, photographers, suppliers and workshops. Browse community recommendations, post creative jobs and keep listings accurate together.
+              Search makers, studios, photographers, suppliers and workshops in Singapore. See what the community recommends, post creative jobs, and help keep listings useful for the next person.
             </p>
             <div className="mt-8 max-w-2xl">
               <SearchBar placeholder="Search by service, material, location or project need" />
@@ -37,12 +37,12 @@ export default async function Home() {
             </div>
           </div>
           <div className="home-reveal home-reveal-delay-2 home-hero-card border border-[#211f1b] bg-white p-6 shadow-[12px_12px_0_#d8d0c4]">
-            <h2 className="font-serif text-3xl font-semibold">How MakeSG works now</h2>
+            <h2 className="font-serif text-3xl font-semibold">How MakeSG helps</h2>
             <div className="mt-6 grid gap-5">
               {[
-                ["Find", "Search published businesses by service, need, budget, lead time and location."],
-                ["Verify", "Use moderated word-of-mouth recommendations and portfolio media as trust signals."],
-                ["Act", "Contact a business, post a creative job, recommend one you trust or request a listing correction."],
+                ["Find", "Search by the service, location, budget or kind of help you need."],
+                ["Feel it out", "Look at portfolio media and community recommendations before reaching out."],
+                ["Take action", "Contact a business, post a job, recommend someone good, or suggest a correction."],
               ].map(([title, text], index) => (
                 <div key={title} className="home-flow-step border-l-2 border-[#315c6b] pl-4" style={{ "--step-index": index } as React.CSSProperties}>
                   <p className="font-semibold">{title}</p>
@@ -59,9 +59,9 @@ export default async function Home() {
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
               <p className="home-reveal text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Directory highlights</p>
-              <h2 className="home-reveal home-reveal-delay-1 mt-2 font-serif text-4xl font-semibold">Recommended and recently updated businesses</h2>
+              <h2 className="home-reveal home-reveal-delay-1 mt-2 font-serif text-4xl font-semibold">Useful businesses to start with</h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-[#6d675d]">
-                This list updates from the live directory, prioritising community-recommended, featured and newly updated listings.
+                These highlights refresh from the live directory, favouring businesses that are recommended, featured or recently updated.
               </p>
             </div>
             <Button asChild variant="secondary"><Link href="/businesses">Browse directory</Link></Button>
@@ -90,9 +90,9 @@ export default async function Home() {
 
       <section className="border-y border-[#ded8cc] bg-white">
         <div className="container-shell grid gap-8 py-14 md:grid-cols-3">
-          <Feature icon={<SearchCheck />} title="Smart directory search" text="Search across listing words, services, descriptions and portfolios, with light typo tolerance." index={0} />
-          <Feature icon={<MessageCircleHeart />} title="Moderated recommendations" text="Community reviews and media are reviewed before they become public trust signals." index={1} />
-          <Feature icon={<ClipboardList />} title="Creative job board" text="Creatives can post jobs and manage status through a private link without creating an account." index={2} />
+          <Feature icon={<SearchCheck />} title="Smarter search" text="Search across names, services, descriptions and portfolio text, even when your wording is not exact." index={0} />
+          <Feature icon={<MessageCircleHeart />} title="Community recommendations" text="People can share first-hand experiences, with admin review before anything goes public." index={1} />
+          <Feature icon={<ClipboardList />} title="Creative jobs" text="Post a job and manage its status through a private link, no account needed." index={2} />
         </div>
       </section>
 
@@ -101,14 +101,14 @@ export default async function Home() {
           <Callout
             icon={<Building2 />}
             title="Know a useful business?"
-            text="Business owners and community members can submit listings. Approved businesses receive a private edit link, while public correction requests go to admin review."
+            text="Submit a business you run, work with or want others to discover. Approved listings get a private edit link, and correction requests go to admin review."
             href="/for-businesses"
             label="Submit a business"
           />
           <Callout
             icon={<BriefcaseBusiness />}
             title="Need help making something?"
-            text="Post a creative job with services needed, reference media and contact details so listed businesses can browse and respond."
+            text="Post the job, add helpful references, and let suitable businesses reach out directly."
             href="/for-creatives"
             label="Post a creative job"
           />

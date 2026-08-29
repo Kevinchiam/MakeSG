@@ -1,205 +1,248 @@
 # Session Handover
 
-Date: 2026-08-22
+Date: 2026-08-29
 
 ## Session Summary
 
-Today's work added a first-line automated moderation triage system for MakeSG. Public submission flows now screen obvious abusive, adult, unsafe, or spam-like wording before saving. Admin queues now show a consistent automated triage summary, so business listings, business edits, creative jobs, recommendations, and change requests can be reviewed faster while the admin still keeps final override control.
+Today’s work made MakeSG feel more forgiving and easier to maintain. Uploaded media now receives a useful fallback caption when contributors leave captions blank. The public copy was softened across key pages so the platform sounds more welcoming and less formal. Admin moderation now has a trash-bin workflow: rejected or dismissed items leave the active queues, remain visible to admins for seven days, and are then permanently cleaned up with related storage files.
 
 ## Objectives Completed
 
-- [x] Added rule-based moderation triage utility.
-- [x] Blocked obvious abusive/spam/adult/unsafe terms before saving submissions.
-- [x] Checked captions, supporting text, links, filenames, contact presence, and low-detail signals.
-- [x] Added moderation metadata to business listings, pending business revisions, recommendations, change requests, and creative jobs.
-- [x] Added `pending_review` creative job status for flagged jobs.
-- [x] Auto-published low-risk creative jobs while holding higher-risk jobs for admin review.
-- [x] Kept business listings, business edits, recommendations, and change requests in admin review by default.
-- [x] Added shared admin triage UI across moderation queues.
-- [x] Updated project documentation and changelog.
-- [x] Ran lint, TypeScript, production build, and diff checks successfully.
+- [x] Added smart fallback captions for uncaptained uploads.
+- [x] Applied fallback captions across business onboarding, private business media edits, creative job references, private creative job media edits, and business recommendation media.
+- [x] Rewrote major public and workflow copy to be friendlier and easier to understand.
+- [x] Added an admin-only trash bin at `/admin/trash`.
+- [x] Moved rejected/dismissed/archived admin items out of active queues.
+- [x] Added seven-day trash retention cleanup for database rows and related storage files.
+- [x] Added Supabase migration indexes to support trash cleanup queries.
+- [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
+- [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 
 ## Files Created
 
-### `src/lib/moderation.ts`
-Rule-based moderation helper. It returns `auto_approved`, `needs_review`, or `blocked`, plus risk level, reason, and review signals.
+### `src/lib/media-captions.ts`
+Shared helper that preserves contributor-written captions and generates simple fallback captions when captions are blank. It uses filename cleanup and contextual fallback text, while avoiding generic filenames like screenshots or camera defaults.
 
-### `src/components/admin/moderation-summary.tsx`
-Shared admin UI for displaying automated triage decision, risk, reason, and signal tags.
+### `src/lib/admin-trash.ts`
+Admin-only trash aggregation and cleanup helper. It lists rejected/dismissed/archived items, computes retention dates, purges expired rows, and removes related files from Supabase Storage where possible.
 
-### `supabase/migrations/0014_moderation_triage.sql`
-Adds moderation metadata columns and `pending_review` creative job status support.
+### `src/app/admin/trash/page.tsx`
+Admin-only trash-bin page showing trashed item type, title, reason/status, moved date, and delete-after date.
+
+### `supabase/migrations/0015_admin_trash_retention.sql`
+Adds partial indexes for faster cleanup/filtering of rejected businesses, rejected business revisions, rejected recommendations, archived creative jobs, and dismissed business change requests.
 
 ## Files Modified
 
 ### `src/features/businesses/actions.ts`
-Business onboarding and private business edit flows now run moderation before saving. Published edits store moderation metadata on pending revisions. Also fixed the business service helper usage.
+Business portfolio uploads now use smart fallback captions. Private business media edits also apply fallback captions for new uploads and cleared captions.
 
 ### `src/features/creative-jobs/actions.ts`
-Creative job creation and private edits now run moderation. Low-risk submissions auto-publish; flagged submissions become `pending_review`.
-
-### `src/features/creative-jobs/creative-job-listing-form.tsx`
-Success message now distinguishes between published jobs and jobs sent for admin review.
-
-### `src/lib/creative-jobs.ts`
-Creative job types and labels now include `pending_review`, plus moderation metadata mapping.
-
-### `src/lib/business-submissions.ts`
-Admin business data now includes moderation metadata for listings and pending revisions.
-
-### `src/lib/business-recommendations.ts`
-Admin recommendation data now includes moderation metadata.
-
-### `src/lib/business-change-requests.ts`
-Admin change-request data now includes moderation metadata.
+Creative job reference uploads and private media edits now use smart fallback captions based on the job title.
 
 ### `src/components/business/recommendation-actions.ts`
-Business recommendation submissions now run moderation before saving.
+Recommendation media uploads now use smart fallback captions when contributors do not provide captions.
 
-### `src/components/business/change-request-actions.ts`
-Business change requests now run moderation before saving.
+### `src/features/businesses/business-listing-form.tsx`
+Business onboarding copy is warmer and clearer. Upload copy explains that blank captions are acceptable. Success and duplicate-listing messages now read less formally.
+
+### `src/features/businesses/manage-business-details.tsx`
+Private business edit success copy now says changes are waiting for review again.
+
+### `src/features/businesses/manage-business-media.tsx`
+Private business media editing now tells users blank captions can be filled automatically and uses friendlier review copy.
+
+### `src/features/creative-jobs/creative-job-listing-form.tsx`
+Creative job posting copy is friendlier. Reference upload copy mentions automatic simple captions when blank.
+
+### `src/components/business/recommend-business-panel.tsx`
+Recommendation panel copy now uses “review” language instead of “moderation” and explains optional media captions more gently.
+
+### `src/app/page.tsx`
+Homepage copy now reflects MakeSG as a practical community platform for finding businesses, posting jobs, requesting changes, and sharing recommendations.
+
+### `src/app/about/page.tsx`
+About page copy no longer describes the product as fictional and now explains the platform in simpler, friendlier language.
+
+### `src/app/for-businesses/page.tsx`
+Business submission page now invites both business owners and community members to share useful businesses.
+
+### `src/app/for-creatives/page.tsx`
+Creative job page now sounds more conversational and focuses on posting work for businesses to find.
+
+### `src/app/businesses/manage/[token]/page.tsx`
+Private business management page copy now uses clearer “private business link” and “review status” wording.
+
+### `src/app/creative-jobs/manage/[token]/page.tsx`
+Private creative job management page copy now uses clearer “private job link” wording.
+
+### `src/lib/moderation.ts`
+Moderation reasons and blocking messages now sound less severe while still clearly guiding users to fix unsuitable wording or filenames.
+
+### `src/lib/validation.ts`
+Validation helper text now uses “businesses” consistently and says “review” instead of “moderation” where user-facing.
+
+### `src/components/business/recommend-business-lookup.tsx`
+Recommendation lookup copy now says listings are sent for review.
 
 ### `src/app/admin/page.tsx`
-Admin home now surfaces high-risk triage counts and pending creative jobs.
+Admin home now includes trash-bin count and calls trash cleanup so expired items can be purged.
 
-### `src/app/admin/businesses/page.tsx`
-Business moderation list now shows triage context.
+### `src/lib/business-submissions.ts`
+Active admin business queues now exclude rejected listings.
 
-### `src/app/admin/businesses/[id]/page.tsx`
-Business detail review now shows triage context for current submissions and pending edits.
+### `src/lib/business-recommendations.ts`
+Active admin recommendation queues now exclude rejected recommendations.
 
-### `src/app/admin/creative-jobs/page.tsx`
-Creative job admin list now shows triage context.
+### `src/lib/business-change-requests.ts`
+Active admin change-request queues now exclude dismissed requests.
+
+### `src/lib/creative-jobs.ts`
+Active admin creative job queues now exclude archived jobs; archived status label changed to “In trash.”
+
+### `src/components/admin/admin-status-controls.tsx`
+Reject feedback now tells admins that rejected items move to the trash bin for seven days.
+
+### `src/components/admin/business-change-request-controls.tsx`
+Dismiss feedback now tells admins that dismissed requests move to the trash bin for seven days.
+
+### `src/components/admin/actions.ts`
+Admin actions now revalidate `/admin/trash` when moderation, deletion, or change-request status changes.
 
 ### `src/app/admin/creative-jobs/[id]/page.tsx`
-Creative job admin detail page now shows triage context and supports `pending_review`.
-
-### `src/app/admin/recommendations/page.tsx`
-Recommendation queue now shows triage context.
-
-### `src/app/admin/change-requests/page.tsx`
-Change-request queue now shows triage context.
-
-### `src/lib/types.ts`
-Added shared moderation decision/risk/triage types.
+Admin creative job archived action is now labelled “Move to trash.”
 
 ### `PROJECT_CONTEXT.md`
-Updated to describe automated moderation, new schema metadata, and current limitations.
+Updated to document smart captions, admin trash, trash cleanup limits, revised copy direction, schema implications, and future scheduled cleanup work.
 
 ### `CHANGELOG.md`
-Added the 2026-08-22 semantic changelog entry.
+Added the 2026-08-29 changelog entry.
 
 ## Database Changes
 
-- Added moderation columns to:
-  - `businesses`
-  - `business_listing_revisions`
-  - `business_recommendations`
-  - `business_change_requests`
-  - `creative_job_listings`
-- Added `pending_review` to creative job status constraints.
-- Kept `closed` in the status constraint for backward compatibility with any old rows.
-- Updated public creative job policies so only `open` and `in_discussion` jobs remain public.
-- Added moderation indexes for admin queue filtering.
+- Added `supabase/migrations/0015_admin_trash_retention.sql`.
+- The migration only adds indexes; it does not delete data or change existing table shapes.
+- Existing statuses are used as trash states:
+  - `businesses.publication_status = 'rejected'`
+  - `business_listing_revisions.status = 'rejected'`
+  - `business_recommendations.status = 'rejected'`
+  - `business_change_requests.status = 'dismissed'`
+  - `creative_job_listings.status = 'archived'`
+- Apply this migration in Supabase before relying on the production trash cleanup performance.
 
 ## API Changes
 
-- Business submission/edit actions now return a blocking message when moderation rejects obvious unsafe content.
-- Creative job submission now returns the saved status so the UI can show either published or review-pending feedback.
-- Recommendation and change-request actions now block obvious unsafe submissions before saving.
+- Upload-related server actions now call `smartMediaCaption()` before inserting media rows.
+- `getAdminTrashItems({ purgeExpired })` provides admin trash listing and cleanup.
+- Admin dashboard and trash page trigger expired-trash cleanup.
+- Active admin queue helpers filter out trash-state rows.
 
 ## UI Changes
 
-- Admin queues now show automated triage panels with risk, decision, reason, and signal tags.
-- Admin home now flags high-risk items.
-- Creative job submission success copy now matches whether the job was published or sent for review.
+- Added `/admin/trash` as a new admin page.
+- Added a Trash bin card on admin home.
+- Rejected/dismissed items no longer clutter normal review queues.
+- Upload helper text now reassures users that blank captions are fine.
+- Major public-facing copy was softened across home, About, business submission, creative job posting, recommendation, and private management pages.
 
 ## Bugs Fixed
 
-- Fixed a duplicated/nested business service upsert helper that conflicted with the shared helper signature.
-- Fixed creative job status handling to support `pending_review` in admin views.
+- Blank media captions no longer result in empty or unhelpful captions.
+- Rejected/dismissed items no longer stay mixed into active admin queues.
+- Admin reject/dismiss feedback now explains where items went.
 
 ## Bugs Remaining
 
-- Uploaded image/video content is not visually inspected yet. Current moderation checks metadata, captions, text, filenames, links, and file type/size only.
+- Trash cleanup is not independently scheduled yet; it runs when admin pages call the cleanup helper.
+- Smart captions do not inspect actual image/video content.
 - Public forms still need rate limiting.
-- Admin moderation does not yet have an audit log or admin notes for every queue type.
+- Visual image/video moderation is still rule-based metadata checking only.
 
 ## Technical Decisions
 
-- Used conservative rule-based triage first to avoid adding dependencies and to keep decisions transparent.
-- Auto-approval is limited to creative jobs because these are lower-risk public classifieds.
-- Business listings, business edits, recommendations, and change requests still require admin review because they affect business reputation and directory trust.
-- `pending_review` hides flagged creative jobs from public listing pages until admin approval.
+- Used filename/context fallback captions first because it is reliable, private, fast, and dependency-free.
+- Used existing status fields as trash states instead of adding new trash tables, reducing schema churn.
+- Performed storage cleanup before deleting expired rows so orphaned media is less likely.
+- Kept admin override intact: trash is a retention layer, not a replacement for admin decision-making.
 
 ## Lessons Learned
 
-- Automation should reduce admin reading time without hiding admin control.
-- Business reputation workflows need stricter human review than creative job classifieds.
-- If image safety becomes important, metadata checks are not enough; a real moderation API will be needed.
+- Friendly copy matters because contributors may not understand platform language like “moderation.”
+- Rejected content should leave review queues quickly so admins can focus on open decisions.
+- A simple caption fallback improves polish, but true auto-captioning will need image understanding later.
 
 ## Risks
 
-- Rule-based filtering can miss nuanced abuse or produce occasional false positives.
-- Some blocked terms may need tuning as real users submit edge cases.
-- Production Supabase must run `0014_moderation_triage.sql` before the deployed code relies on moderation columns.
+- If admin pages are not visited, expired trash will not be purged automatically.
+- Storage cleanup may miss files if older rows have missing or malformed storage paths.
+- Treating existing statuses as trash states means “archived” creative jobs now function as trash, not long-term archive.
+- Private manage links remain bearer credentials.
 
 ## Things To Watch
 
-- Whether many submissions become medium/high risk due to low-detail signals.
-- Whether creative jobs should stay auto-published or become admin-review-first as volume grows.
-- Whether business submissions need clearer wording when blocked by moderation.
+- Whether admins need restore buttons for accidentally rejected items.
+- Whether seven days is enough retention before permanent deletion.
+- Whether users expect actual AI captions from image contents rather than filename-based captions.
+- Whether rejected business listings should be hidden from every future reporting/export surface.
 
 ## Suggested Refactoring
 
-- Generate Supabase database types and replace manual row casts.
-- Add a reusable admin queue shell with filters for risk/status/date.
-- Extract shared media moderation input builders between business and creative job flows.
+- Move trash cleanup into a scheduled Vercel Cron route or Supabase scheduled function.
+- Add an `admin_events` audit table for moderation decisions, trash moves, restores, and purges.
+- Generate typed Supabase schemas to reduce casts in admin helpers.
+- Extract a shared media-upload mapping utility for business, recommendation, and creative job flows.
 
 ## Performance Considerations
 
-- Moderation is synchronous and lightweight string matching, so it adds negligible runtime cost.
-- No new dependencies were added.
-- Future image moderation would add latency and cost, so it should be async or clearly communicated in UI.
+- Smart captioning is simple string processing and adds negligible overhead.
+- Trash indexes should keep admin cleanup queries cheap as data grows.
+- Storage deletion happens during cleanup and could become slow if many expired items accumulate; schedule/background execution would be better at scale.
 
 ## Accessibility Considerations
 
-- Moderation summary uses semantic section labels and text, not colour alone.
-- Blocked submission errors reuse existing accessible alert/error patterns.
+- Fallback captions improve media descriptions, but they are not yet true alt text generated from visual content.
+- New trash page uses semantic headings, list content, links, and existing focusable controls.
+- Copy changes should reduce cognitive load for first-time contributors.
 
 ## Security Considerations
 
-- This is not a security boundary. It is an abuse-reduction and admin-triage layer.
-- Add rate limiting to public forms before substantial public launch.
-- Keep admin override protected by the existing admin login flow.
+- Admin trash is protected by the existing admin middleware.
+- Public users cannot access `/admin/trash` without the admin cookie.
+- No secrets were added.
+- Permanent deletion should remain admin-only or scheduled server-side.
 
 ## Testing Completed
 
 - `pnpm lint`
 - `pnpm typecheck`
 - `pnpm build`
+- `pnpm test`
 - `git diff --check`
 
 The bundled Codex Node runtime was used because the regular shell could not find `node`.
 
 ## Testing Still Needed
 
-- Run `supabase/migrations/0014_moderation_triage.sql` in production.
-- Deploy to Vercel and smoke test:
-  - Business onboarding blocks obvious unsafe text but preserves valid submissions.
-  - Creative jobs auto-publish when low risk.
-  - Suspicious creative jobs show as pending review in admin.
-  - Admin queues show triage panels.
-  - Public creative jobs do not show `pending_review`.
+- Apply `supabase/migrations/0015_admin_trash_retention.sql` in production Supabase.
+- Deploy to Vercel.
+- Smoke test:
+  - Business onboarding with blank media captions.
+  - Creative job posting with blank reference captions.
+  - Business recommendation with blank media captions.
+  - Reject a business and confirm it appears in `/admin/trash`.
+  - Dismiss a change request and confirm it appears in `/admin/trash`.
+  - Confirm active admin queues no longer show trash items.
+- After seven days or with a test old row, confirm expired trash cleanup removes database rows and storage files.
 
 ## Recommended Next Tasks
 
-1. Apply the Supabase migration in production.
-2. Push and redeploy on Vercel.
-3. Add admin filters by moderation risk/status.
-4. Add public form rate limiting.
-5. Decide whether to add external image/video moderation.
+1. Apply the new Supabase migration and redeploy.
+2. Add a scheduled cleanup route using Vercel Cron so trash purges without needing an admin visit.
+3. Add restore buttons to `/admin/trash`.
+4. Add actual image/video moderation and AI captions after choosing a provider.
+5. Add public form rate limiting.
+6. Add admin audit logs for every moderation decision.
 
 ## Ready-to-use Prompt for Next Session
 
-Continue the MakeSG project in `/Users/kevinchiam/Documents/Design Directory`. Before coding, read `AI_RULES.md`, `PROJECT_CONTEXT.md`, and `SESSION_HANDOVER.md`. Today’s last work added rule-based automated moderation triage across business listings, business edits, creative jobs, business recommendations, and business change requests. Key files to read first: `src/lib/moderation.ts`, `src/components/admin/moderation-summary.tsx`, `src/features/businesses/actions.ts`, `src/features/creative-jobs/actions.ts`, `src/lib/business-submissions.ts`, `src/lib/creative-jobs.ts`, and `supabase/migrations/0014_moderation_triage.sql`. The next likely task is to apply the migration, smoke test production, and consider admin risk/status filters or real image moderation. Remember: creative jobs can auto-publish when low risk; business reputation content still requires admin review.
+Continue the MakeSG project in `/Users/kevinchiam/Documents/Design Directory`. Before coding, read `AI_RULES.md`, `PROJECT_CONTEXT.md`, and `SESSION_HANDOVER.md`. The latest work on 2026-08-29 added smart fallback captions for uncaptained media, friendlier site copy, and an admin-only trash bin with seven-day retention cleanup for rejected/dismissed/archived items. Key files to read first: `src/lib/media-captions.ts`, `src/lib/admin-trash.ts`, `src/app/admin/trash/page.tsx`, `src/app/admin/page.tsx`, `src/features/businesses/actions.ts`, `src/features/creative-jobs/actions.ts`, `src/components/business/recommendation-actions.ts`, and `supabase/migrations/0015_admin_trash_retention.sql`. The next likely task is to apply the migration, deploy, and then move trash cleanup to a scheduled Vercel Cron route with optional restore buttons. Remember the current decision: smart captions are filename/context-based, not visual AI; rejected business/recommendation/revision rows, dismissed change requests, and archived creative jobs are considered trash; admin override stays central.

@@ -84,6 +84,7 @@ export async function getAdminBusinessRecommendations(): Promise<AdminBusinessRe
       .select(
         "id, business_id, recommender_name, recommender_role, recommender_email, relationship, project_context, recommended_for, comment, quality_rating, reliability_rating, collaboration_rating, supporting_links, permission_to_contact, permission_to_publish_name, status, created_at, moderation_decision, moderation_risk, moderation_reason, moderation_signals, business_recommendation_media(id, bucket, storage_path, file_name, mime_type, caption), businesses(name, slug)",
       )
+      .neq("status", "rejected")
       .order("created_at", { ascending: false });
 
     if (error) return demo;

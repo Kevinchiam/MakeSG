@@ -19,6 +19,7 @@ export async function updateBusinessPublicationStatus(businessId: string, status
 
   revalidatePath("/admin/businesses");
   revalidatePath(`/admin/businesses/${businessId}`);
+  revalidatePath("/admin/trash");
   revalidatePath("/businesses");
   return { ok: true };
 }
@@ -117,6 +118,7 @@ export async function approvePendingBusinessRevision(businessId: string) {
     .eq("id", revision.id);
 
   revalidateBusinessAdminPaths(businessId);
+  revalidatePath("/admin/trash");
   return { ok: true };
 }
 
@@ -165,6 +167,7 @@ export async function updateBusinessRecommendationStatus(recommendationId: strin
   const business = Array.isArray(data?.businesses) ? data.businesses[0] : data?.businesses;
   revalidatePath("/admin");
   revalidatePath("/admin/recommendations");
+  revalidatePath("/admin/trash");
   if (business?.slug) revalidatePath(`/businesses/${business.slug}`);
   return { ok: true };
 }
@@ -195,6 +198,7 @@ export async function updateCreativeJobFromForm(jobId: string, formData: FormDat
   revalidatePath("/admin");
   revalidatePath("/admin/creative-jobs");
   revalidatePath(`/admin/creative-jobs/${jobId}`);
+  revalidatePath("/admin/trash");
 
   if (error) {
     return { ok: false, message: error.message };
@@ -210,6 +214,7 @@ export async function deleteCreativeJobEntry(jobId: string) {
   revalidatePath("/creative-jobs");
   revalidatePath("/admin");
   revalidatePath("/admin/creative-jobs");
+  revalidatePath("/admin/trash");
 
   if (error) {
     return { ok: false, message: error.message };
@@ -231,6 +236,7 @@ export async function updateBusinessChangeRequestStatus(requestId: string, statu
 
   revalidatePath("/admin");
   revalidatePath("/admin/change-requests");
+  revalidatePath("/admin/trash");
 
   if (error) {
     return { ok: false, message: error.message };

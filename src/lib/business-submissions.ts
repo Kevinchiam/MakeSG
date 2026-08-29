@@ -137,6 +137,7 @@ export async function getAdminBusinesses(): Promise<AdminBusinessSummary[]> {
     const { data } = await supabase
       .from("businesses")
       .select("id, name, short_description, publication_status, verification_status, endorsement_count, moderation_decision, moderation_risk, moderation_reason, moderation_signals, business_listing_revisions(status, moderation_decision, moderation_risk, moderation_reason, moderation_signals)")
+      .neq("publication_status", "rejected")
       .order("created_at", { ascending: false });
 
     const submittedBusinesses = ((data ?? []) as Array<BusinessRow & { business_listing_revisions?: BusinessRevisionRow[] }>).map((business) => {

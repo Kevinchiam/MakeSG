@@ -17,10 +17,10 @@ export default async function ManageCreativeJobPage({ params }: { params: Promis
     <section className="container-shell py-12">
       <div className="grid gap-8 lg:grid-cols-[0.9fr_0.7fr]">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Private job management</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Private job link</p>
           <h1 className="mt-2 font-serif text-5xl font-semibold">Manage your creative job</h1>
           <p className="mt-5 text-lg leading-8 text-[#6d675d]">
-            This private link controls only this job listing. You can update the details and status whenever the job moves forward.
+            This private link controls only this job listing. Use it to update details and status whenever the job moves forward.
           </p>
           <div className="mt-8 border border-[#ded8cc] bg-white p-5">
             <p className="text-sm font-semibold uppercase tracking-wide text-[#7a7063]">Job</p>

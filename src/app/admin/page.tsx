@@ -4,6 +4,7 @@ import { getAdminBusinessChangeRequests } from "@/lib/business-change-requests";
 import { getAdminBusinessRecommendations } from "@/lib/business-recommendations";
 import { getAdminBusinesses } from "@/lib/business-submissions";
 import { getAdminCreativeJobs } from "@/lib/creative-jobs";
+import { getAdminTrashItems } from "@/lib/admin-trash";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ export default async function AdminPage() {
   const creativeJobs = await getAdminCreativeJobs();
   const recommendations = await getAdminBusinessRecommendations();
   const changeRequests = await getAdminBusinessChangeRequests();
+  const trashItems = await getAdminTrashItems();
   const pending = businesses.filter((b) => b.publicationStatus === "pending" || b.pendingRevision).length;
   const openCreativeJobs = creativeJobs.filter((job) => job.status === "open").length;
   const pendingCreativeJobs = creativeJobs.filter((job) => job.status === "pending_review").length;
@@ -33,6 +35,7 @@ export default async function AdminPage() {
         <AdminLink href="/admin/creative-jobs" title="Creative jobs" text={`${pendingCreativeJobs} pending review, ${openCreativeJobs} open, ${inDiscussionCreativeJobs} in discussion`} />
         <AdminLink href="/admin/recommendations" title="Recommendations" text={`${pendingRecommendations} pending word-of-mouth submissions`} />
         <AdminLink href="/admin/change-requests" title="Change requests" text={`${openChangeRequests} open listing correction request${openChangeRequests === 1 ? "" : "s"}`} />
+        <AdminLink href="/admin/trash" title="Trash bin" text={`${trashItems.length} rejected or dismissed item${trashItems.length === 1 ? "" : "s"} waiting for cleanup`} />
         <AdminLink href="/admin/services" title="Services" text="Edit service categories and descriptions" />
         <AdminLink href="/admin/reports" title="Reports" text="Review reported content" />
       </div>

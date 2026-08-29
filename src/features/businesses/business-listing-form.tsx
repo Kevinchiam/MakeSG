@@ -55,9 +55,9 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
   if (submittedManageUrl) {
     return (
       <div ref={successRef} className="border border-[#536343] bg-[#eef2e8] p-6" tabIndex={-1}>
-        <h2 className="text-xl font-semibold">Listing submitted for approval</h2>
+        <h2 className="text-xl font-semibold">Thanks, the listing has been sent for review</h2>
         <p className="mt-2 text-sm leading-6 text-[#39462d]">
-          Thanks. Your listing is pending admin review. Save this private link so you can edit your business information later.
+          Save this private link so you can update the business information later. Changes still go through review before they appear publicly.
         </p>
         <div className="mt-4 grid gap-2 border border-[#b9c6ae] bg-white p-3 text-sm">
           <span className="font-semibold">Private edit link</span>
@@ -133,7 +133,7 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
         },
       )}
     >
-      <h2 className="font-serif text-3xl font-semibold">Business listing</h2>
+      <h2 className="font-serif text-3xl font-semibold">Tell us about the business</h2>
       {submitError ? (
         <p ref={errorRef} className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm leading-6 text-[#8a3c24]" role="alert">
           {submitError}
@@ -148,10 +148,10 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
       {duplicateSuggestion ? (
         <div className="grid gap-3 border border-[#b9d3bf] bg-[#f1f8f2] p-4 text-sm text-[#39462d]" role="status">
           <div>
-            <p className="font-semibold">Do you mean {duplicateSuggestion.name}?</p>
-            <p className="mt-1 leading-6">
-              This looks like an existing listing. Open the profile to check it before submitting a duplicate.
-            </p>
+          <p className="font-semibold">Do you mean {duplicateSuggestion.name}?</p>
+          <p className="mt-1 leading-6">
+              This looks like a business already on MakeSG. Open the listing first so we avoid duplicates.
+          </p>
           </div>
           <Button asChild variant="secondary">
             <Link href={`/businesses/${duplicateSuggestion.slug}`}>View existing listing</Link>
@@ -227,12 +227,12 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
           setPortfolioFiles(files);
         }}
         label="Upload portfolio photos or videos"
-        description="Photos and videos are stored in Supabase and shown after admin approval. Uploads must be 10MB total or smaller."
+        description="Photos and videos are stored safely and shown after approval. Uploads must be 10MB total or smaller. Leave captions blank and MakeSG will add a simple one."
       />
       {portfolioFiles.length ? (
         <fieldset className="grid gap-3">
           <legend className="text-sm font-medium">Portfolio captions</legend>
-          <p className="text-xs leading-5 text-[#6d675d]">Add an optional caption for each uploaded photo or video. Captions will appear on the public business profile after approval.</p>
+          <p className="text-xs leading-5 text-[#6d675d]">Add a caption if you have one. If you leave it blank, MakeSG will add a simple caption after upload.</p>
           {portfolioFiles.map((file, index) => {
             const key = fileKey(file);
             return (
@@ -247,7 +247,7 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
           })}
         </fieldset>
       ) : null}
-      <Button type="submit" disabled={isSubmitting || Boolean(duplicateSuggestion)}><Send className="h-4 w-4" /> {isSubmitting ? "Submitting..." : "Submit for approval"}</Button>
+      <Button type="submit" disabled={isSubmitting || Boolean(duplicateSuggestion)}><Send className="h-4 w-4" /> {isSubmitting ? "Sending..." : "Send for review"}</Button>
     </form>
   );
 }

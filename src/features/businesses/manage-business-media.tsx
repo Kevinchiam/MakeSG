@@ -42,7 +42,7 @@ export function ManageBusinessMedia({ token, portfolio }: { token: string; portf
 
     setNewFiles([]);
     setNewCaptions({});
-    setMessage({ tone: "success", text: "Portfolio updated. Your listing is pending admin approval again." });
+    setMessage({ tone: "success", text: "Portfolio updated. Your listing is waiting for review again." });
     window.setTimeout(() => messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
   }
 
@@ -51,7 +51,7 @@ export function ManageBusinessMedia({ token, portfolio }: { token: string; portf
       <div>
         <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Portfolio media</p>
         <h2 className="mt-1 text-2xl font-semibold">Edit photos and videos</h2>
-        <p className="mt-2 text-sm leading-6 text-[#6d675d]">Changes to portfolio media will be reviewed by an admin before publication.</p>
+        <p className="mt-2 text-sm leading-6 text-[#6d675d]">Changes to portfolio media are reviewed before they appear publicly.</p>
       </div>
       {message ? (
         <p ref={messageRef} className={`border p-3 text-sm ${message.tone === "success" ? "border-[#b9c6ae] bg-[#eef2e8] text-[#39462d]" : "border-[#e2b8a7] bg-[#fff6f1] text-[#8a3c24]"}`} role={message.tone === "error" ? "alert" : "status"}>
@@ -102,11 +102,12 @@ export function ManageBusinessMedia({ token, portfolio }: { token: string; portf
           setNewFiles(files);
         }}
         label="Add portfolio photos or videos"
-        description="Photos and videos are stored in Supabase and shown after admin approval. Uploads must be 10MB total or smaller."
+        description="Photos and videos are stored safely and shown after approval. Uploads must be 10MB total or smaller. Leave captions blank and MakeSG will add a simple one."
       />
       {newFiles.length ? (
         <fieldset className="grid gap-3">
           <legend className="text-sm font-medium">New upload captions</legend>
+          <p className="text-xs leading-5 text-[#6d675d]">Add a caption if you have one. If you leave it blank, MakeSG will add a simple caption after upload.</p>
           {newFiles.map((file, index) => {
             const key = fileKey(file);
             return (

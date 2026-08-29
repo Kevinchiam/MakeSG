@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { smartMediaCaption } from "@/lib/media-captions";
 import { assessModeration, moderationBlockMessage } from "@/lib/moderation";
 import { businessRecommendationSchema } from "@/lib/validation";
 
@@ -136,7 +137,12 @@ export async function submitBusinessRecommendation(formData: FormData): Promise<
       mime_type: file.type,
       size_bytes: file.size,
       sort_order: index,
-      caption: mediaCaptions[index] ?? "",
+      caption: smartMediaCaption({
+        caption: mediaCaptions[index],
+        fileName: file.name,
+        fallback: "Recommendation support",
+        mediaKind: file.type.startsWith("video/") ? "video" : "photo",
+      }),
     });
   }
 

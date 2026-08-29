@@ -51,7 +51,7 @@ export function AdminStatusControls({
 
       const nextRecommendationStatus = nextStatus === "published" ? "approved" : "rejected";
       setStatus(nextRecommendationStatus);
-      setMessage(nextRecommendationStatus === "approved" ? "Approved. This recommendation can now appear publicly." : "Rejected.");
+      setMessage(nextRecommendationStatus === "approved" ? "Approved. This recommendation can now appear publicly." : "Rejected. It has been moved to the trash bin for seven days.");
       return;
     }
 
@@ -77,9 +77,11 @@ export function AdminStatusControls({
     setMessage(hasPendingRevision && nextStatus === "published"
       ? "Approved. The pending edits are now live."
       : hasPendingRevision && nextStatus === "rejected"
-        ? "Rejected. The live listing was not changed."
+        ? "Rejected. The live listing was not changed, and the rejected edit is in the trash bin for seven days."
         : nextStatus === "published"
           ? "Published. This business can now appear in the public directory."
+          : nextStatus === "rejected"
+            ? "Rejected. This listing has been moved to the trash bin for seven days."
           : "Status updated.");
   }
 

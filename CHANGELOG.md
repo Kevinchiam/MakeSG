@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 The format loosely follows Keep a Changelog and semantic sections.
 
+## [Unreleased] - 2026-08-29
+
+### Added
+- Added smart fallback captions for uncaptained business portfolio, creative job reference, and business recommendation media uploads.
+- Added an admin-only trash bin at `/admin/trash` for rejected business listings, rejected business edits, rejected recommendations, dismissed change requests, and creative jobs moved to trash.
+- Added seven-day trash retention cleanup that permanently deletes expired trash rows and associated Supabase Storage objects when admin trash cleanup runs.
+- Added trash-retention indexes in `supabase/migrations/0015_admin_trash_retention.sql`.
+
+### Changed
+- Changed homepage, About, business onboarding, creative job posting, recommendation, management, and moderation copy to feel warmer, clearer, and less formal.
+- Changed admin queues so rejected/dismissed/archived trash items are hidden from active review queues.
+- Changed reject/dismiss admin feedback to tell admins that items move to trash for seven days.
+- Changed creative job archive wording to “Move to trash” and archived status display to “In trash.”
+- Changed upload helper copy so contributors know blank captions can be filled automatically.
+
+### Fixed
+- Fixed blank media captions by generating simple fallback captions before records are saved.
+- Fixed active admin queue clutter by moving rejected/dismissed items into a dedicated trash view.
+
+### Removed
+- Removed no public-facing features.
+
+### Known Issues
+- Trash cleanup is triggered from admin dashboard/trash access, not from an independent scheduled job yet.
+- Smart captions use filenames and listing context; they do not visually inspect image or video content yet.
+
 ## [Unreleased] - 2026-08-22
 
 ### Added

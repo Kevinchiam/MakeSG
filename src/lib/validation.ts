@@ -34,7 +34,7 @@ const optionalText = z.preprocess((value) => {
 export const projectSchema = z.object({
   title: z.string().min(3, "Add a short project title."),
   description: z.string().min(20, "Describe the idea in at least 20 characters."),
-  intendedOutcome: z.string().min(3, "Tell providers what success looks like."),
+  intendedOutcome: z.string().min(3, "Tell businesses what a good result looks like."),
   projectType: z.enum(["physical", "digital", "both"]),
   quantity: z.string().optional(),
   dimensions: z.string().optional(),
@@ -101,7 +101,7 @@ export const enquirySchema = z.object({
 export const businessRecommendationSchema = z.object({
   businessId: z.string().min(1, "Choose a business."),
   recommenderName: z.string().min(2, "Add your name."),
-  recommenderEmail: z.string().email("Use a valid private email for moderation."),
+  recommenderEmail: z.string().email("Use a valid private email for review."),
   qualityRating: z.coerce.number().int().min(1, "Rate quality from 1 to 5.").max(5, "Rate quality from 1 to 5."),
   reliabilityRating: z.coerce.number().int().min(1, "Rate reliability from 1 to 5.").max(5, "Rate reliability from 1 to 5."),
   collaborationRating: z.coerce.number().int().min(1, "Rate collaboration from 1 to 5.").max(5, "Rate collaboration from 1 to 5."),
