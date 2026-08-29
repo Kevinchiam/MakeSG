@@ -32,6 +32,7 @@ type PublishedBusinessRow = {
     description: string | null;
     image_url: string | null;
     tags: string[] | null;
+    mime_type?: string | null;
   }[];
 };
 
@@ -43,7 +44,7 @@ export async function getPublishedBusinesses(): Promise<Business[]> {
     const { data, error } = await supabase
       .from("businesses")
       .select(
-        "id, name, slug, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, accepts_prototypes, accepts_production, offers_onsite_service, offers_remote_service, verification_status, publication_status, featured, claimed, endorsement_count, hero_image_url, updated_at, business_services(services(slug)), portfolio_items(id, title, description, image_url, tags)",
+        "id, name, slug, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, accepts_prototypes, accepts_production, offers_onsite_service, offers_remote_service, verification_status, publication_status, featured, claimed, endorsement_count, hero_image_url, updated_at, business_services(services(slug)), portfolio_items(id, title, description, image_url, tags, mime_type)",
       )
       .eq("publication_status", "published")
       .order("updated_at", { ascending: false });
@@ -64,7 +65,7 @@ export async function getPublishedBusinessBySlug(slug: string) {
     const { data, error } = await supabase
       .from("businesses")
       .select(
-        "id, name, slug, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, accepts_prototypes, accepts_production, offers_onsite_service, offers_remote_service, verification_status, publication_status, featured, claimed, endorsement_count, hero_image_url, updated_at, business_services(services(slug)), portfolio_items(id, title, description, image_url, tags)",
+        "id, name, slug, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, accepts_prototypes, accepts_production, offers_onsite_service, offers_remote_service, verification_status, publication_status, featured, claimed, endorsement_count, hero_image_url, updated_at, business_services(services(slug)), portfolio_items(id, title, description, image_url, tags, mime_type)",
       )
       .eq("slug", slug)
       .eq("publication_status", "published")
@@ -144,6 +145,7 @@ function rowToBusiness(row: PublishedBusinessRow, recommendationCount = 0): Busi
       description: item.description ?? "",
       tags: item.tags ?? [],
       imageUrl: item.image_url ?? "",
+      mimeType: item.mime_type ?? undefined,
     })) ?? [],
     heroImage: row.hero_image_url ?? fallbackImage,
   };

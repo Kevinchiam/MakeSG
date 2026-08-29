@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BriefcaseBusiness, Building2, ClipboardList, MessageCircleHeart, SearchCheck, ShieldCheck } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Building2, Camera, ClipboardList, MessageCircleHeart, SearchCheck, ShieldCheck } from "lucide-react";
 import { BusinessGrid } from "@/components/business/business-grid";
 import { SearchBar } from "@/components/site/search-bar";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,10 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   const [businesses, creativeJobs] = await Promise.all([getPublishedBusinesses(), getPublicCreativeJobs()]);
   const featured = getHomepageBusinesses(businesses);
+  const heroMedia = getHomepageMedia(businesses);
   const openCreativeJobs = creativeJobs.filter((job) => job.status === "open").length;
   const recommendedBusinesses = businesses.filter((business) => (business.recommendationCount ?? 0) > 0).length;
+  const movingServices = getMovingServices(businesses);
 
   return (
     <>
@@ -36,17 +38,41 @@ export default async function Home() {
               <span className="home-stat-pill border border-[#ded8cc] bg-white px-3 py-2">{openCreativeJobs} open creative jobs</span>
             </div>
           </div>
-          <div className="home-reveal home-reveal-delay-2 home-hero-card border border-[#211f1b] bg-white p-6 shadow-[12px_12px_0_#d8d0c4]">
-            <h2 className="font-serif text-3xl font-semibold">How MakeSG helps</h2>
-            <div className="mt-6 grid gap-5">
+          <div className="home-reveal home-reveal-delay-2 home-visual-panel border border-[#211f1b] bg-white p-4 shadow-[12px_12px_0_#d8d0c4]">
+            <div className="flex items-center justify-between gap-3 px-2 pb-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#9c4f35]">Live from the directory</p>
+                <h2 className="mt-1 font-serif text-3xl font-semibold">Work you can picture</h2>
+              </div>
+              <Link href="/businesses" className="inline-flex h-11 w-11 items-center justify-center border border-[#ded8cc] text-[#211f1b]" aria-label="Browse business listings">
+                <ArrowRight className="h-5 w-5" aria-hidden />
+              </Link>
+            </div>
+            <div className="home-media-wall">
+              <HomeMediaTile media={heroMedia[0]} priority="main" />
+              <div className="home-media-stack">
+                <HomeMediaTile media={heroMedia[1]} priority="small" />
+                <HomeMediaTile media={heroMedia[2]} priority="small" />
+              </div>
+            </div>
+            <div className="home-service-ticker mt-4 border border-[#ded8cc] bg-[#fbfaf7]" aria-label="Popular service areas">
+              <div className="home-service-track">
+                {[...movingServices, ...movingServices].map((service, index) => (
+                  <span key={`${service}-${index}`} className="home-service-chip">
+                    {service}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
               {[
-                ["Find", "Search by the service, location, budget or kind of help you need."],
-                ["Feel it out", "Look at portfolio media and community recommendations before reaching out."],
-                ["Take action", "Contact a business, post a job, recommend someone good, or suggest a correction."],
+                ["Find", "Search by service, budget or need."],
+                ["Compare", "Look through media and recommendations."],
+                ["Reach out", "Contact a business or post a job."],
               ].map(([title, text], index) => (
-                <div key={title} className="home-flow-step border-l-2 border-[#315c6b] pl-4" style={{ "--step-index": index } as React.CSSProperties}>
-                  <p className="font-semibold">{title}</p>
-                  <p className="mt-1 text-sm leading-6 text-[#6d675d]">{text}</p>
+                <div key={title} className="home-flow-step border-l-2 border-[#315c6b] pl-3" style={{ "--step-index": index } as React.CSSProperties}>
+                  <p className="text-sm font-semibold">{title}</p>
+                  <p className="mt-1 text-xs leading-5 text-[#6d675d]">{text}</p>
                 </div>
               ))}
             </div>
@@ -131,6 +157,84 @@ function getHomepageBusinesses(businesses: Business[]) {
 
     return a.name.localeCompare(b.name);
   }).slice(0, 6);
+}
+
+type HomeMedia = {
+  id: string;
+  businessName: string;
+  title: string;
+  imageUrl: string;
+  mimeType?: string;
+};
+
+function getHomepageMedia(businesses: Business[]): HomeMedia[] {
+  return getHomepageBusinesses(businesses)
+    .flatMap((business) => {
+      const portfolioMedia = business.portfolio.map((item) => ({
+        id: item.id,
+        businessName: business.name,
+        title: item.title,
+        imageUrl: item.imageUrl,
+        mimeType: item.mimeType,
+      }));
+
+      return portfolioMedia.length
+        ? portfolioMedia
+        : [{
+            id: `${business.id}-hero`,
+            businessName: business.name,
+            title: business.shortDescription,
+            imageUrl: business.heroImage,
+          }];
+    })
+    .filter((item) => Boolean(item.imageUrl))
+    .slice(0, 6);
+}
+
+function getMovingServices(businesses: Business[]) {
+  const serviceNames = getHomepageBusinesses(businesses)
+    .flatMap((business) => business.services)
+    .map(formatServiceSlug)
+    .filter(Boolean);
+
+  const uniqueServices = [...new Set(serviceNames)].slice(0, 8);
+  return uniqueServices.length ? uniqueServices : ["Photography", "Videography", "Fabrication", "Product design", "Creative jobs", "Community recommendations"];
+}
+
+function HomeMediaTile({ media, priority }: { media?: HomeMedia; priority: "main" | "small" }) {
+  const isVideo = media?.mimeType?.startsWith("video/");
+
+  return (
+    <figure className={`home-media-tile home-media-${priority}`}>
+      {media ? (
+        isVideo ? (
+          <video src={media.imageUrl} autoPlay muted loop playsInline className="h-full w-full object-cover" aria-label={`${media.businessName} portfolio video`} />
+        ) : (
+          <div className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url("${media.imageUrl}")` }} role="img" aria-label={`${media.businessName}: ${media.title}`} />
+        )
+      ) : (
+        <div className="home-media-fallback flex h-full w-full flex-col items-center justify-center gap-3 bg-[#f3eee5] p-6 text-center">
+          <Camera className="h-9 w-9 text-[#315c6b]" aria-hidden />
+          <p className="max-w-xs text-sm font-semibold">Portfolio images will appear here as the directory grows.</p>
+        </div>
+      )}
+      {media ? (
+        <figcaption className="home-media-caption">
+          <span>{media.businessName}</span>
+          <small>{media.title}</small>
+        </figcaption>
+      ) : null}
+    </figure>
+  );
+}
+
+function formatServiceSlug(slug: string) {
+  return slug
+    .replace(/^other-/, "")
+    .split("-")
+    .filter(Boolean)
+    .map((word) => word[0]?.toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 function Feature({ icon, title, text, index }: { icon: React.ReactNode; title: string; text: string; index: number }) {
