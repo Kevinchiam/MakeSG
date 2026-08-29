@@ -173,7 +173,7 @@ export async function getAdminBusiness(id: string) {
       location: business.address ?? "",
       minimumBudget: business.minimum_budget ?? 0,
       typicalLeadTime: business.typical_lead_time ?? 0,
-      businessType: business.business_type ?? "studio",
+      businessType: (business.business_type ?? "studio") as BusinessType,
       services: business.business_services?.flatMap((join) => {
         if (!join.services) return [];
         if (Array.isArray(join.services)) return join.services.map((service) => service.name);

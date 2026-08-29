@@ -1,11 +1,17 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { createSlug } from "@/lib/slug";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { AdminTrashKind } from "@/lib/admin-trash";
 import type { PublicationStatus } from "@/lib/types";
 import { services as knownServices } from "@/lib/data";
+import { businessSchema } from "@/lib/validation";
+
+type AdminBusinessUpdateResult =
+  | { ok: true }
+  | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 export async function updateBusinessPublicationStatus(businessId: string, status: PublicationStatus) {
   const supabase = createAdminClient();
@@ -208,6 +214,85 @@ export async function updateCreativeJobFromForm(jobId: string, formData: FormDat
   return { ok: true };
 }
 
+export async function updateBusinessFromAdmin(businessId: string, formData: FormData): Promise<AdminBusinessUpdateResult> {
+  const parsed = businessSchema.safeParse(formDataToBusinessInput(formData));
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Check the highlighted fields and try again.",
+      fieldErrors: fieldErrorsFromIssues(parsed.error.issues),
+    };
+  }
+
+  const data = parsed.data;
+  const supabase = createAdminClient();
+  const { data: business } = await supabase
+    .from("businesses")
+    .select("slug")
+    .eq("id", businessId)
+    .single();
+
+  const serviceSlugs = [...data.services];
+  if (data.otherService?.trim()) {
+    const otherSlug = `other-${createSlug(data.otherService)}`;
+    serviceSlugs.push(otherSlug);
+    await supabase.from("services").upsert(
+      {
+        slug: otherSlug,
+        name: data.otherService.trim(),
+        description: "Community-submitted service.",
+        service_group: "Other",
+      },
+      { onConflict: "slug" },
+    );
+  }
+
+  const { error: updateError } = await supabase
+    .from("businesses")
+    .update({
+      name: data.name,
+      short_description: data.shortDescription,
+      description: data.description,
+      website_url: data.websiteUrl ?? null,
+      public_email: data.publicEmail ?? null,
+      public_phone: data.phoneNumber ?? null,
+      address: data.location ?? null,
+      minimum_budget: data.minimumBudget ?? 0,
+      typical_lead_time: data.typicalLeadTime ?? 0,
+      business_type: data.businessType,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", businessId);
+
+  if (updateError) {
+    return { ok: false, message: updateError.message };
+  }
+
+  await supabase.from("business_services").delete().eq("business_id", businessId);
+  if (serviceSlugs.length > 0) {
+    await upsertKnownServices(supabase, serviceSlugs);
+    const { data: serviceRows } = await supabase.from("services").select("id, slug").in("slug", serviceSlugs);
+    const joins = (serviceRows ?? []).map((service) => ({
+      business_id: businessId,
+      service_id: service.id,
+    }));
+
+    if (joins.length > 0) {
+      const { error: joinError } = await supabase.from("business_services").insert(joins);
+      if (joinError) return { ok: false, message: joinError.message };
+    }
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/businesses");
+  revalidatePath(`/admin/businesses/${businessId}`);
+  revalidatePath("/businesses");
+  if (business?.slug) revalidatePath(`/businesses/${business.slug}`);
+
+  return { ok: true };
+}
+
 export async function deleteCreativeJobEntry(jobId: string) {
   const supabase = createAdminClient();
   const { error } = await supabase.from("creative_job_listings").delete().eq("id", jobId);
@@ -319,6 +404,33 @@ function nullableNumberFromFormData(value: FormDataEntryValue | null) {
   return text ? Number(text) : null;
 }
 
+function formDataToBusinessInput(formData: FormData) {
+  return {
+    name: stringFromFormData(formData.get("name")),
+    shortDescription: stringFromFormData(formData.get("shortDescription")),
+    description: stringFromFormData(formData.get("description")),
+    websiteUrl: stringFromFormData(formData.get("websiteUrl")),
+    publicEmail: stringFromFormData(formData.get("publicEmail")),
+    phoneNumber: stringFromFormData(formData.get("phoneNumber")),
+    location: stringFromFormData(formData.get("location")),
+    minimumBudget: stringFromFormData(formData.get("minimumBudget")),
+    typicalLeadTime: stringFromFormData(formData.get("typicalLeadTime")),
+    businessType: stringFromFormData(formData.get("businessType")),
+    services: formData.getAll("services").filter((value): value is string => typeof value === "string"),
+    otherService: stringFromFormData(formData.get("otherService")),
+  };
+}
+
+function fieldErrorsFromIssues(issues: z.ZodIssue[]) {
+  const errors: Record<string, string> = {};
+  for (const issue of issues) {
+    const field = String(issue.path[0] ?? "form");
+    errors[field] ??= issue.message;
+  }
+
+  return errors;
+}
+
 async function ensureServicesByName(supabase: ReturnType<typeof createAdminClient>, names: string[]) {
   const serviceRows = [];
 
@@ -348,6 +460,21 @@ async function ensureServicesByName(supabase: ReturnType<typeof createAdminClien
   }
 
   return serviceRows.map((service) => service.slug);
+}
+
+async function upsertKnownServices(supabase: ReturnType<typeof createAdminClient>, slugs: string[]) {
+  const selectedServices = knownServices
+    .filter((service) => slugs.includes(service.slug))
+    .map((service) => ({
+      slug: service.slug,
+      name: service.name,
+      description: service.description,
+      service_group: service.group,
+    }));
+
+  if (selectedServices.length > 0) {
+    await supabase.from("services").upsert(selectedServices, { onConflict: "slug" });
+  }
 }
 
 function revalidateBusinessAdminPaths(businessId: string) {
