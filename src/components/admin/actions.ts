@@ -7,11 +7,16 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { AdminTrashKind } from "@/lib/admin-trash";
 import type { PublicationStatus } from "@/lib/types";
 import { services as knownServices } from "@/lib/data";
+import { smartMediaCaption } from "@/lib/media-captions";
 import { businessSchema } from "@/lib/validation";
 
 type AdminBusinessUpdateResult =
   | { ok: true }
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
+
+type AdminBusinessMediaUpdateResult =
+  | { ok: true }
+  | { ok: false; message: string };
 
 export async function updateBusinessPublicationStatus(businessId: string, status: PublicationStatus) {
   const supabase = createAdminClient();
@@ -293,6 +298,135 @@ export async function updateBusinessFromAdmin(businessId: string, formData: Form
   return { ok: true };
 }
 
+export async function updateBusinessMediaFromAdmin(businessId: string, formData: FormData): Promise<AdminBusinessMediaUpdateResult> {
+  const supabase = createAdminClient();
+  const { data: business, error: businessError } = await supabase
+    .from("businesses")
+    .select("id, name, slug")
+    .eq("id", businessId)
+    .single();
+
+  if (businessError || !business) {
+    return { ok: false, message: "Could not find this business listing." };
+  }
+
+  const { data: currentItems, error: itemsError } = await supabase
+    .from("portfolio_items")
+    .select("id, image_url, storage_path, size_bytes")
+    .eq("business_id", businessId);
+
+  if (itemsError || !currentItems) {
+    return { ok: false, message: "Could not load the current portfolio uploads." };
+  }
+
+  const itemRows = currentItems as Array<{ id: string; image_url: string | null; storage_path: string | null; size_bytes: number | null }>;
+  const deletedIds = new Set(formData.getAll("deletedPortfolioIds").filter((value): value is string => typeof value === "string"));
+  const newFiles = validPortfolioFiles(formData.getAll("newPortfolioFiles"));
+  const newCaptions = formData.getAll("newPortfolioCaptions").map((value) => stringFromFormData(value).trim());
+  const keptSizeBytes = itemRows
+    .filter((item) => !deletedIds.has(item.id))
+    .reduce((total, item) => total + (item.size_bytes ?? 0), 0);
+  const newSizeBytes = newFiles.reduce((total, file) => total + file.size, 0);
+
+  if ((keptSizeBytes + newSizeBytes) / 1024 / 1024 > 10) {
+    return { ok: false, message: "Portfolio uploads must be 10MB total or smaller. Remove a file or upload smaller files." };
+  }
+
+  const captionUpdates = formData.getAll("portfolioCaptionUpdates").filter((value): value is string => typeof value === "string");
+  for (const update of captionUpdates) {
+    const [id, ...captionParts] = update.split("::");
+    if (!id || deletedIds.has(id)) continue;
+    const caption = captionParts.join("::").trim();
+    await supabase
+      .from("portfolio_items")
+      .update({
+        title: smartMediaCaption({ caption, fallback: `${business.name} portfolio` }),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("business_id", businessId);
+  }
+
+  if (deletedIds.size > 0) {
+    const rowsToDelete = itemRows.filter((item) => deletedIds.has(item.id));
+    const storagePaths = rowsToDelete
+      .map((item) => item.storage_path ?? storagePathFromPublicUrl(item.image_url))
+      .filter((path): path is string => Boolean(path));
+
+    if (storagePaths.length > 0) {
+      await supabase.storage.from("business-portfolios").remove(storagePaths);
+    }
+
+    await supabase.from("portfolio_items").delete().eq("business_id", businessId).in("id", Array.from(deletedIds));
+  }
+
+  const remainingCount = itemRows.filter((item) => !deletedIds.has(item.id)).length;
+  const uploadedItems = [];
+  for (const [index, file] of newFiles.entries()) {
+    const caption = smartMediaCaption({
+      caption: newCaptions[index],
+      fileName: file.name,
+      fallback: `${business.name} portfolio`,
+      mediaKind: file.type.startsWith("video/") ? "video" : "photo",
+    });
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload";
+    const path = `${businessId}/admin-${Date.now()}-${index}.${extension}`;
+    const { error: uploadError } = await supabase.storage.from("business-portfolios").upload(path, file, {
+      contentType: file.type,
+      upsert: false,
+    });
+
+    if (uploadError) {
+      return { ok: false, message: uploadError.message };
+    }
+
+    const { data: publicUrlData } = supabase.storage.from("business-portfolios").getPublicUrl(path);
+    uploadedItems.push({
+      business_id: businessId,
+      title: caption,
+      description: "",
+      image_url: publicUrlData.publicUrl,
+      tags: [file.type],
+      file_name: file.name,
+      storage_path: path,
+      mime_type: file.type,
+      size_bytes: file.size,
+      sort_order: remainingCount + index,
+    });
+  }
+
+  if (uploadedItems.length > 0) {
+    const { error: insertError } = await supabase.from("portfolio_items").insert(uploadedItems);
+    if (insertError) {
+      return { ok: false, message: insertError.message };
+    }
+  }
+
+  const { data: images } = await supabase
+    .from("portfolio_items")
+    .select("image_url, tags, mime_type")
+    .eq("business_id", businessId)
+    .order("sort_order", { ascending: true })
+    .limit(20);
+  const heroImage = (images ?? []).find((item) => {
+    const mimeType = item.mime_type ?? (Array.isArray(item.tags) ? item.tags[0] : "");
+    return mimeType?.startsWith("image/");
+  })?.image_url ?? null;
+
+  await supabase
+    .from("businesses")
+    .update({ hero_image_url: heroImage, updated_at: new Date().toISOString() })
+    .eq("id", businessId);
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/businesses");
+  revalidatePath(`/admin/businesses/${businessId}`);
+  revalidatePath("/businesses");
+  if (business.slug) revalidatePath(`/businesses/${business.slug}`);
+
+  return { ok: true };
+}
+
 export async function deleteCreativeJobEntry(jobId: string) {
   const supabase = createAdminClient();
   const { error } = await supabase.from("creative_job_listings").delete().eq("id", jobId);
@@ -402,6 +536,19 @@ function nullableStringFromFormData(value: FormDataEntryValue | null) {
 function nullableNumberFromFormData(value: FormDataEntryValue | null) {
   const text = stringFromFormData(value).trim();
   return text ? Number(text) : null;
+}
+
+function validPortfolioFiles(values: FormDataEntryValue[]) {
+  const allowed = ["image/jpeg", "image/png", "image/webp", "video/mp4", "video/quicktime", "video/webm"];
+  return values.filter((value): value is File => value instanceof File && value.size > 0 && allowed.includes(value.type));
+}
+
+function storagePathFromPublicUrl(url: string | null) {
+  if (!url) return null;
+  const marker = "/object/public/business-portfolios/";
+  const index = url.indexOf(marker);
+  if (index === -1) return null;
+  return decodeURIComponent(url.slice(index + marker.length));
 }
 
 function formDataToBusinessInput(formData: FormData) {

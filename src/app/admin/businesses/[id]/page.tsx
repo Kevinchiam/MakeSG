@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { AdminBusinessEditForm } from "@/components/admin/admin-business-edit-form";
+import { AdminBusinessMediaForm } from "@/components/admin/admin-business-media-form";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { AdminStatusControls } from "@/components/admin/admin-status-controls";
 import { ModerationSummary } from "@/components/admin/moderation-summary";
@@ -123,6 +124,7 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
           </div>
         </details>
         <AdminBusinessEditForm business={business} />
+        <AdminBusinessMediaForm businessId={business.id} portfolio={business.portfolio} />
         <AdminStatusControls businessId={business.id} initialStatus={business.publicationStatus} hasPendingRevision={Boolean(business.pendingRevision)} />
       </div>
     </section>
