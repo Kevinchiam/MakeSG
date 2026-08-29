@@ -27,6 +27,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Changed upload helper copy so contributors know blank captions can be filled automatically.
 - Changed the business directory filter from “Verified only” to “Recommended only” and wired it to approved recommendation counts.
 - Changed edit, submission, recommendation, change-request, restore, and admin review feedback notices to scroll and focus after they render.
+- Changed home and About rotating media captions so labels appear only on hover or keyboard focus, and media tiles now link to the related business profile.
 
 ### Fixed
 - Fixed blank media captions by generating simple fallback captions before records are saved.

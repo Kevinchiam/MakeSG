@@ -162,6 +162,7 @@ function getHomepageBusinesses(businesses: Business[]) {
 type HomeMedia = {
   id: string;
   businessName: string;
+  businessSlug: string;
   title: string;
   imageUrl: string;
   mimeType?: string;
@@ -173,6 +174,7 @@ function getHomepageMedia(businesses: Business[]): HomeMedia[] {
       const portfolioMedia = business.portfolio.map((item) => ({
         id: item.id,
         businessName: business.name,
+        businessSlug: business.slug,
         title: item.title,
         imageUrl: item.imageUrl,
         mimeType: item.mimeType,
@@ -183,6 +185,7 @@ function getHomepageMedia(businesses: Business[]): HomeMedia[] {
         : [{
             id: `${business.id}-hero`,
             businessName: business.name,
+            businessSlug: business.slug,
             title: business.shortDescription,
             imageUrl: business.heroImage,
           }];
@@ -205,27 +208,33 @@ function getMovingServices(businesses: Business[]) {
 function HomeMediaTile({ media, priority }: { media?: HomeMedia; priority: "main" | "small" }) {
   const isVideo = media?.mimeType?.startsWith("video/");
 
-  return (
-    <figure className={`home-media-tile home-media-${priority}`}>
-      {media ? (
-        isVideo ? (
-          <video src={media.imageUrl} autoPlay muted loop playsInline className="h-full w-full object-cover" aria-label={`${media.businessName} portfolio video`} />
-        ) : (
-          <div className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url("${media.imageUrl}")` }} role="img" aria-label={`${media.businessName}: ${media.title}`} />
-        )
-      ) : (
+  if (!media) {
+    return (
+      <div className={`home-media-tile home-media-${priority}`}>
         <div className="home-media-fallback flex h-full w-full flex-col items-center justify-center gap-3 bg-[#f3eee5] p-6 text-center">
           <Camera className="h-9 w-9 text-[#315c6b]" aria-hidden />
           <p className="max-w-xs text-sm font-semibold">Portfolio images will appear here as the directory grows.</p>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={`/businesses/${media.businessSlug}`}
+      className={`home-media-tile home-media-${priority}`}
+      aria-label={`View ${media.businessName} listing. ${media.title}`}
+    >
+      {isVideo ? (
+        <video src={media.imageUrl} autoPlay muted loop playsInline className="h-full w-full object-cover" aria-label={`${media.businessName} portfolio video`} />
+      ) : (
+        <div className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url("${media.imageUrl}")` }} role="img" aria-label={`${media.businessName}: ${media.title}`} />
       )}
-      {media ? (
-        <figcaption className="home-media-caption">
-          <span>{media.businessName}</span>
-          <small>{media.title}</small>
-        </figcaption>
-      ) : null}
-    </figure>
+      <span className="home-media-caption" aria-hidden>
+        <span>{media.businessName}</span>
+        <small>{media.title}</small>
+      </span>
+    </Link>
   );
 }
 

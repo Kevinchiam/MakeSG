@@ -160,7 +160,7 @@ Most mutations use server actions:
 ### Public Home
 Status: Completed
 
-Description: Landing/search entry for MakeSG with editorial visual direction, CSS-only motion, live directory counts, current platform feature copy, rotating portfolio media from published businesses, and up to six homepage business highlights ranked by recommendations, featured status, and latest updates.
+Description: Landing/search entry for MakeSG with editorial visual direction, CSS-only motion, live directory counts, current platform feature copy, rotating portfolio media from published businesses, clickable media tiles that open the related business profile, hover/focus-only media captions, and up to six homepage business highlights ranked by recommendations, featured status, and latest updates.
 
 Relevant files:
 - `src/app/page.tsx`
@@ -172,6 +172,20 @@ Future improvements:
 - Add richer dynamic previews from creative jobs and recommendations.
 - Add analytics to understand which rotating media drives profile visits.
 - Track search conversion.
+
+### About Page
+Status: Completed
+
+Description: Public explanation of MakeSG with friendlier copy, platform value props, rotating live portfolio media, and clickable media tiles that reveal captions on hover or keyboard focus before linking to the related business profile.
+
+Relevant files:
+- `src/app/about/page.tsx`
+- `src/app/globals.css`
+- `src/lib/public-businesses.ts`
+
+Future improvements:
+- Add more founder/platform story content once MakeSG has real user learnings.
+- Add testimonials when enough approved recommendations are available.
 
 ### Business Directory
 Status: Completed

@@ -10,6 +10,8 @@ Later in the session, the home and About pages were given a more visual editoria
 
 Latest update: the admin dashboard and review queues were tightened so admin work is easier to understand. The dashboard now separates active review queues from maintenance, business and creative-job lists prioritise pending/high-risk items, business verification wording was removed from admin queues, the business Feature button now saves to Supabase, and admin creative-job edits now show visible success/error feedback.
 
+Final update: home and About rotating media tiles now behave as business-profile links. Captions and labels are hidden by default and reveal only on hover or keyboard focus, keeping the imagery cleaner while preserving accessible link labels.
+
 ## Objectives Completed
 
 - [x] Added smart fallback captions for uncaptained uploads.
@@ -21,6 +23,7 @@ Latest update: the admin dashboard and review queues were tightened so admin wor
 - [x] Added seven-day trash retention cleanup for database rows and related storage files.
 - [x] Added Supabase migration indexes to support trash cleanup queries.
 - [x] Added rotating live portfolio media to the home and About pages.
+- [x] Made home and About media tiles clickable and changed captions to hover/focus reveal only.
 - [x] Reworked admin home into active review queues plus maintenance.
 - [x] Prioritised pending and high-risk items in admin business and creative-job queues.
 - [x] Removed outdated verification wording from admin business list cards.

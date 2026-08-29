@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { BriefcaseBusiness, Camera, HeartHandshake, SearchCheck } from "lucide-react";
 import { getPublishedBusinesses } from "@/lib/public-businesses";
 import type { Business } from "@/lib/types";
@@ -71,6 +72,7 @@ type AboutMedia = {
   id: string;
   title: string;
   businessName: string;
+  businessSlug: string;
   imageUrl: string;
   mimeType?: string;
 };
@@ -82,6 +84,7 @@ function getAboutMedia(businesses: Business[]): AboutMedia[] {
         id: item.id,
         title: item.title,
         businessName: business.name,
+        businessSlug: business.slug,
         imageUrl: item.imageUrl,
         mimeType: item.mimeType,
       }));
@@ -92,6 +95,7 @@ function getAboutMedia(businesses: Business[]): AboutMedia[] {
             id: `${business.id}-hero`,
             title: business.shortDescription,
             businessName: business.name,
+            businessSlug: business.slug,
             imageUrl: business.heroImage,
         }];
     })
@@ -103,26 +107,32 @@ function getAboutMedia(businesses: Business[]): AboutMedia[] {
 function AboutMediaTile({ media, className }: { media?: AboutMedia; className?: string }) {
   const isVideo = media?.mimeType?.startsWith("video/");
 
-  return (
-    <figure className={`about-media-tile relative overflow-hidden border border-[#ded8cc] bg-[#f3eee5] ${className ?? ""}`}>
-      {media ? (
-        isVideo ? (
-          <video src={media.imageUrl} autoPlay muted loop playsInline className="h-full w-full object-cover" aria-label={`${media.businessName} portfolio video`} />
-        ) : (
-          <div className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url("${media.imageUrl}")` }} role="img" aria-label={`${media.businessName}: ${media.title}`} />
-        )
-      ) : (
+  if (!media) {
+    return (
+      <div className={`about-media-tile relative overflow-hidden border border-[#ded8cc] bg-[#f3eee5] ${className ?? ""}`}>
         <div className="flex h-full min-h-[160px] items-center justify-center p-6 text-center text-sm font-semibold text-[#315c6b]">
           Portfolio media appears here as listings grow.
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={`/businesses/${media.businessSlug}`}
+      className={`about-media-tile relative overflow-hidden border border-[#ded8cc] bg-[#f3eee5] ${className ?? ""}`}
+      aria-label={`View ${media.businessName} listing. ${media.title}`}
+    >
+      {isVideo ? (
+        <video src={media.imageUrl} autoPlay muted loop playsInline className="h-full w-full object-cover" aria-label={`${media.businessName} portfolio video`} />
+      ) : (
+        <div className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url("${media.imageUrl}")` }} role="img" aria-label={`${media.businessName}: ${media.title}`} />
       )}
-      {media ? (
-        <figcaption className="about-media-caption">
-          <span>{media.businessName}</span>
-          <small>{media.title}</small>
-        </figcaption>
-      ) : null}
-    </figure>
+      <span className="about-media-caption" aria-hidden>
+        <span>{media.businessName}</span>
+        <small>{media.title}</small>
+      </span>
+    </Link>
   );
 }
 

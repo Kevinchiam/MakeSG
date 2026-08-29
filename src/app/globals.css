@@ -256,18 +256,26 @@ body > footer a:hover {
 
 .home-media-tile {
   position: relative;
+  display: block;
   min-height: 0;
   overflow: hidden;
   border: 1px solid var(--line);
   background: var(--surface-warm);
+  color: inherit;
+  text-decoration: none;
 }
 
 .home-media-tile > :is(div, video) {
   transition: transform 700ms ease;
 }
 
-.home-media-tile:hover > :is(div, video) {
+.home-media-tile:is(:hover, :focus-visible) > :is(div, video) {
   transform: scale(1.035);
+}
+
+.home-media-tile:focus-visible {
+  outline: 2px solid var(--steel);
+  outline-offset: 3px;
 }
 
 .home-media-main {
@@ -289,7 +297,18 @@ body > footer a:hover {
   border: 1px solid rgba(251, 250, 247, 0.62);
   background: rgba(33, 31, 27, 0.72);
   color: #ffffff;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
   backdrop-filter: blur(8px);
+}
+
+.home-media-tile:is(:hover, :focus-visible) .home-media-caption {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .home-media-caption span {
@@ -457,12 +476,23 @@ body > footer a:hover {
   z-index: 1;
 }
 
+.about-media-tile {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
 .about-media-tile > :is(div, video) {
   transition: transform 760ms ease;
 }
 
-.about-media-tile:hover > :is(div, video) {
+.about-media-tile:is(:hover, :focus-visible) > :is(div, video) {
   transform: scale(1.035);
+}
+
+.about-media-tile:focus-visible {
+  outline: 2px solid var(--steel);
+  outline-offset: 3px;
 }
 
 .about-media-caption {
@@ -476,7 +506,18 @@ body > footer a:hover {
   border: 1px solid rgba(251, 250, 247, 0.62);
   background: rgba(33, 31, 27, 0.72);
   color: #ffffff;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
   backdrop-filter: blur(8px);
+}
+
+.about-media-tile:is(:hover, :focus-visible) .about-media-caption {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .about-media-caption span,
