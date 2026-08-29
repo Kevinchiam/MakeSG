@@ -15,7 +15,7 @@ export default async function AdminChangeRequestsPage() {
     <section className="container-shell py-12">
       <AdminPageHeader
         title="Business change requests"
-        description="Review suggested corrections from the public directory. If the request is valid, open the business record and make the change manually."
+        description="Review suggested corrections from the public directory. If the request is valid, open the business record, make the edit, then mark the request reviewed."
       />
       <p className="mt-4 text-sm font-semibold text-[#536343]">{openCount} open request{openCount === 1 ? "" : "s"}</p>
       <div className="mt-8 grid gap-4">

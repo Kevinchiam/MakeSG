@@ -123,9 +123,9 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
             </div>
           </div>
         </details>
+        <AdminStatusControls businessId={business.id} initialStatus={business.publicationStatus} initialFeatured={business.featured} hasPendingRevision={Boolean(business.pendingRevision)} />
         <AdminBusinessEditForm business={business} />
         <AdminBusinessMediaForm businessId={business.id} portfolio={business.portfolio} />
-        <AdminStatusControls businessId={business.id} initialStatus={business.publicationStatus} hasPendingRevision={Boolean(business.pendingRevision)} />
       </div>
     </section>
   );

@@ -8,6 +8,8 @@ Today’s work made MakeSG feel more forgiving and easier to maintain. Uploaded 
 
 Later in the session, the home and About pages were given a more visual editorial treatment using approved business portfolio media. That media now rotates from the database on each server render so refreshes can surface different published work.
 
+Latest update: the admin dashboard and review queues were tightened so admin work is easier to understand. The dashboard now separates active review queues from maintenance, business and creative-job lists prioritise pending/high-risk items, business verification wording was removed from admin queues, the business Feature button now saves to Supabase, and admin creative-job edits now show visible success/error feedback.
+
 ## Objectives Completed
 
 - [x] Added smart fallback captions for uncaptained uploads.
@@ -19,6 +21,11 @@ Later in the session, the home and About pages were given a more visual editoria
 - [x] Added seven-day trash retention cleanup for database rows and related storage files.
 - [x] Added Supabase migration indexes to support trash cleanup queries.
 - [x] Added rotating live portfolio media to the home and About pages.
+- [x] Reworked admin home into active review queues plus maintenance.
+- [x] Prioritised pending and high-risk items in admin business and creative-job queues.
+- [x] Removed outdated verification wording from admin business list cards.
+- [x] Fixed the admin business Feature button so it persists to Supabase.
+- [x] Added visible save/error feedback to admin creative-job editing.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 
@@ -93,10 +100,25 @@ Validation helper text now uses “businesses” consistently and says “review
 Recommendation lookup copy now says listings are sent for review.
 
 ### `src/app/admin/page.tsx`
-Admin home now includes trash-bin count and calls trash cleanup so expired items can be purged.
+Admin home now includes trash-bin count, calls trash cleanup so expired items can be purged, and is organised into active review queues plus maintenance items.
+
+### `src/app/admin/businesses/page.tsx`
+Business review queue now prioritises pending edits, pending listings, and high-risk items. It uses plain labels such as Pending edits, Pending review, Published, and Unpublished, and no longer shows the unused verification label.
+
+### `src/app/admin/creative-jobs/page.tsx`
+Creative job review queue now prioritises pending/high-risk jobs, shows clearer queue summary badges, and uses “creatives” instead of “clients.”
+
+### `src/app/admin/recommendations/page.tsx`
+Recommendation review now sorts pending/high-risk submissions first and includes a clear empty state.
+
+### `src/app/admin/businesses/[id]/page.tsx`
+Business moderation controls now appear before manual edit forms, keeping approve/reject/feature decisions easier to find.
+
+### `src/components/admin/admin-creative-job-edit-form.tsx`
+New admin creative-job edit form that preserves the previous editing fields while adding success/error feedback after saves.
 
 ### `src/lib/business-submissions.ts`
-Active admin business queues now exclude rejected listings.
+Active admin business queues now exclude rejected listings and expose featured state and timestamps for better admin sorting and labels.
 
 ### `src/lib/business-recommendations.ts`
 Active admin recommendation queues now exclude rejected recommendations.
@@ -108,16 +130,16 @@ Active admin change-request queues now exclude dismissed requests.
 Active admin creative job queues now exclude archived jobs; archived status label changed to “In trash.”
 
 ### `src/components/admin/admin-status-controls.tsx`
-Reject feedback now tells admins that rejected items move to the trash bin for seven days.
+Reject feedback now tells admins that rejected items move to the trash bin for seven days. Business feature/unfeature controls now persist to Supabase instead of only changing local screen text.
 
 ### `src/components/admin/business-change-request-controls.tsx`
 Dismiss feedback now tells admins that dismissed requests move to the trash bin for seven days.
 
 ### `src/components/admin/actions.ts`
-Admin actions now revalidate `/admin/trash` when moderation, deletion, change-request status, or trash restore changes.
+Admin actions now revalidate `/admin/trash` when moderation, deletion, change-request status, or trash restore changes. Business feature/unfeature now revalidates public highlights and directory pages.
 
 ### `src/app/admin/creative-jobs/[id]/page.tsx`
-Admin creative job archived action is now labelled “Move to trash.”
+Admin creative job archived action is now labelled “Move to trash,” and the edit form now shows visible save/error feedback.
 
 ### `PROJECT_CONTEXT.md`
 Updated to document smart captions, admin trash, trash cleanup limits, revised copy direction, schema implications, and future scheduled cleanup work.
@@ -140,6 +162,7 @@ Added the 2026-08-29 changelog entry.
 ## API Changes
 
 - Upload-related server actions now call `smartMediaCaption()` before inserting media rows.
+- Admin business feature/unfeature now persists to Supabase and revalidates public pages that use featured listings.
 - `getAdminTrashItems({ purgeExpired })` provides admin trash listing and cleanup.
 - `restoreTrashItem(kind, id)` restores trash items to the appropriate review queue.
 - Admin dashboard and trash page trigger expired-trash cleanup.
@@ -151,6 +174,9 @@ Added the 2026-08-29 changelog entry.
 - Added restore buttons to `/admin/trash`.
 - Added a Trash bin card on admin home.
 - Added rotating database-backed portfolio media to the home and About pages.
+- Reworked admin home around active review work, high-risk triage, and maintenance.
+- Improved business, creative-job, and recommendation queue sorting and empty states.
+- Added visible save feedback to admin creative-job editing.
 - Rejected/dismissed items no longer clutter normal review queues.
 - Upload helper text now reassures users that blank captions are fine.
 - Major public-facing copy was softened across home, About, business submission, creative job posting, recommendation, and private management pages.
@@ -161,6 +187,8 @@ Added the 2026-08-29 changelog entry.
 - Rejected/dismissed items no longer stay mixed into active admin queues.
 - Admin reject/dismiss feedback now explains where items went.
 - Admins can now restore trash items before the seven-day cleanup window ends.
+- Admin business Feature no longer creates a false local-only status.
+- Admin creative-job saves no longer complete silently with no confirmation.
 
 ## Bugs Remaining
 
@@ -175,6 +203,7 @@ Added the 2026-08-29 changelog entry.
 - Used existing status fields as trash states instead of adding new trash tables, reducing schema churn.
 - Performed storage cleanup before deleting expired rows so orphaned media is less likely.
 - Kept admin override intact: trash is a retention layer, not a replacement for admin decision-making.
+- Persisted Feature as a true boolean setting because homepage highlights already use the `featured` column.
 
 ## Lessons Learned
 
@@ -200,6 +229,7 @@ Added the 2026-08-29 changelog entry.
 
 - Move trash cleanup into a scheduled Vercel Cron route or Supabase scheduled function.
 - Add an `admin_events` audit table for moderation decisions, trash moves, restores, and purges.
+- Add queue filters/search and bulk actions once admin volume grows.
 - Generate typed Supabase schemas to reduce casts in admin helpers.
 - Extract a shared media-upload mapping utility for business, recommendation, and creative job flows.
 

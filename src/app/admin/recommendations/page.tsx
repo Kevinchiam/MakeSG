@@ -5,11 +5,14 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { AdminStatusControls } from "@/components/admin/admin-status-controls";
 import { ModerationSummary } from "@/components/admin/moderation-summary";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getAdminBusinessRecommendations } from "@/lib/business-recommendations";
 
 export default async function AdminRecommendationsPage() {
   const recommendations = await getAdminBusinessRecommendations();
+  const sortedRecommendations = [...recommendations].sort((a, b) => reviewPriority(b) - reviewPriority(a));
   const pendingCount = recommendations.filter((recommendation) => recommendation.status === "pending").length;
+  const highRiskCount = recommendations.filter((recommendation) => recommendation.moderationRisk === "high").length;
 
   return (
     <section className="container-shell py-12">
@@ -18,10 +21,14 @@ export default async function AdminRecommendationsPage() {
         title="Business recommendations"
         description="Review word-of-mouth submissions before they appear publicly. Recommendations are not ratings; they are moderated trust signals tied to first-hand experience."
       />
-      <p className="mt-4 text-sm font-semibold text-[#536343]">{pendingCount} pending recommendation{pendingCount === 1 ? "" : "s"}</p>
+      <div className="mt-6 flex flex-wrap gap-3 text-sm font-semibold">
+        <Badge className={pendingCount ? "border-[#9c4f35] bg-[#fffaf5] text-[#9c4f35]" : undefined}>{pendingCount} pending</Badge>
+        <Badge className={highRiskCount ? "border-[#9c4f35] bg-[#fffaf5] text-[#9c4f35]" : undefined}>{highRiskCount} high-risk</Badge>
+        <Badge>{recommendations.length} active submissions</Badge>
+      </div>
 
       <div className="mt-8 grid gap-4">
-        {recommendations.map((recommendation) => (
+        {sortedRecommendations.length ? sortedRecommendations.map((recommendation) => (
           <article key={recommendation.id} className="grid gap-4 border border-[#ded8cc] bg-white p-5 lg:grid-cols-[1fr_280px]">
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -36,7 +43,7 @@ export default async function AdminRecommendationsPage() {
                   <Rating label="Collaboration" value={recommendation.collaborationRating} />
                 </dl>
               ) : null}
-              <p className="mt-3 text-sm leading-6 text-[#4f493f]">“{recommendation.comment}”</p>
+              <blockquote className="mt-3 border-l-2 border-[#ded8cc] pl-4 text-sm leading-6 text-[#4f493f]">{recommendation.comment}</blockquote>
               <div className="mt-4">
                 <ModerationSummary
                   decision={recommendation.moderationDecision}
@@ -86,10 +93,20 @@ export default async function AdminRecommendationsPage() {
               approvedStatus="published"
             />
           </article>
-        ))}
+        )) : (
+          <EmptyState title="No recommendations to review" description="New business recommendations will appear here before they are shown publicly." />
+        )}
       </div>
     </section>
   );
+}
+
+type AdminRecommendationListItem = Awaited<ReturnType<typeof getAdminBusinessRecommendations>>[number];
+
+function reviewPriority(recommendation: AdminRecommendationListItem) {
+  return (recommendation.moderationRisk === "high" ? 10 : 0)
+    + (recommendation.status === "pending" ? 8 : 0)
+    + (recommendation.status === "approved" ? 1 : 0);
 }
 
 function Rating({ label, value }: { label: string; value?: number }) {

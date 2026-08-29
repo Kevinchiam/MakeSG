@@ -352,7 +352,7 @@ Future improvements:
 ### Admin Dashboard
 Status: Completed
 
-Description: Admin home with links to business moderation, creative jobs, recommendations, services, reports, and the trash bin. It highlights pending queues, high-risk automated triage items, and trashed items waiting for seven-day cleanup.
+Description: Admin home organised as a review command centre. Active work is grouped into business listings, creative jobs, recommendations, and change requests, with high-risk automated triage flags called out separately. Maintenance items such as trash, services, and reports are visually separated so admins know what needs a decision now versus what is upkeep or future functionality.
 
 Relevant files:
 - `src/app/admin/page.tsx`
@@ -362,12 +362,13 @@ Relevant files:
 - `src/lib/admin-trash.ts`
 
 Future improvements:
-- Add activity feed.
+- Add activity feed and moderation history.
+- Add one-click filtering by high-risk items.
 
 ### Admin Business Moderation
 Status: Completed
 
-Description: Admin can review, approve, reject, feature, unpublish, and delete business listings. New listings and pending edits show automated triage risk, reason, and signals to streamline review while preserving admin override. Rejected listings and rejected pending edits move out of the main queues into the admin trash bin for seven days before cleanup.
+Description: Admin can review, approve, reject, feature/unfeature, unpublish, delete, and directly edit business listings and portfolio media. New listings and pending edits are prioritised in the queue, show plain-language review labels, and include automated triage risk, reason, and signals to streamline review while preserving admin override. Rejected listings and rejected pending edits move out of the main queues into the admin trash bin for seven days before cleanup.
 
 Relevant files:
 - `src/app/admin/businesses/page.tsx`
@@ -382,11 +383,12 @@ Future improvements:
 ### Admin Creative Job Management
 Status: Completed
 
-Description: Admin can view, edit, status-change, move to trash, and delete creative jobs. Creative jobs flagged by automated triage can be held in `pending_review` until an admin opens or moves them to trash.
+Description: Admin can view, edit, status-change, move to trash, and delete creative jobs. Creative jobs flagged by automated triage can be held in `pending_review` until an admin opens or moves them to trash. Admin creative-job edits now show inline success/error feedback so saves are visible.
 
 Relevant files:
 - `src/app/admin/creative-jobs/page.tsx`
 - `src/app/admin/creative-jobs/[id]/page.tsx`
+- `src/components/admin/admin-creative-job-edit-form.tsx`
 - `src/components/admin/admin-creative-job-delete-button.tsx`
 - `src/components/admin/moderation-summary.tsx`
 - `src/components/admin/actions.ts`
@@ -557,7 +559,8 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - `FileUploader`: Shared media/reference uploader with previews and client-side image optimisation.
 - `AdminPageHeader`: Admin page heading wrapper.
 - `ModerationSummary`: Shared admin triage panel showing automated decision, risk, reason, and signals.
-- `AdminStatusControls`: Business moderation buttons.
+- `AdminStatusControls`: Business and recommendation moderation buttons, including persisted business feature/unfeature controls.
+- `AdminCreativeJobEditForm`: Admin creative-job editing form with visible save/error feedback.
 - `AdminCreativeJobDeleteButton`: Admin deletion confirmation for creative jobs.
 - `Admin Trash Page`: Admin-only queue for rejected/dismissed/archived items waiting for seven-day cleanup.
 

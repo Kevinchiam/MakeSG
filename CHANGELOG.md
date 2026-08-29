@@ -13,9 +13,14 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Added seven-day trash retention cleanup that permanently deletes expired trash rows and associated Supabase Storage objects when admin trash cleanup runs.
 - Added trash-retention indexes in `supabase/migrations/0015_admin_trash_retention.sql`.
 - Added database-backed rotating portfolio media to the home and About pages so refreshes can show different published work.
+- Added visible success/error feedback to admin creative-job editing.
 
 ### Changed
 - Changed homepage, About, business onboarding, creative job posting, recommendation, management, and moderation copy to feel warmer, clearer, and less formal.
+- Changed admin home into a clearer review command centre with active review queues separated from maintenance items.
+- Changed admin business and creative-job queues to prioritise pending and high-risk items.
+- Changed admin recommendation review to prioritise pending and high-risk submissions and show an empty state.
+- Changed business moderation controls to appear before admin edit forms on business detail pages.
 - Changed admin queues so rejected/dismissed/archived trash items are hidden from active review queues.
 - Changed reject/dismiss admin feedback to tell admins that items move to trash for seven days.
 - Changed creative job archive wording to “Move to trash” and archived status display to “In trash.”
@@ -27,9 +32,12 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Fixed blank media captions by generating simple fallback captions before records are saved.
 - Fixed active admin queue clutter by moving rejected/dismissed items into a dedicated trash view.
 - Fixed save confirmations that could appear above the current scroll position after editing listing details or portfolio media.
+- Fixed the admin business Feature button so it now persists to Supabase and revalidates public highlight pages.
+- Fixed admin creative-job saves that previously completed without visible confirmation.
 
 ### Removed
 - Removed bundled demo business listings and demo recommendation listings from public and admin data flows.
+- Removed outdated business verification wording from admin business queue cards.
 
 ### Known Issues
 - Trash cleanup is triggered from admin dashboard/trash access, not from an independent scheduled job yet.

@@ -32,7 +32,34 @@ export async function updateBusinessPublicationStatus(businessId: string, status
   revalidatePath("/admin/businesses");
   revalidatePath(`/admin/businesses/${businessId}`);
   revalidatePath("/admin/trash");
+  revalidatePath("/");
   revalidatePath("/businesses");
+  return { ok: true };
+}
+
+export async function updateBusinessFeaturedStatus(businessId: string, featured: boolean) {
+  const supabase = createAdminClient();
+  const { data: business } = await supabase
+    .from("businesses")
+    .select("slug")
+    .eq("id", businessId)
+    .single();
+
+  const { error } = await supabase
+    .from("businesses")
+    .update({ featured, updated_at: new Date().toISOString() })
+    .eq("id", businessId);
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/admin/businesses");
+  revalidatePath(`/admin/businesses/${businessId}`);
+  revalidatePath("/businesses");
+  if (business?.slug) revalidatePath(`/businesses/${business.slug}`);
   return { ok: true };
 }
 
@@ -159,6 +186,7 @@ export async function deleteBusinessEntry(businessId: string) {
   }
 
   revalidatePath("/admin/businesses");
+  revalidatePath("/");
   revalidatePath("/businesses");
   return { ok: true };
 }
@@ -180,6 +208,8 @@ export async function updateBusinessRecommendationStatus(recommendationId: strin
   revalidatePath("/admin");
   revalidatePath("/admin/recommendations");
   revalidatePath("/admin/trash");
+  revalidatePath("/");
+  revalidatePath("/businesses");
   if (business?.slug) revalidatePath(`/businesses/${business.slug}`);
   return { ok: true };
 }
@@ -625,6 +655,7 @@ async function upsertKnownServices(supabase: ReturnType<typeof createAdminClient
 }
 
 function revalidateBusinessAdminPaths(businessId: string) {
+  revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath("/admin/businesses");
   revalidatePath(`/admin/businesses/${businessId}`);
