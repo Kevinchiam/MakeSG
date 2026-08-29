@@ -9,6 +9,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 ### Added
 - Added smart fallback captions for uncaptained business portfolio, creative job reference, and business recommendation media uploads.
 - Added an admin-only trash bin at `/admin/trash` for rejected business listings, rejected business edits, rejected recommendations, dismissed change requests, and creative jobs moved to trash.
+- Added restore controls in the admin trash bin so admins can return trashed items to the right review queue before deletion.
 - Added seven-day trash retention cleanup that permanently deletes expired trash rows and associated Supabase Storage objects when admin trash cleanup runs.
 - Added trash-retention indexes in `supabase/migrations/0015_admin_trash_retention.sql`.
 

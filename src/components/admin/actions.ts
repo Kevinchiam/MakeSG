@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createSlug } from "@/lib/slug";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { AdminTrashKind } from "@/lib/admin-trash";
 import type { PublicationStatus } from "@/lib/types";
 import { services as knownServices } from "@/lib/data";
 
@@ -240,6 +241,65 @@ export async function updateBusinessChangeRequestStatus(requestId: string, statu
 
   if (error) {
     return { ok: false, message: error.message };
+  }
+
+  return { ok: true };
+}
+
+export async function restoreTrashItem(kind: AdminTrashKind, id: string) {
+  const supabase = createAdminClient();
+  const now = new Date().toISOString();
+  let result: { error: { message: string } | null };
+
+  switch (kind) {
+    case "business":
+      result = await supabase
+        .from("businesses")
+        .update({ publication_status: "pending", updated_at: now })
+        .eq("id", id)
+        .eq("publication_status", "rejected");
+      break;
+    case "business_edit":
+      result = await supabase
+        .from("business_listing_revisions")
+        .update({ status: "pending", updated_at: now })
+        .eq("id", id)
+        .eq("status", "rejected");
+      break;
+    case "recommendation":
+      result = await supabase
+        .from("business_recommendations")
+        .update({ status: "pending", updated_at: now })
+        .eq("id", id)
+        .eq("status", "rejected");
+      break;
+    case "creative_job":
+      result = await supabase
+        .from("creative_job_listings")
+        .update({ status: "pending_review", updated_at: now })
+        .eq("id", id)
+        .eq("status", "archived");
+      break;
+    case "change_request":
+      result = await supabase
+        .from("business_change_requests")
+        .update({ status: "pending", updated_at: now })
+        .eq("id", id)
+        .eq("status", "dismissed");
+      break;
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/trash");
+  revalidatePath("/admin/businesses");
+  revalidatePath("/admin/recommendations");
+  revalidatePath("/admin/creative-jobs");
+  revalidatePath("/admin/change-requests");
+  revalidatePath("/businesses");
+  revalidatePath("/creative-jobs");
+
+  if (result.error) {
+    return { ok: false, message: result.error.message };
   }
 
   return { ok: true };

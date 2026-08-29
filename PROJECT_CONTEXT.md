@@ -397,10 +397,11 @@ Future improvements:
 ### Admin Trash Bin
 Status: Completed
 
-Description: Admin-only trash view that collects rejected business listings, rejected business listing edits, rejected recommendations, dismissed change requests, and creative jobs moved to trash. Items remain visible for seven days, then the cleanup helper permanently deletes expired rows and associated Supabase Storage objects when the admin dashboard or trash page is visited.
+Description: Admin-only trash view that collects rejected business listings, rejected business listing edits, rejected recommendations, dismissed change requests, and creative jobs moved to trash. Admins can restore items back to their review queues before deletion. Items remain visible for seven days, then the cleanup helper permanently deletes expired rows and associated Supabase Storage objects when the admin dashboard or trash page is visited.
 
 Relevant files:
 - `src/app/admin/trash/page.tsx`
+- `src/components/admin/restore-trash-item-button.tsx`
 - `src/lib/admin-trash.ts`
 - `src/app/admin/page.tsx`
 - `src/components/admin/actions.ts`
@@ -410,7 +411,6 @@ Relevant files:
 
 Future improvements:
 - Move cleanup to a scheduled Vercel Cron or Supabase scheduled job.
-- Add restore buttons for accidental rejections.
 - Add an audit log that records who moved each item to trash.
 
 ### Dashboard Pages

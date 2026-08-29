@@ -12,6 +12,7 @@ Today’s work made MakeSG feel more forgiving and easier to maintain. Uploaded 
 - [x] Applied fallback captions across business onboarding, private business media edits, creative job references, private creative job media edits, and business recommendation media.
 - [x] Rewrote major public and workflow copy to be friendlier and easier to understand.
 - [x] Added an admin-only trash bin at `/admin/trash`.
+- [x] Added restore controls so admins can undo accidental trash moves before cleanup.
 - [x] Moved rejected/dismissed/archived admin items out of active queues.
 - [x] Added seven-day trash retention cleanup for database rows and related storage files.
 - [x] Added Supabase migration indexes to support trash cleanup queries.
@@ -27,7 +28,10 @@ Shared helper that preserves contributor-written captions and generates simple f
 Admin-only trash aggregation and cleanup helper. It lists rejected/dismissed/archived items, computes retention dates, purges expired rows, and removes related files from Supabase Storage where possible.
 
 ### `src/app/admin/trash/page.tsx`
-Admin-only trash-bin page showing trashed item type, title, reason/status, moved date, and delete-after date.
+Admin-only trash-bin page showing trashed item type, title, reason/status, moved date, delete-after date, restore controls, and detail links.
+
+### `src/components/admin/restore-trash-item-button.tsx`
+Client-side restore button for trash items. It calls the shared admin restore action and shows inline feedback.
 
 ### `supabase/migrations/0015_admin_trash_retention.sql`
 Adds partial indexes for faster cleanup/filtering of rejected businesses, rejected business revisions, rejected recommendations, archived creative jobs, and dismissed business change requests.
@@ -107,7 +111,7 @@ Reject feedback now tells admins that rejected items move to the trash bin for s
 Dismiss feedback now tells admins that dismissed requests move to the trash bin for seven days.
 
 ### `src/components/admin/actions.ts`
-Admin actions now revalidate `/admin/trash` when moderation, deletion, or change-request status changes.
+Admin actions now revalidate `/admin/trash` when moderation, deletion, change-request status, or trash restore changes.
 
 ### `src/app/admin/creative-jobs/[id]/page.tsx`
 Admin creative job archived action is now labelled “Move to trash.”
@@ -134,12 +138,14 @@ Added the 2026-08-29 changelog entry.
 
 - Upload-related server actions now call `smartMediaCaption()` before inserting media rows.
 - `getAdminTrashItems({ purgeExpired })` provides admin trash listing and cleanup.
+- `restoreTrashItem(kind, id)` restores trash items to the appropriate review queue.
 - Admin dashboard and trash page trigger expired-trash cleanup.
 - Active admin queue helpers filter out trash-state rows.
 
 ## UI Changes
 
 - Added `/admin/trash` as a new admin page.
+- Added restore buttons to `/admin/trash`.
 - Added a Trash bin card on admin home.
 - Rejected/dismissed items no longer clutter normal review queues.
 - Upload helper text now reassures users that blank captions are fine.
@@ -150,6 +156,7 @@ Added the 2026-08-29 changelog entry.
 - Blank media captions no longer result in empty or unhelpful captions.
 - Rejected/dismissed items no longer stay mixed into active admin queues.
 - Admin reject/dismiss feedback now explains where items went.
+- Admins can now restore trash items before the seven-day cleanup window ends.
 
 ## Bugs Remaining
 
@@ -180,7 +187,7 @@ Added the 2026-08-29 changelog entry.
 
 ## Things To Watch
 
-- Whether admins need restore buttons for accidentally rejected items.
+- Whether restored items should remember their exact previous status instead of returning to review queues.
 - Whether seven days is enough retention before permanent deletion.
 - Whether users expect actual AI captions from image contents rather than filename-based captions.
 - Whether rejected business listings should be hidden from every future reporting/export surface.
@@ -238,11 +245,10 @@ The bundled Codex Node runtime was used because the regular shell could not find
 
 1. Apply the new Supabase migration and redeploy.
 2. Add a scheduled cleanup route using Vercel Cron so trash purges without needing an admin visit.
-3. Add restore buttons to `/admin/trash`.
-4. Add actual image/video moderation and AI captions after choosing a provider.
-5. Add public form rate limiting.
-6. Add admin audit logs for every moderation decision.
+3. Add actual image/video moderation and AI captions after choosing a provider.
+4. Add public form rate limiting.
+5. Add admin audit logs for every moderation decision.
 
 ## Ready-to-use Prompt for Next Session
 
-Continue the MakeSG project in `/Users/kevinchiam/Documents/Design Directory`. Before coding, read `AI_RULES.md`, `PROJECT_CONTEXT.md`, and `SESSION_HANDOVER.md`. The latest work on 2026-08-29 added smart fallback captions for uncaptained media, friendlier site copy, and an admin-only trash bin with seven-day retention cleanup for rejected/dismissed/archived items. Key files to read first: `src/lib/media-captions.ts`, `src/lib/admin-trash.ts`, `src/app/admin/trash/page.tsx`, `src/app/admin/page.tsx`, `src/features/businesses/actions.ts`, `src/features/creative-jobs/actions.ts`, `src/components/business/recommendation-actions.ts`, and `supabase/migrations/0015_admin_trash_retention.sql`. The next likely task is to apply the migration, deploy, and then move trash cleanup to a scheduled Vercel Cron route with optional restore buttons. Remember the current decision: smart captions are filename/context-based, not visual AI; rejected business/recommendation/revision rows, dismissed change requests, and archived creative jobs are considered trash; admin override stays central.
+Continue the MakeSG project in `/Users/kevinchiam/Documents/Design Directory`. Before coding, read `AI_RULES.md`, `PROJECT_CONTEXT.md`, and `SESSION_HANDOVER.md`. The latest work on 2026-08-29 added smart fallback captions for uncaptained media, friendlier site copy, an admin-only trash bin with seven-day retention cleanup, and restore controls for trash items. Key files to read first: `src/lib/media-captions.ts`, `src/lib/admin-trash.ts`, `src/app/admin/trash/page.tsx`, `src/components/admin/restore-trash-item-button.tsx`, `src/components/admin/actions.ts`, `src/app/admin/page.tsx`, `src/features/businesses/actions.ts`, `src/features/creative-jobs/actions.ts`, `src/components/business/recommendation-actions.ts`, and `supabase/migrations/0015_admin_trash_retention.sql`. The next likely task is to apply the migration, deploy, and then move trash cleanup to a scheduled Vercel Cron route. Remember the current decision: smart captions are filename/context-based, not visual AI; rejected business/recommendation/revision rows, dismissed change requests, and archived creative jobs are considered trash; restored trash items return to review queues rather than going straight public; admin override stays central.

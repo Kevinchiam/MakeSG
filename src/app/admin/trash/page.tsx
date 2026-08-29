@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { ArchiveX } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { RestoreTrashItemButton } from "@/components/admin/restore-trash-item-button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getAdminTrashItems, type AdminTrashItem } from "@/lib/admin-trash";
 
@@ -34,8 +36,8 @@ export default async function AdminTrashPage() {
 }
 
 function TrashCard({ item }: { item: AdminTrashItem }) {
-  const content = (
-    <article className="grid gap-3 border border-[#ded8cc] bg-white p-5 transition hover:border-[#9c4f35] md:grid-cols-[1fr_auto]">
+  return (
+    <article className="grid gap-4 border border-[#ded8cc] bg-white p-5 md:grid-cols-[1fr_auto]">
       <div>
         <div className="flex flex-wrap items-center gap-2">
           <ArchiveX className="h-4 w-4 text-[#9c4f35]" aria-hidden />
@@ -43,6 +45,14 @@ function TrashCard({ item }: { item: AdminTrashItem }) {
           <Badge>{item.status}</Badge>
         </div>
         <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#6d675d]">{item.description}</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <RestoreTrashItemButton id={item.id} kind={item.kind} />
+          {item.href ? (
+            <Button asChild type="button" variant="ghost">
+              <Link href={item.href}>Review details</Link>
+            </Button>
+          ) : null}
+        </div>
       </div>
       <dl className="grid gap-1 text-sm text-[#6d675d] md:text-right">
         <div>
@@ -56,8 +66,6 @@ function TrashCard({ item }: { item: AdminTrashItem }) {
       </dl>
     </article>
   );
-
-  return item.href ? <Link href={item.href}>{content}</Link> : content;
 }
 
 function formatDate(value: string) {
