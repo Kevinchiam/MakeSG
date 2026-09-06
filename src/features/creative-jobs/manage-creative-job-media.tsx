@@ -117,25 +117,20 @@ export function ManageCreativeJobMedia({ token, references }: { token: string; r
         }}
         label="Add photos or videos"
         description="Upload additional JPG, PNG, WebP, MP4, MOV or WebM files. All media for this job must be 10MB total or smaller."
+        renderFileFields={(file, index) => {
+          const key = fileKey(file);
+          return (
+            <label className="grid gap-1.5 text-sm font-medium">
+              Caption for new upload {index + 1}
+              <Input
+                value={newCaptions[key] ?? ""}
+                onChange={(event) => setNewCaptions((current) => ({ ...current, [key]: event.target.value }))}
+                placeholder="Optional caption"
+              />
+            </label>
+          );
+        }}
       />
-      {newFiles.length ? (
-        <fieldset className="grid gap-3">
-          <legend className="text-sm font-medium">Captions for new uploads</legend>
-          {newFiles.map((file, index) => {
-            const key = fileKey(file);
-            return (
-              <label key={key} className="grid gap-1.5 text-sm font-medium">
-                Caption for new upload {index + 1}
-                <Input
-                  value={newCaptions[key] ?? ""}
-                  onChange={(event) => setNewCaptions((current) => ({ ...current, [key]: event.target.value }))}
-                  placeholder="Optional caption"
-                />
-              </label>
-            );
-          })}
-        </fieldset>
-      ) : null}
       <Button type="button" disabled={isSaving} onClick={() => void updateMedia()}>
         <Save className="h-4 w-4" />
         {isSaving ? "Saving..." : "Save photos and videos"}

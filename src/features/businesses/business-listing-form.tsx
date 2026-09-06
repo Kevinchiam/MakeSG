@@ -249,25 +249,19 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
         }}
         label="Upload portfolio photos or videos"
         description="Photos and videos are stored safely and shown after approval. Uploads must be 10MB total or smaller. Leave captions blank and MakeSG will add a simple one."
+        renderFileFields={(file, index) => {
+          const key = fileKey(file);
+          return (
+            <Field label={`Caption for upload ${index + 1}`}>
+              <Input
+                value={portfolioCaptions[key] ?? ""}
+                onChange={(event) => setPortfolioCaptions((current) => ({ ...current, [key]: event.target.value }))}
+                placeholder="e.g. Product photography for ceramic vessel"
+              />
+            </Field>
+          );
+        }}
       />
-      {portfolioFiles.length ? (
-        <fieldset className="grid gap-3">
-          <legend className="text-sm font-medium">Portfolio captions</legend>
-          <p className="text-xs leading-5 text-[#6d675d]">Add a caption if you have one. If you leave it blank, MakeSG will add a simple caption after upload.</p>
-          {portfolioFiles.map((file, index) => {
-            const key = fileKey(file);
-            return (
-              <Field key={key} label={`Caption for upload ${index + 1}`}>
-                <Input
-                  value={portfolioCaptions[key] ?? ""}
-                  onChange={(event) => setPortfolioCaptions((current) => ({ ...current, [key]: event.target.value }))}
-                  placeholder="e.g. Product photography for ceramic vessel"
-                />
-              </Field>
-            );
-          })}
-        </fieldset>
-      ) : null}
       <Button type="submit" disabled={isSubmitting || Boolean(duplicateSuggestion)}><Send className="h-4 w-4" /> {isSubmitting ? "Sending..." : "Submit listing"}</Button>
     </form>
   );

@@ -126,25 +126,20 @@ export function RequestBusinessChangePanel({ businessId, businessName }: { busin
               label="Add photos or videos"
               description="Optional. Uploads must be 10MB total or smaller."
               error={fieldErrors.media}
+              renderFileFields={(file, index) => {
+                const key = fileKey(file);
+                return (
+                  <label className="grid gap-1.5 text-sm font-medium">
+                    Caption for upload {index + 1}
+                    <Input
+                      value={mediaCaptions[key] ?? ""}
+                      onChange={(event) => setMediaCaptions((current) => ({ ...current, [key]: event.target.value }))}
+                      placeholder="What should admin notice in this file?"
+                    />
+                  </label>
+                );
+              }}
             />
-            {mediaFiles.length ? (
-              <fieldset className="grid gap-3">
-                <legend className="text-sm font-medium">Media captions</legend>
-                {mediaFiles.map((file, index) => {
-                  const key = fileKey(file);
-                  return (
-                    <label key={key} className="grid gap-1.5 text-sm font-medium">
-                      Caption for upload {index + 1}
-                      <Input
-                        value={mediaCaptions[key] ?? ""}
-                        onChange={(event) => setMediaCaptions((current) => ({ ...current, [key]: event.target.value }))}
-                        placeholder="What should admin notice in this file?"
-                      />
-                    </label>
-                  );
-                })}
-              </fieldset>
-            ) : null}
           </div>
           <Button type="submit" disabled={isSubmitting}>
             <Send className="h-4 w-4" aria-hidden /> {isSubmitting ? "Saving..." : "Submit request"}

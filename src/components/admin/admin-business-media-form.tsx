@@ -119,25 +119,20 @@ export function AdminBusinessMediaForm({
         }}
         label="Add portfolio photos or videos"
         description="Uploads must be 10MB total or smaller. Blank captions get a simple fallback caption."
+        renderFileFields={(file, index) => {
+          const key = fileKey(file);
+          return (
+            <label className="grid gap-1.5 text-sm font-medium">
+              Caption for new upload {index + 1}
+              <Input
+                value={newCaptions[key] ?? ""}
+                onChange={(event) => setNewCaptions((current) => ({ ...current, [key]: event.target.value }))}
+                placeholder="e.g. Product photography for ceramic vessel"
+              />
+            </label>
+          );
+        }}
       />
-      {newFiles.length ? (
-        <fieldset className="grid gap-3">
-          <legend className="text-sm font-medium">New upload captions</legend>
-          {newFiles.map((file, index) => {
-            const key = fileKey(file);
-            return (
-              <label key={key} className="grid gap-1.5 text-sm font-medium">
-                Caption for new upload {index + 1}
-                <Input
-                  value={newCaptions[key] ?? ""}
-                  onChange={(event) => setNewCaptions((current) => ({ ...current, [key]: event.target.value }))}
-                  placeholder="e.g. Product photography for ceramic vessel"
-                />
-              </label>
-            );
-          })}
-        </fieldset>
-      ) : null}
       <Button type="submit" disabled={isSaving}>
         <Save className="h-4 w-4" />
         {isSaving ? "Saving..." : "Save portfolio media"}

@@ -159,25 +159,20 @@ export function AdminRecommendationEditForm({ recommendation }: { recommendation
             }}
             label="Add recommendation photos or videos"
             description="Uploads must be 10MB total or smaller. Blank captions get a simple fallback caption."
+            renderFileFields={(file, index) => {
+              const key = fileKey(file);
+              return (
+                <label className="grid gap-1.5 text-sm font-medium">
+                  Caption for new upload {index + 1}
+                  <Input
+                    value={newCaptions[key] ?? ""}
+                    onChange={(event) => setNewCaptions((current) => ({ ...current, [key]: event.target.value }))}
+                    placeholder="e.g. Finished prototype detail"
+                  />
+                </label>
+              );
+            }}
           />
-          {newFiles.length ? (
-            <fieldset className="grid gap-3">
-              <legend className="text-sm font-medium">New upload captions</legend>
-              {newFiles.map((file, index) => {
-                const key = fileKey(file);
-                return (
-                  <label key={key} className="grid gap-1.5 text-sm font-medium">
-                    Caption for new upload {index + 1}
-                    <Input
-                      value={newCaptions[key] ?? ""}
-                      onChange={(event) => setNewCaptions((current) => ({ ...current, [key]: event.target.value }))}
-                      placeholder="e.g. Finished prototype detail"
-                    />
-                  </label>
-                );
-              })}
-            </fieldset>
-          ) : null}
         </section>
 
         <Button type="submit" disabled={isSaving}>

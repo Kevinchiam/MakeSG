@@ -185,25 +185,19 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
             }}
             label="Add photos or videos"
             description="Optional. Uploads must be 10MB total or smaller. Leave captions blank and MakeSG will add a simple one."
+            renderFileFields={(file, index) => {
+              const key = fileKey(file);
+              return (
+                <Field label={`Caption for upload ${index + 1}`}>
+                  <Input
+                    value={mediaCaptions[key] ?? ""}
+                    onChange={(event) => setMediaCaptions((current) => ({ ...current, [key]: event.target.value }))}
+                    placeholder="e.g. Finished installation, prototype detail, process photo"
+                  />
+                </Field>
+              );
+            }}
           />
-          {mediaFiles.length ? (
-            <fieldset className="grid gap-3">
-              <legend className="text-sm font-medium">Captions</legend>
-              <p className="text-xs leading-5 text-[#6d675d]">Add a caption if it helps. If you leave it blank, MakeSG will add a simple caption after upload.</p>
-              {mediaFiles.map((file, index) => {
-                const key = fileKey(file);
-                return (
-                  <Field key={key} label={`Caption for upload ${index + 1}`}>
-                    <Input
-                      value={mediaCaptions[key] ?? ""}
-                      onChange={(event) => setMediaCaptions((current) => ({ ...current, [key]: event.target.value }))}
-                      placeholder="e.g. Finished installation, prototype detail, process photo"
-                    />
-                  </Field>
-                );
-              })}
-            </fieldset>
-          ) : null}
 
           <fieldset className="grid gap-3">
             <legend className="text-sm font-medium">Supporting links</legend>

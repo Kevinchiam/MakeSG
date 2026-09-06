@@ -99,7 +99,7 @@ Creative production relies heavily on word of mouth, but reliable service discov
 - `src/components`: Reusable UI and domain components.
 - `src/components/admin`: Admin page headers, moderation controls, delete controls, and server actions for admin-managed data.
 - `src/components/business`: Business cards, filter UI, enquiry form, recommendation form, badges, and directory display components.
-- `src/components/projects`: Project brief and file-upload UI shared by project and media flows.
+- `src/components/projects`: Project brief and file-upload UI shared by project and media flows, including per-file fields inside upload preview cards.
 - `src/components/site`: Site header, footer, mobile navigation, admin shortcut, search bar, and shared site-level media caption UI.
 - `src/components/ui`: Small design-system primitives such as buttons, inputs, textareas, badges, pagination, skeletons, and empty states.
 - `src/features`: Feature-specific workflows that combine UI and server actions.
@@ -589,7 +589,7 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - `ManageCreativeJobStatus`: Private status selector.
 - `ManageCreativeJobDetails`: Private listing-detail editor.
 - `ManageCreativeJobMedia`: Private media/caption manager.
-- `FileUploader`: Shared media/reference uploader with previews and client-side image optimisation.
+- `FileUploader`: Shared media/reference uploader with previews, client-side image optimisation, and optional per-file fields rendered inside each upload card for captions or related metadata.
 - `AdminPageHeader`: Admin page heading wrapper.
 - `ModerationSummary`: Shared admin triage panel showing automated decision, risk, reason, and signals.
 - `AdminStatusControls`: Business and recommendation moderation buttons, including persisted business feature/unfeature controls.

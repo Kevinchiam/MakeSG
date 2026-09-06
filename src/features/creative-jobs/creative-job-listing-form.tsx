@@ -255,25 +255,19 @@ export function CreativeJobListingForm() {
         }}
         label="Upload reference photos or videos"
         description="Upload photos or videos that help businesses understand the job. Uploads must be 10MB total or smaller. Leave captions blank and MakeSG will add a simple one."
+        renderFileFields={(file, index) => {
+          const key = fileKey(file);
+          return (
+            <Field label={`Caption for upload ${index + 1}`}>
+              <Input
+                value={referenceCaptions[key] ?? ""}
+                onChange={(event) => setReferenceCaptions((current) => ({ ...current, [key]: event.target.value }))}
+                placeholder="e.g. Preferred mood, finish, reference angle or material detail"
+              />
+            </Field>
+          );
+        }}
       />
-      {referenceFiles.length ? (
-        <fieldset className="grid gap-3">
-          <legend className="text-sm font-medium">Reference captions</legend>
-          <p className="text-xs leading-5 text-[#6d675d]">Add a caption if it helps. If you leave it blank, MakeSG will add a simple caption after upload.</p>
-          {referenceFiles.map((file, index) => {
-            const key = fileKey(file);
-            return (
-              <Field key={key} label={`Caption for upload ${index + 1}`}>
-                <Input
-                  value={referenceCaptions[key] ?? ""}
-                  onChange={(event) => setReferenceCaptions((current) => ({ ...current, [key]: event.target.value }))}
-                  placeholder="e.g. Preferred mood, finish, reference angle or material detail"
-                />
-              </Field>
-            );
-          })}
-        </fieldset>
-      ) : null}
       <Field label="Anything businesses should know?" error={form.formState.errors.notes?.message}>
         <Textarea {...form.register("notes")} placeholder="Access constraints, materials already purchased, files available, preferred working style..." />
       </Field>

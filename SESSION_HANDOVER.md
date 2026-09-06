@@ -24,6 +24,8 @@ Admin recommendation editing: admins can now review and correct recommendation s
 
 Business onboarding guidance: the `/for-businesses` form now mirrors the creative job form's live character guidance. Business name, short summary, and full description tell submitters the minimum length and update as they type.
 
+Media caption placement: caption inputs for new uploads now appear directly inside each uploaded file preview card. This applies across business onboarding, private business media editing, creative job posting, private creative job media editing, recommendations, business change requests, and admin media edit forms.
+
 ## Objectives Completed
 
 - [x] Added smart fallback captions for uncaptained uploads.
@@ -51,6 +53,7 @@ Business onboarding guidance: the `/for-businesses` form now mirrors the creativ
 - [x] Made landing and About page media captions stream consistently across all database-backed image/video tiles.
 - [x] Added admin editing for business recommendations, including attached recommendation media.
 - [x] Added live minimum-character guidance to business onboarding required text fields.
+- [x] Moved caption inputs below their related uploaded image/video previews across MakeSG media upload fields.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 
@@ -80,6 +83,9 @@ Shared caption component for homepage and About page media overlays. It duplicat
 ### `src/components/admin/admin-recommendation-edit-form.tsx`
 Collapsible admin editor for recommendation submissions. It mirrors the public recommendation fields, lets admins correct captions/remove uploads/add replacement media, and shows inline save feedback that scrolls into view.
 
+### `src/components/projects/file-uploader.tsx`
+Shared media uploader now supports optional per-file fields rendered inside each preview card, allowing captions and future upload metadata to sit beside the exact file they describe.
+
 ## Files Modified
 
 ### `src/features/businesses/actions.ts`
@@ -92,19 +98,22 @@ Creative job reference uploads and private media edits now use smart fallback ca
 Recommendation media uploads now use smart fallback captions when contributors do not provide captions.
 
 ### `src/features/businesses/business-listing-form.tsx`
-Business onboarding copy is warmer and clearer. Upload copy explains that blank captions are acceptable. Success and duplicate-listing messages now read less formally. Required text fields now show live minimum-character guidance for business name, short summary, and full description.
+Business onboarding copy is warmer and clearer. Upload copy explains that blank captions are acceptable. Success and duplicate-listing messages now read less formally. Required text fields now show live minimum-character guidance for business name, short summary, and full description. New portfolio captions now appear below each uploaded preview.
 
 ### `src/features/businesses/manage-business-details.tsx`
 Private business edit success copy now says changes are waiting for review again.
 
 ### `src/features/businesses/manage-business-media.tsx`
-Private business media editing now tells users blank captions can be filled automatically and uses friendlier review copy.
+Private business media editing now tells users blank captions can be filled automatically, uses friendlier review copy, and places new-upload caption fields below their matching previews.
 
 ### `src/features/creative-jobs/creative-job-listing-form.tsx`
-Creative job posting copy is friendlier. Reference upload copy mentions automatic simple captions when blank.
+Creative job posting copy is friendlier. Reference upload copy mentions automatic simple captions when blank, and new reference captions now appear below each uploaded preview.
+
+### `src/features/creative-jobs/manage-creative-job-media.tsx`
+Private creative job media editing now places new-upload caption fields below their matching previews.
 
 ### `src/components/business/recommend-business-panel.tsx`
-Recommendation panel copy now uses “review” language instead of “moderation” and explains optional media captions more gently.
+Recommendation panel copy now uses “review” language instead of “moderation” and explains optional media captions more gently. Recommendation upload captions now sit below their related file previews.
 
 ### `src/app/page.tsx`
 Homepage copy now reflects MakeSG as a practical community platform for finding businesses, posting jobs, requesting changes, and sharing recommendations. The hero now uses a richer media-led visual panel, and the selected photos/videos shuffle from published business media on refresh. Media overlay captions now use the shared streaming caption component.
@@ -167,10 +176,13 @@ Active admin change-request queues now exclude dismissed requests and load suppo
 Public business change requests now accept optional photos/videos, validate file type and a 10MB combined upload limit, upload files to Supabase Storage, attach captions, and roll back saved data if upload fails.
 
 ### `src/components/business/request-business-change-panel.tsx`
-The public Request a change panel now includes an optional media uploader and per-file captions while preserving inline validation feedback.
+The public Request a change panel now includes an optional media uploader and per-file captions while preserving inline validation feedback. Caption inputs now sit below the uploaded file they describe.
 
 ### `src/app/admin/change-requests/page.tsx`
 The admin change-request page now presents the request, requester notes, supporting media, moderation summary, and admin controls beside the live business listing and media editing forms.
+
+### `src/components/admin/admin-business-media-form.tsx`
+Admin business media editing now places captions for new uploads below their matching previews.
 
 ### `src/lib/admin-trash.ts`
 Expired dismissed change requests now remove their supporting media from `business-portfolios` during trash cleanup.

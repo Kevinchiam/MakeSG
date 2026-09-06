@@ -20,6 +20,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Changed home and About page media overlays so every database-backed caption uses the same hover/focus streaming behaviour.
 - Changed the recommendation review queue so admins can correct recommendation content before or after approval.
 - Changed business onboarding required text fields to show live minimum-character guidance while people type.
+- Changed media upload caption inputs to appear directly below each uploaded image/video preview across public, private, and admin upload flows.
 
 ### Fixed
 - Fixed a server-side duplicate business-name gap by rejecting duplicate business submissions even if the browser-side suggestion is bypassed.

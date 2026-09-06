@@ -1,6 +1,7 @@
 "use client";
 
 import { FileText, FileUp, ImageIcon, Video, X } from "lucide-react";
+import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -17,6 +18,7 @@ type FileUploaderProps = {
   error?: string | null;
   value?: File[];
   onFilesChange?: (files: File[]) => void;
+  renderFileFields?: (file: File, index: number) => ReactNode;
 };
 
 export function FileUploader({
@@ -28,6 +30,7 @@ export function FileUploader({
   error: externalError,
   value,
   onFilesChange,
+  renderFileFields,
 }: FileUploaderProps) {
   const [internalFiles, setInternalFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +87,7 @@ export function FileUploader({
       {error || externalError ? <p className="text-sm text-[#9c4f35]" role="alert">{error ?? externalError}</p> : null}
       {files.length ? (
         <ul className="grid gap-3 sm:grid-cols-2">
-          {files.map((file) => (
+          {files.map((file, index) => (
             <li key={`${file.name}-${file.size}`} className="border border-[#ded8cc] bg-white p-3 text-sm">
               <MediaPreview file={file} />
               <div className="mt-3 flex items-center justify-between gap-3">
@@ -93,6 +96,7 @@ export function FileUploader({
                   <X className="h-4 w-4" />
                 </Button>
               </div>
+              {renderFileFields ? <div className="mt-3 border-t border-[#ded8cc] pt-3">{renderFileFields(file, index)}</div> : null}
             </li>
           ))}
         </ul>
