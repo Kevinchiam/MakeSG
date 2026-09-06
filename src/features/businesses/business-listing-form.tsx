@@ -344,7 +344,7 @@ function applyServerFieldErrors(
 }
 
 function Field({ label, hint, error, children }: { label: string; hint?: string; error?: string; children: React.ReactNode }) {
-  return <label className="grid gap-1.5 text-sm font-medium">{label}{children}{hint ? <span className="text-xs font-normal leading-5 text-[#6d675d]">{hint}</span> : null}{error ? <span className="text-[#9c4f35]">{error}</span> : null}</label>;
+  return <label className="grid content-start gap-1.5 text-sm font-medium">{label}{children}{hint ? <span className="text-xs font-normal leading-5 text-[#6d675d]">{hint}</span> : null}{error ? <span className="text-[#9c4f35]">{error}</span> : null}</label>;
 }
 
 function Checklist({ label, error, items, labels = {}, selected, onChange }: { label: string; error?: string; items: string[]; labels?: Record<string, string>; selected: string[]; onChange: (next: string[]) => void }) {

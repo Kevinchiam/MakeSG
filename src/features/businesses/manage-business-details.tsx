@@ -145,7 +145,7 @@ export function ManageBusinessDetails({ token, business }: { token: string; busi
 
 function Field({ label, hint, error, children }: { label: string; hint?: string; error?: string; children: React.ReactNode }) {
   return (
-    <label className="grid gap-1.5 text-sm font-medium">
+    <label className="grid content-start gap-1.5 text-sm font-medium">
       {label}
       {children}
       {hint ? <span className="text-xs font-normal leading-5 text-[#6d675d]">{hint}</span> : null}
