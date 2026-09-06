@@ -23,6 +23,7 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
   const successRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
   const [submittedManageUrl, setSubmittedManageUrl] = useState<string | null>(null);
+  const [submittedPublicationStatus, setSubmittedPublicationStatus] = useState<"pending" | "published" | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [otherError, setOtherError] = useState<string | null>(null);
   const [portfolioError, setPortfolioError] = useState<string | null>(null);
@@ -44,11 +45,14 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
   useFeedbackFocus(errorRef, submitError);
 
   if (submittedManageUrl) {
+    const isPublished = submittedPublicationStatus === "published";
     return (
       <div ref={successRef} className="border border-[#536343] bg-[#eef2e8] p-6 focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#315c6b]" role="status" tabIndex={-1}>
-        <h2 className="text-xl font-semibold">Thanks, the listing has been sent for review</h2>
+        <h2 className="text-xl font-semibold">{isPublished ? "Thanks, the listing is now live" : "Thanks, the listing has been sent for review"}</h2>
         <p className="mt-2 text-sm leading-6 text-[#39462d]">
-          Save this private link so you can update the business information later. Changes still go through review before they appear publicly.
+          {isPublished
+            ? "It passed MakeSG’s checks and can now appear in the directory. Save this private link so you can update the business information later."
+            : "Save this private link so you can update the business information later. Changes still go through review before they appear publicly."}
         </p>
         <div className="mt-4 grid gap-2 border border-[#b9c6ae] bg-white p-3 text-sm">
           <span className="font-semibold">Private edit link</span>
@@ -113,6 +117,7 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
             }
 
             setSubmittedManageUrl(`${window.location.origin}/businesses/manage/${result.manageToken}`);
+            setSubmittedPublicationStatus(result.publicationStatus);
           } catch {
             setPortfolioError("The upload did not complete. Remove one file or use smaller files, then try again.");
           } finally {
@@ -238,7 +243,7 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
           })}
         </fieldset>
       ) : null}
-      <Button type="submit" disabled={isSubmitting || Boolean(duplicateSuggestion)}><Send className="h-4 w-4" /> {isSubmitting ? "Sending..." : "Send for review"}</Button>
+      <Button type="submit" disabled={isSubmitting || Boolean(duplicateSuggestion)}><Send className="h-4 w-4" /> {isSubmitting ? "Sending..." : "Submit listing"}</Button>
     </form>
   );
 }

@@ -72,6 +72,7 @@ function reviewPriority(business: AdminBusinessListItem) {
 
 function businessLabel(business: AdminBusinessListItem) {
   if (business.pendingRevision) return "Pending edits";
+  if (business.publicationStatus === "published" && business.moderationDecision === "auto_approved") return "Auto-approved";
   switch (business.publicationStatus) {
     case "pending":
       return "Pending review";

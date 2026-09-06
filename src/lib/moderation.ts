@@ -113,6 +113,24 @@ export function assessModeration(input: ModerationInput): ModerationResult {
     };
   }
 
+  if (input.kind === "recommendation") {
+    return {
+      decision: "auto_approved",
+      risk: "low",
+      reason: "Looks good and can appear publicly right away.",
+      signals: ["Clean recommendation submission."],
+    };
+  }
+
+  if (input.kind === "business") {
+    return {
+      decision: "auto_approved",
+      risk: "low",
+      reason: "Looks complete and can appear in the directory right away.",
+      signals: ["Clean business listing submission."],
+    };
+  }
+
   return {
     decision: "needs_review",
     risk: "low",

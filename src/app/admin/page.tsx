@@ -23,6 +23,9 @@ export default async function AdminPage() {
   const pendingRecommendations = recommendations.filter((recommendation) => recommendation.status === "pending").length;
   const openChangeRequests = changeRequests.filter((request) => request.status === "open").length;
   const totalReviewItems = pending + pendingCreativeJobs + pendingRecommendations + openChangeRequests;
+  const autoApprovedBusinesses = businesses.filter((business) => business.publicationStatus === "published" && business.moderationDecision === "auto_approved").length;
+  const autoApprovedRecommendations = recommendations.filter((recommendation) => recommendation.status === "approved" && recommendation.moderationDecision === "auto_approved").length;
+  const autoApprovedItems = autoApprovedBusinesses + autoApprovedRecommendations;
   const highRiskItems = [
     ...businesses,
     ...creativeJobs,
@@ -51,6 +54,13 @@ export default async function AdminPage() {
               <p className="mt-2 text-sm leading-6 text-[#6d675d]">Triage helps prioritise review. You still have the final say.</p>
             </div>
           </div>
+        </section>
+        <section className="border border-[#b9c9aa] bg-[#f2f6ed] p-6 lg:col-span-2">
+          <p className="text-sm font-semibold uppercase tracking-wide text-[#536343]">Automation</p>
+          <h2 className="mt-2 font-serif text-3xl font-semibold">{autoApprovedItems} auto-approved item{autoApprovedItems === 1 ? "" : "s"}</h2>
+          <p className="mt-3 text-sm leading-6 text-[#4f493f]">
+            Low-risk business listings and recommendations can now go live automatically. They still appear in the business and recommendation admin pages, where you can edit, unpublish, reject, or move them to trash if needed.
+          </p>
         </section>
       </div>
 

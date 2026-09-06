@@ -34,7 +34,7 @@ export default async function AdminRecommendationsPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <MessageCircleHeart className="h-4 w-4 text-[#536343]" aria-hidden />
                 <h2 className="text-xl font-semibold">{recommendation.businessName}</h2>
-                <Badge>{recommendation.status}</Badge>
+                <Badge>{recommendationLabel(recommendation)}</Badge>
               </div>
               {(recommendation.qualityRating || recommendation.reliabilityRating || recommendation.collaborationRating) ? (
                 <dl className="mt-4 grid gap-2 text-sm text-[#4f493f] md:grid-cols-3">
@@ -107,6 +107,12 @@ function reviewPriority(recommendation: AdminRecommendationListItem) {
   return (recommendation.moderationRisk === "high" ? 10 : 0)
     + (recommendation.status === "pending" ? 8 : 0)
     + (recommendation.status === "approved" ? 1 : 0);
+}
+
+function recommendationLabel(recommendation: AdminRecommendationListItem) {
+  if (recommendation.status === "approved" && recommendation.moderationDecision === "auto_approved") return "Auto-approved";
+  if (recommendation.status === "pending") return "Pending review";
+  return recommendation.status;
 }
 
 function Rating({ label, value }: { label: string; value?: number }) {

@@ -1,6 +1,6 @@
 # MakeSG Project Context
 
-Last updated: 2026-08-29
+Last updated: 2026-09-06
 
 ## Project Overview
 
@@ -28,13 +28,14 @@ Creative production relies heavily on word of mouth, but reliable service discov
 - Allow creatives to post public job listings without account creation.
 - Allow creatives to manage posted jobs through a private manage link.
 - Add helpful fallback captions for uploaded media when contributors leave captions blank.
+- Auto-approve low-risk business listings, recommendations, and creative jobs while preserving admin override.
 - Keep rejected and dismissed items in an admin-only trash bin before permanent cleanup.
 - Provide direct contact routes through visible email or mailto links, with Resend support when configured.
 
 ### Future Roadmap
 - Replace remaining dashboard placeholders with fully persisted Supabase workflows.
 - Add robust user accounts for business owners and optional creative accounts.
-- Add moderation queues with richer status history and admin notes.
+- Add moderation queues with richer status history, admin notes, and automation audit trails.
 - Add stronger search ranking, synonyms, and possibly AI-assisted service matching.
 - Add map/location search once a custom geocoding provider is selected.
 - Add notification emails for creative job submissions and changes.
@@ -150,6 +151,7 @@ Most mutations use server actions:
 - Public creative jobs call `getPublicCreativeJobs()` in `src/lib/creative-jobs.ts`.
 - Business onboarding inserts into Supabase and uploads portfolio media.
 - Business onboarding, business edits, business recommendations, change requests, and creative jobs run through rule-based moderation triage before saving.
+- Low-risk new business listings, business recommendations, and creative jobs can auto-publish. Business edits, change requests, medium-risk items, high-risk items, duplicates, and no-contact business listings still require admin review.
 - Blank upload captions receive a simple, context-aware fallback before media records are saved.
 - Rejected business listings, rejected listing edits, rejected recommendations, dismissed change requests, and archived creative jobs are treated as trash-bin items and are permanently deleted after seven days when the admin dashboard or trash page runs cleanup.
 - Creative job submission inserts a job, stores a manage token, uploads reference files, and returns the private manage link. Low-risk creative jobs auto-publish; higher-risk jobs use `pending_review`.
@@ -241,7 +243,7 @@ Future improvements:
 ### Business Onboarding
 Status: Completed
 
-Description: Businesses or community members can submit listing details, service options including Other, optional website/email/phone/location/budget/lead time, and portfolio photos/videos. Submissions run through automated triage for abusive/spam wording, suspicious patterns, risky filenames, and low-detail signals, then enter review before publication. Blank media captions are filled with a simple smart fallback based on the filename and business context. After submission, submitters receive a private edit link that can update listing details and portfolio media. Edits to already published listings create a pending revision, so the current approved public listing stays live until an admin approves the changes.
+Description: Businesses or community members can submit listing details, service options including Other, optional website/email/phone/location/budget/lead time, and portfolio photos/videos. Submissions run through automated triage for abusive/spam wording, suspicious patterns, risky filenames, low-detail signals, missing contact routes, and duplicate business names. Low-risk listings with a public contact route can publish automatically; anything uncertain waits for admin review. Blank media captions are filled with a simple smart fallback based on the filename and business context. After submission, submitters receive a private edit link that can update listing details and portfolio media. Edits to already published listings create a pending revision, so the current approved public listing stays live until an admin approves the changes.
 
 Relevant files:
 - `src/app/for-businesses/page.tsx`
@@ -265,7 +267,7 @@ Future improvements:
 ### Business Recommendations
 Status: Completed
 
-Description: Users can recommend businesses based on real experience. Recommendations are checked for obvious abuse/spam and reviewed before public use. Recommendation media also receives a smart fallback caption when contributors leave captions blank.
+Description: Users can recommend businesses based on real experience. Recommendations are checked for obvious abuse/spam and low-risk recommendations can appear publicly right away. Anything uncertain waits for admin review. Recommendation media also receives a smart fallback caption when contributors leave captions blank.
 
 Relevant files:
 - `src/app/recommend-business/page.tsx`
@@ -382,7 +384,7 @@ Future improvements:
 ### Admin Business Moderation
 Status: Completed
 
-Description: Admin can review, approve, reject, feature/unfeature, unpublish, delete, and directly edit business listings and portfolio media. New listings and pending edits are prioritised in the queue, show plain-language review labels, and include automated triage risk, reason, and signals to streamline review while preserving admin override. Rejected listings and rejected pending edits move out of the main queues into the admin trash bin for seven days before cleanup.
+Description: Admin can review, approve, reject, feature/unfeature, unpublish, delete, and directly edit business listings and portfolio media. New listings, auto-approved listings, and pending edits are visible in the queue, with pending/high-risk items prioritised. Records show plain-language review labels and automated triage risk, reason, and signals to streamline review while preserving admin override. Rejected listings and rejected pending edits move out of the main queues into the admin trash bin for seven days before cleanup.
 
 Relevant files:
 - `src/app/admin/businesses/page.tsx`

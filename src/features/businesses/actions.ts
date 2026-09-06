@@ -12,7 +12,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { businessSchema } from "@/lib/validation";
 
 type SubmitBusinessResult =
-  | { ok: true; id: string; manageToken: string }
+  | { ok: true; id: string; manageToken: string; publicationStatus: "pending" | "published"; autoApproved: boolean }
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 type UpdateBusinessResult =
@@ -43,6 +43,18 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
   }
 
   const data = parsed.data;
+  const { data: existingRows } = await supabase
+    .from("businesses")
+    .select("name")
+    .neq("publication_status", "rejected");
+  const duplicateBusiness = ((existingRows ?? []) as Array<{ name: string }>).some((business) => {
+    return normalizeBusinessName(business.name) === normalizeBusinessName(data.name);
+  });
+
+  if (duplicateBusiness) {
+    return { ok: false, message: "This business already exists. Open the existing listing instead of creating a duplicate." };
+  }
+
   const portfolioFiles = input instanceof FormData ? validPortfolioFiles(input.getAll("portfolioFiles")) : [];
   const portfolioCaptions = input instanceof FormData ? input.getAll("portfolioCaptions").map((value) => stringFromFormData(value).trim()) : [];
   const totalPortfolioSizeMb = portfolioFiles.reduce((total, file) => total + file.size, 0) / 1024 / 1024;
@@ -75,6 +87,7 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
   const slugBase = createSlug(data.name) || "business";
   const slug = `${slugBase}-${Date.now().toString(36)}`;
   const manageToken = createManageToken();
+  const publicationStatus = moderation.decision === "auto_approved" ? "published" : "pending";
 
   const { data: business, error: businessError } = await supabase
     .from("businesses")
@@ -90,7 +103,7 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
       minimum_budget: data.minimumBudget ?? 0,
       typical_lead_time: data.typicalLeadTime ?? 0,
       business_type: data.businessType,
-      publication_status: "pending",
+      publication_status: publicationStatus,
       verification_status: "unverified",
       claimed: false,
       featured: false,
@@ -175,7 +188,14 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
     }
   }
 
-  return { ok: true, id: business.id, manageToken };
+  revalidatePath("/");
+  revalidatePath("/about");
+  revalidatePath("/businesses");
+  revalidatePath(`/businesses/${slug}`);
+  revalidatePath("/admin");
+  revalidatePath("/admin/businesses");
+
+  return { ok: true, id: business.id, manageToken, publicationStatus, autoApproved: moderation.decision === "auto_approved" };
 }
 
 export async function updateBusinessDetailsByToken(token: string, input: unknown): Promise<UpdateBusinessResult> {
@@ -718,6 +738,10 @@ function formDataToBusinessInput(formData: FormData) {
 
 function stringFromFormData(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value : "";
+}
+
+function normalizeBusinessName(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 function fieldErrorsFromIssues(issues: z.ZodIssue[]) {

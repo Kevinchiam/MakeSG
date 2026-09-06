@@ -41,7 +41,7 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
   const feedbackRef = useRef<HTMLParagraphElement>(null);
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] = useState<"pending" | "approved" | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [ratings, setRatings] = useState({ qualityRating: 0, reliabilityRating: 0, collaborationRating: 0 });
@@ -56,11 +56,11 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
   });
   const reviewLength = formValues.review.trim().length;
   const reviewCharactersRemaining = Math.max(0, minimumReviewCharacters - reviewLength);
-  useFeedbackFocus(feedbackRef, success || submitError);
+  useFeedbackFocus(feedbackRef, Boolean(success) || submitError);
 
   async function submit(formData: FormData) {
     setIsSubmitting(true);
-    setSuccess(false);
+    setSuccess(null);
     setSubmitError(null);
     setFieldErrors({});
 
@@ -85,7 +85,7 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
       return;
     }
 
-    setSuccess(true);
+    setSuccess(result.status);
     setRatings({ qualityRating: 0, reliabilityRating: 0, collaborationRating: 0 });
     setFormValues({ review: "", recommenderName: "", recommenderEmail: "", permissionToPublishName: false });
     setMediaFiles([]);
@@ -105,7 +105,7 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
             <div>
               <h2 className="font-serif text-2xl font-semibold">Recommend {businessName}</h2>
               <p className="mt-2 text-sm leading-6 text-[#6d675d]">
-                Share a first-hand review. Admin checks recommendations before they appear publicly.
+                Share a first-hand review. Clean recommendations can appear right away; anything that needs a closer look goes to admin first.
               </p>
             </div>
             <button
@@ -120,7 +120,9 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
 
           {success ? (
             <p ref={feedbackRef} tabIndex={-1} className="border border-[#b9c6ae] bg-[#eef2e8] p-3 text-sm leading-6 text-[#39462d] focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#315c6b]" role="status">
-              Thanks, your recommendation has been sent for review.
+              {success === "approved"
+                ? "Thanks, your recommendation is now live."
+                : "Thanks, your recommendation has been sent for review."}
             </p>
           ) : null}
           {submitError ? (
@@ -253,7 +255,7 @@ export function RecommendBusinessPanel({ businessId, businessName }: { businessI
           </label>
 
           <Button type="submit" disabled={isSubmitting}>
-            <Send className="h-4 w-4" aria-hidden /> {isSubmitting ? "Sending..." : "Send for review"}
+            <Send className="h-4 w-4" aria-hidden /> {isSubmitting ? "Sending..." : "Send recommendation"}
           </Button>
         </form>
       ) : null}

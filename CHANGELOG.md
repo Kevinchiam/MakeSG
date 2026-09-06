@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format loosely follows Keep a Changelog and semantic sections.
 
+## [Unreleased] - 2026-09-06
+
+### Added
+- Added low-risk auto-approval for new business listings that pass moderation and include a public contact route.
+- Added low-risk auto-approval for clean business recommendations.
+- Added an admin automation summary showing auto-approved business listings and recommendations.
+- Added moderation unit tests for auto-approval, review fallback, and blocked content.
+
+### Changed
+- Changed business listing and recommendation submission feedback so users can tell when content went live immediately versus went to admin review.
+- Changed admin business and recommendation queues to label auto-approved records while preserving override actions.
+
+### Fixed
+- Fixed a server-side duplicate business-name gap by rejecting duplicate business submissions even if the browser-side suggestion is bypassed.
+
+### Removed
+- No user-facing features removed.
+
+### Known Issues
+- Auto-approval is still rule-based and does not visually inspect uploaded image/video content.
+- Business listing edits remain review-first so existing approved listings stay live while edits wait for admin approval.
+
 ## [Unreleased] - 2026-08-29
 
 ### Added

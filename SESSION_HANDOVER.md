@@ -1,6 +1,6 @@
 # Session Handover
 
-Date: 2026-08-29
+Date: 2026-09-06
 
 ## Session Summary
 
@@ -11,6 +11,8 @@ Later in the session, the home and About pages were given a more visual editoria
 Latest update: the admin dashboard and review queues were tightened so admin work is easier to understand. The dashboard now separates active review queues from maintenance, business and creative-job lists prioritise pending/high-risk items, business verification wording was removed from admin queues, the business Feature button now saves to Supabase, and admin creative-job edits now show visible success/error feedback.
 
 Final update: home and About rotating media tiles now behave as business-profile links. Captions and labels are hidden by default and reveal only on hover or keyboard focus, keeping the imagery cleaner while preserving accessible link labels.
+
+Current session update: low-risk new business listings and business recommendations can now auto-approve. Business listings still need a clean moderation result and a public contact route before they go live automatically. Medium-risk, high-risk, duplicate, blocked, no-contact, and edited listings still require admin review. Admin dashboard now shows an automation summary, and auto-approved records remain visible in admin queues for override.
 
 ## Objectives Completed
 
@@ -24,6 +26,9 @@ Final update: home and About rotating media tiles now behave as business-profile
 - [x] Added Supabase migration indexes to support trash cleanup queries.
 - [x] Added rotating live portfolio media to the home and About pages.
 - [x] Made home and About media tiles clickable and changed captions to hover/focus reveal only.
+- [x] Added low-risk auto-approval for new business listings and business recommendations.
+- [x] Kept admin override by labelling auto-approved records in admin queues and summarising automation on admin home.
+- [x] Added moderation unit tests for auto-approval, review fallback, and blocked content.
 - [x] Reworked admin home into active review queues plus maintenance.
 - [x] Prioritised pending and high-risk items in admin business and creative-job queues.
 - [x] Removed outdated verification wording from admin business list cards.

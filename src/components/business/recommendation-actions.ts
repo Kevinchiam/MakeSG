@@ -8,7 +8,7 @@ import { assessModeration, moderationBlockMessage } from "@/lib/moderation";
 import { businessRecommendationSchema } from "@/lib/validation";
 
 type SubmitRecommendationResult =
-  | { ok: true }
+  | { ok: true; status: "pending" | "approved"; autoApproved: boolean }
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 const mediaTypes = new Set(["image/jpeg", "image/png", "image/webp", "video/mp4", "video/quicktime", "video/webm"]);
@@ -84,6 +84,8 @@ export async function submitBusinessRecommendation(formData: FormData): Promise<
     return { ok: false, message: moderationBlockMessage(moderation) };
   }
 
+  const recommendationStatus = moderation.decision === "auto_approved" ? "approved" : "pending";
+
   const { data: recommendation, error: recommendationError } = await supabase
     .from("business_recommendations")
     .insert({
@@ -100,7 +102,7 @@ export async function submitBusinessRecommendation(formData: FormData): Promise<
       supporting_links: data.supportingLinks,
       permission_to_contact: true,
       permission_to_publish_name: data.permissionToPublishName,
-      status: "pending",
+      status: recommendationStatus,
       moderation_decision: moderation.decision,
       moderation_risk: moderation.risk,
       moderation_reason: moderation.reason,
@@ -156,8 +158,11 @@ export async function submitBusinessRecommendation(formData: FormData): Promise<
 
   revalidatePath("/admin");
   revalidatePath("/admin/recommendations");
+  revalidatePath("/");
+  revalidatePath("/about");
+  revalidatePath("/businesses");
   revalidatePath(`/businesses/${business.slug}`);
-  return { ok: true };
+  return { ok: true, status: recommendationStatus, autoApproved: moderation.decision === "auto_approved" };
 }
 
 function formDataToRecommendationInput(formData: FormData) {
