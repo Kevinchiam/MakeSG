@@ -22,6 +22,8 @@ Caption polish: home and About media captions now use one shared streaming capti
 
 Admin recommendation editing: admins can now review and correct recommendation submissions from `/admin/recommendations`. The new collapsible edit form supports ratings, review text, recommender details, name display permission, supporting links, media caption edits, media removal, and new recommendation media uploads.
 
+Business onboarding guidance: the `/for-businesses` form now mirrors the creative job form's live character guidance. Business name, short summary, and full description tell submitters the minimum length and update as they type.
+
 ## Objectives Completed
 
 - [x] Added smart fallback captions for uncaptained uploads.
@@ -48,6 +50,7 @@ Admin recommendation editing: admins can now review and correct recommendation s
 - [x] Fixed trash restore for dismissed business change requests.
 - [x] Made landing and About page media captions stream consistently across all database-backed image/video tiles.
 - [x] Added admin editing for business recommendations, including attached recommendation media.
+- [x] Added live minimum-character guidance to business onboarding required text fields.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 
@@ -89,7 +92,7 @@ Creative job reference uploads and private media edits now use smart fallback ca
 Recommendation media uploads now use smart fallback captions when contributors do not provide captions.
 
 ### `src/features/businesses/business-listing-form.tsx`
-Business onboarding copy is warmer and clearer. Upload copy explains that blank captions are acceptable. Success and duplicate-listing messages now read less formally.
+Business onboarding copy is warmer and clearer. Upload copy explains that blank captions are acceptable. Success and duplicate-listing messages now read less formally. Required text fields now show live minimum-character guidance for business name, short summary, and full description.
 
 ### `src/features/businesses/manage-business-details.tsx`
 Private business edit success copy now says changes are waiting for review again.

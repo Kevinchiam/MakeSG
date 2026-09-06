@@ -19,6 +19,10 @@ import type { ExistingBusinessSuggestion } from "@/lib/business-submissions";
 type BusinessInput = z.input<typeof businessSchema>;
 type BusinessOutput = z.output<typeof businessSchema>;
 
+const minimumBusinessNameCharacters = 2;
+const minimumShortSummaryCharacters = 20;
+const minimumFullDescriptionCharacters = 80;
+
 export function BusinessListingForm({ existingBusinesses = [] }: { existingBusinesses?: ExistingBusinessSuggestion[] }) {
   const successRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
@@ -37,6 +41,9 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
   });
   const watched = useWatch({ control: form.control }) as BusinessInput;
   const selectedServices = watched.services ?? [];
+  const businessNameLength = characterCount(watched.name);
+  const shortSummaryLength = characterCount(watched.shortDescription);
+  const fullDescriptionLength = characterCount(watched.description);
   const normalizedName = normalizeBusinessName(watched.name ?? "");
   const duplicateSuggestion = normalizedName.length >= 3
     ? existingBusinesses.find((business) => normalizeBusinessName(business.name) === normalizedName)
@@ -140,7 +147,13 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
           Uploading portfolio files and saving the listing. This can take a little longer for large photos or videos.
         </p>
       ) : null}
-      <Field label="Business name" error={form.formState.errors.name?.message}><Input {...form.register("name")} /></Field>
+      <Field
+        label="Business name"
+        hint={minimumCharacterHint(businessNameLength, minimumBusinessNameCharacters, "Minimum 2 characters.")}
+        error={form.formState.errors.name?.message}
+      >
+        <Input {...form.register("name")} />
+      </Field>
       {duplicateSuggestion ? (
         <div className="grid gap-3 border border-[#b9d3bf] bg-[#f1f8f2] p-4 text-sm text-[#39462d]" role="status">
           <div>
@@ -154,8 +167,20 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
           </Button>
         </div>
       ) : null}
-      <Field label="Short summary" error={form.formState.errors.shortDescription?.message}><Input {...form.register("shortDescription")} /></Field>
-      <Field label="Full description" error={form.formState.errors.description?.message}><Textarea {...form.register("description")} /></Field>
+      <Field
+        label="Short summary"
+        hint={minimumCharacterHint(shortSummaryLength, minimumShortSummaryCharacters, "Minimum 20 characters. Share the clearest one-line description of what this business does.")}
+        error={form.formState.errors.shortDescription?.message}
+      >
+        <Input {...form.register("shortDescription")} />
+      </Field>
+      <Field
+        label="Full description"
+        hint={minimumCharacterHint(fullDescriptionLength, minimumFullDescriptionCharacters, "Minimum 80 characters. Include the type of work, who they help, materials or services, and what makes them useful.")}
+        error={form.formState.errors.description?.message}
+      >
+        <Textarea {...form.register("description")} />
+      </Field>
       <div className="grid gap-4 md:grid-cols-2">
         <Field label="Website (optional)" error={form.formState.errors.websiteUrl?.message}><Input {...form.register("websiteUrl")} placeholder="https://example.com" /></Field>
         <Field label="Public email (optional)" error={form.formState.errors.publicEmail?.message}><Input {...form.register("publicEmail")} /></Field>
@@ -254,6 +279,19 @@ function normalizeBusinessName(value: string) {
 
 function fileKey(file: File) {
   return `${file.name}-${file.size}-${file.lastModified}`;
+}
+
+function characterCount(value: unknown) {
+  return typeof value === "string" ? value.trim().length : 0;
+}
+
+function minimumCharacterHint(currentLength: number, minimumLength: number, baseHint: string) {
+  const remaining = Math.max(0, minimumLength - currentLength);
+  if (remaining > 0) {
+    return `${baseHint} ${remaining} more character${remaining === 1 ? "" : "s"} needed.`;
+  }
+
+  return `${currentLength} characters. Good to submit.`;
 }
 
 function setOptionalFormValue(formData: FormData, key: string, value: string | number | undefined) {
