@@ -126,8 +126,8 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
                   ) : null}
                   <p className="mt-3 text-sm leading-6 text-[#4f493f]">“{recommendation.comment}”</p>
                   {recommendation.mediaItems?.length ? (
-                    <div className="mt-4 grid grid-cols-2 gap-2">
-                      {recommendation.mediaItems.slice(0, 2).map((media) => (
+                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                      {recommendation.mediaItems.map((media) => (
                         <figure key={media.id} className="border border-[#ded8cc] bg-[#fbfaf7]">
                           {media.mimeType.startsWith("video/") ? (
                             <video src={media.url} controls className="aspect-video w-full bg-black object-cover" />
@@ -145,8 +145,8 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
                       ))}
                     </div>
                   ) : recommendation.mediaUrls?.length ? (
-                    <div className="mt-4 grid grid-cols-2 gap-2">
-                      {recommendation.mediaUrls.slice(0, 2).map((mediaUrl) => (
+                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                      {recommendation.mediaUrls.map((mediaUrl) => (
                         <Image key={mediaUrl} src={mediaUrl} alt="" width={420} height={260} className="aspect-video border border-[#ded8cc] object-cover" />
                       ))}
                     </div>
