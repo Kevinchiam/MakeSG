@@ -157,6 +157,7 @@ async function purgeExpiredTrashItems(supabase: ReturnType<typeof createAdminCli
   await cleanupRejectedRevisionStorage(supabase, cutoff);
   await cleanupRejectedRecommendationStorage(supabase, cutoff);
   await cleanupArchivedCreativeJobStorage(supabase, cutoff);
+  await cleanupDismissedChangeRequestStorage(supabase, cutoff);
 
   await Promise.all([
     supabase.from("businesses").delete().eq("publication_status", "rejected").lt("updated_at", cutoff),
@@ -225,6 +226,21 @@ async function cleanupArchivedCreativeJobStorage(supabase: ReturnType<typeof cre
     .filter((path): path is string => Boolean(path));
 
   if (paths.length) await supabase.storage.from("creative-job-references").remove(paths);
+}
+
+async function cleanupDismissedChangeRequestStorage(supabase: ReturnType<typeof createAdminClient>, cutoff: string) {
+  const { data } = await supabase
+    .from("business_change_requests")
+    .select("business_change_request_media(storage_path)")
+    .eq("status", "dismissed")
+    .lt("updated_at", cutoff);
+
+  const paths = ((data ?? []) as Array<{ business_change_request_media?: Array<{ storage_path: string | null }> }>)
+    .flatMap((request) => request.business_change_request_media ?? [])
+    .map((item) => item.storage_path)
+    .filter((path): path is string => Boolean(path));
+
+  if (paths.length) await supabase.storage.from("business-portfolios").remove(paths);
 }
 
 function trashDates(trashedAt: string) {

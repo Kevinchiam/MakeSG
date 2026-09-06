@@ -3,6 +3,7 @@
 import { PencilLine, Send, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { requestBusinessChange } from "@/components/business/change-request-actions";
+import { FileUploader } from "@/components/projects/file-uploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,6 +19,8 @@ export function RequestBusinessChangePanel({ businessId, businessName }: { busin
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [requesterEmail, setRequesterEmail] = useState("");
   const [reason, setReason] = useState("");
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const [mediaCaptions, setMediaCaptions] = useState<Record<string, string>>({});
   useFeedbackFocus(feedbackRef, message);
 
   async function submit(formData: FormData) {
@@ -27,6 +30,10 @@ export function RequestBusinessChangePanel({ businessId, businessName }: { busin
     formData.set("businessId", businessId);
     formData.set("requesterEmail", requesterEmail);
     formData.set("reason", reason);
+    mediaFiles.forEach((file) => {
+      formData.append("changeRequestMedia", file);
+      formData.append("changeRequestMediaCaptions", mediaCaptions[fileKey(file)] ?? "");
+    });
 
     const result = await requestBusinessChange(formData);
     setIsSubmitting(false);
@@ -40,6 +47,8 @@ export function RequestBusinessChangePanel({ businessId, businessName }: { busin
     setMessage({ tone: "success", text: result.message });
     setRequesterEmail("");
     setReason("");
+    setMediaFiles([]);
+    setMediaCaptions({});
   }
 
   return (
@@ -52,7 +61,7 @@ export function RequestBusinessChangePanel({ businessId, businessName }: { busin
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="font-semibold">Request a listing change</h3>
-              <p className="mt-1 text-xs leading-5 text-[#6d675d]">Tell admin what should be updated for {businessName}. It will appear in the admin dashboard for review.</p>
+              <p className="mt-1 text-xs leading-5 text-[#6d675d]">Tell admin what should be updated for {businessName}. Add a photo or video if it helps explain the correction.</p>
             </div>
             <button
               type="button"
@@ -97,6 +106,46 @@ export function RequestBusinessChangePanel({ businessId, businessName }: { busin
             />
             {fieldErrors.reason ? <span className="text-[#9c4f35]">{fieldErrors.reason}</span> : null}
           </label>
+          <div className="grid gap-3">
+            <FileUploader
+              accept="media"
+              maxTotalSizeMb={10}
+              value={mediaFiles}
+              onFilesChange={(files) => {
+                setFieldErrors((current) => ({ ...current, media: "" }));
+                setMediaCaptions((current) => {
+                  const next: Record<string, string> = {};
+                  files.forEach((file) => {
+                    const key = fileKey(file);
+                    next[key] = current[key] ?? "";
+                  });
+                  return next;
+                });
+                setMediaFiles(files);
+              }}
+              label="Add photos or videos"
+              description="Optional. Uploads must be 10MB total or smaller."
+              error={fieldErrors.media}
+            />
+            {mediaFiles.length ? (
+              <fieldset className="grid gap-3">
+                <legend className="text-sm font-medium">Media captions</legend>
+                {mediaFiles.map((file, index) => {
+                  const key = fileKey(file);
+                  return (
+                    <label key={key} className="grid gap-1.5 text-sm font-medium">
+                      Caption for upload {index + 1}
+                      <Input
+                        value={mediaCaptions[key] ?? ""}
+                        onChange={(event) => setMediaCaptions((current) => ({ ...current, [key]: event.target.value }))}
+                        placeholder="What should admin notice in this file?"
+                      />
+                    </label>
+                  );
+                })}
+              </fieldset>
+            ) : null}
+          </div>
           <Button type="submit" disabled={isSubmitting}>
             <Send className="h-4 w-4" aria-hidden /> {isSubmitting ? "Saving..." : "Submit request"}
           </Button>
@@ -104,4 +153,8 @@ export function RequestBusinessChangePanel({ businessId, businessName }: { busin
       ) : null}
     </div>
   );
+}
+
+function fileKey(file: File) {
+  return `${file.name}-${file.size}-${file.lastModified}`;
 }

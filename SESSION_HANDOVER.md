@@ -14,6 +14,8 @@ Final update: home and About rotating media tiles now behave as business-profile
 
 Current session update: low-risk new business listings and business recommendations can now auto-approve. Business listings still need a clean moderation result and a public contact route before they go live automatically. Medium-risk, high-risk, duplicate, blocked, no-contact, and edited listings still require admin review. Admin dashboard now shows an automation summary, and auto-approved records remain visible in admin queues for override.
 
+Newest update: public business change requests now support optional photos/videos and captions. Admins review each request beside the live business listing editor and media editor, so useful corrections can be applied immediately while keeping admin override intact.
+
 ## Objectives Completed
 
 - [x] Added smart fallback captions for uncaptained uploads.
@@ -34,6 +36,9 @@ Current session update: low-risk new business listings and business recommendati
 - [x] Removed outdated verification wording from admin business list cards.
 - [x] Fixed the admin business Feature button so it persists to Supabase.
 - [x] Added visible save/error feedback to admin creative-job editing.
+- [x] Added media uploads and captions to public business change requests.
+- [x] Added side-by-side admin review for change requests and live business editing.
+- [x] Added storage cleanup for expired dismissed change-request media.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 
@@ -53,6 +58,9 @@ Client-side restore button for trash items. It calls the shared admin restore ac
 
 ### `supabase/migrations/0015_admin_trash_retention.sql`
 Adds partial indexes for faster cleanup/filtering of rejected businesses, rejected business revisions, rejected recommendations, archived creative jobs, and dismissed business change requests.
+
+### `supabase/migrations/0016_business_change_request_media.sql`
+Adds the `business_change_request_media` table for photos/videos attached to public listing correction requests. Rows reference `business_change_requests`, store Supabase Storage metadata, and are admin-managed through RLS.
 
 ## Files Modified
 
@@ -132,7 +140,19 @@ Active admin business queues now exclude rejected listings and expose featured s
 Active admin recommendation queues now exclude rejected recommendations.
 
 ### `src/lib/business-change-requests.ts`
-Active admin change-request queues now exclude dismissed requests.
+Active admin change-request queues now exclude dismissed requests and load supporting media URLs for admin review.
+
+### `src/components/business/change-request-actions.ts`
+Public business change requests now accept optional photos/videos, validate file type and a 10MB combined upload limit, upload files to Supabase Storage, attach captions, and roll back saved data if upload fails.
+
+### `src/components/business/request-business-change-panel.tsx`
+The public Request a change panel now includes an optional media uploader and per-file captions while preserving inline validation feedback.
+
+### `src/app/admin/change-requests/page.tsx`
+The admin change-request page now presents the request, requester notes, supporting media, moderation summary, and admin controls beside the live business listing and media editing forms.
+
+### `src/lib/admin-trash.ts`
+Expired dismissed change requests now remove their supporting media from `business-portfolios` during trash cleanup.
 
 ### `src/lib/creative-jobs.ts`
 Active admin creative job queues now exclude archived jobs; archived status label changed to “In trash.”
@@ -158,14 +178,17 @@ Added the 2026-08-29 changelog entry.
 ## Database Changes
 
 - Added `supabase/migrations/0015_admin_trash_retention.sql`.
+- Added `supabase/migrations/0016_business_change_request_media.sql`.
 - The migration only adds indexes; it does not delete data or change existing table shapes.
+- The new change-request media migration adds a linked media table and does not alter existing change-request rows.
 - Existing statuses are used as trash states:
   - `businesses.publication_status = 'rejected'`
   - `business_listing_revisions.status = 'rejected'`
   - `business_recommendations.status = 'rejected'`
   - `business_change_requests.status = 'dismissed'`
-  - `creative_job_listings.status = 'archived'`
+- `creative_job_listings.status = 'archived'`
 - Apply this migration in Supabase before relying on the production trash cleanup performance.
+- Apply `0016_business_change_request_media.sql` in Supabase before using media uploads on public change requests in production.
 
 ## API Changes
 
@@ -175,6 +198,8 @@ Added the 2026-08-29 changelog entry.
 - `restoreTrashItem(kind, id)` restores trash items to the appropriate review queue.
 - Admin dashboard and trash page trigger expired-trash cleanup.
 - Active admin queue helpers filter out trash-state rows.
+- `requestBusinessChange(formData)` now accepts `changeRequestMedia` files and `changeRequestMediaCaptions`, validates type/size, uploads to Supabase Storage, and saves linked media rows.
+- Admin change-request loading now includes public URLs for attached media.
 
 ## UI Changes
 
@@ -188,6 +213,8 @@ Added the 2026-08-29 changelog entry.
 - Rejected/dismissed items no longer clutter normal review queues.
 - Upload helper text now reassures users that blank captions are fine.
 - Major public-facing copy was softened across home, About, business submission, creative job posting, recommendation, and private management pages.
+- Public change requests now allow photos/videos and captions.
+- Admin change requests now use a two-column review workspace: request evidence on one side, live listing/media editing on the other.
 
 ## Bugs Fixed
 
@@ -197,6 +224,7 @@ Added the 2026-08-29 changelog entry.
 - Admins can now restore trash items before the seven-day cleanup window ends.
 - Admin business Feature no longer creates a false local-only status.
 - Admin creative-job saves no longer complete silently with no confirmation.
+- Failed change-request media uploads now roll back the request and clean up any files uploaded earlier in the same submission.
 
 ## Bugs Remaining
 
@@ -204,6 +232,7 @@ Added the 2026-08-29 changelog entry.
 - Smart captions do not inspect actual image/video content.
 - Public forms still need rate limiting.
 - Visual image/video moderation is still rule-based metadata checking only.
+- Change-request media requires the `0016_business_change_request_media.sql` migration in production before uploads can save.
 
 ## Technical Decisions
 
@@ -223,6 +252,7 @@ Added the 2026-08-29 changelog entry.
 
 - If admin pages are not visited, expired trash will not be purged automatically.
 - Storage cleanup may miss files if older rows have missing or malformed storage paths.
+- Public change-request media uses the public `business-portfolios` bucket so admins can preview it easily.
 - Treating existing statuses as trash states means “archived” creative jobs now function as trash, not long-term archive.
 - Private manage links remain bearer credentials.
 
@@ -232,6 +262,7 @@ Added the 2026-08-29 changelog entry.
 - Whether seven days is enough retention before permanent deletion.
 - Whether users expect actual AI captions from image contents rather than filename-based captions.
 - Whether rejected business listings should be hidden from every future reporting/export surface.
+- Whether change requests should eventually support structured suggested fields, not just free-text reasons and supporting media.
 
 ## Suggested Refactoring
 
@@ -240,18 +271,21 @@ Added the 2026-08-29 changelog entry.
 - Add queue filters/search and bulk actions once admin volume grows.
 - Generate typed Supabase schemas to reduce casts in admin helpers.
 - Extract a shared media-upload mapping utility for business, recommendation, and creative job flows.
+- Consider extracting repeated admin business-edit sections into a reusable side-by-side review layout if more queues need live editing.
 
 ## Performance Considerations
 
 - Smart captioning is simple string processing and adds negligible overhead.
 - Trash indexes should keep admin cleanup queries cheap as data grows.
 - Storage deletion happens during cleanup and could become slow if many expired items accumulate; schedule/background execution would be better at scale.
+- Change-request media adds storage work to public submissions; client-side optimisation from `FileUploader` keeps image uploads smaller where possible.
 
 ## Accessibility Considerations
 
 - Fallback captions improve media descriptions, but they are not yet true alt text generated from visual content.
 - New trash page uses semantic headings, list content, links, and existing focusable controls.
 - Copy changes should reduce cognitive load for first-time contributors.
+- Change-request media previews use image alt text from captions or filenames; richer visual alt text would require real image understanding.
 
 ## Security Considerations
 
@@ -259,6 +293,7 @@ Added the 2026-08-29 changelog entry.
 - Public users cannot access `/admin/trash` without the admin cookie.
 - No secrets were added.
 - Permanent deletion should remain admin-only or scheduled server-side.
+- Change-request media is protected by admin-only RLS at the database row level, while files are stored in the existing public portfolio bucket for preview simplicity.
 
 ## Testing Completed
 
@@ -273,11 +308,14 @@ The bundled Codex Node runtime was used because the regular shell could not find
 ## Testing Still Needed
 
 - Apply `supabase/migrations/0015_admin_trash_retention.sql` in production Supabase.
+- Apply `supabase/migrations/0016_business_change_request_media.sql` in production Supabase.
 - Deploy to Vercel.
 - Smoke test:
   - Business onboarding with blank media captions.
   - Creative job posting with blank reference captions.
   - Business recommendation with blank media captions.
+  - Public business change request with one or more media uploads and captions.
+  - Admin change-request review page with request media beside the live business editor.
   - Reject a business and confirm it appears in `/admin/trash`.
   - Dismiss a change request and confirm it appears in `/admin/trash`.
   - Confirm active admin queues no longer show trash items.
@@ -285,7 +323,7 @@ The bundled Codex Node runtime was used because the regular shell could not find
 
 ## Recommended Next Tasks
 
-1. Apply the new Supabase migration and redeploy.
+1. Apply the new Supabase migrations and redeploy.
 2. Add a scheduled cleanup route using Vercel Cron so trash purges without needing an admin visit.
 3. Add actual image/video moderation and AI captions after choosing a provider.
 4. Add public form rate limiting.
@@ -293,4 +331,4 @@ The bundled Codex Node runtime was used because the regular shell could not find
 
 ## Ready-to-use Prompt for Next Session
 
-Continue the MakeSG project in `/Users/kevinchiam/Documents/Design Directory`. Before coding, read `AI_RULES.md`, `PROJECT_CONTEXT.md`, and `SESSION_HANDOVER.md`. The latest work on 2026-08-29 added smart fallback captions for uncaptained media, friendlier site copy, an admin-only trash bin with seven-day retention cleanup, and restore controls for trash items. Key files to read first: `src/lib/media-captions.ts`, `src/lib/admin-trash.ts`, `src/app/admin/trash/page.tsx`, `src/components/admin/restore-trash-item-button.tsx`, `src/components/admin/actions.ts`, `src/app/admin/page.tsx`, `src/features/businesses/actions.ts`, `src/features/creative-jobs/actions.ts`, `src/components/business/recommendation-actions.ts`, and `supabase/migrations/0015_admin_trash_retention.sql`. The next likely task is to apply the migration, deploy, and then move trash cleanup to a scheduled Vercel Cron route. Remember the current decision: smart captions are filename/context-based, not visual AI; rejected business/recommendation/revision rows, dismissed change requests, and archived creative jobs are considered trash; restored trash items return to review queues rather than going straight public; admin override stays central.
+Continue the MakeSG project in `/Users/kevinchiam/Documents/Design Directory`. Before coding, read `AI_RULES.md`, `PROJECT_CONTEXT.md`, and `SESSION_HANDOVER.md`. The latest work on 2026-09-06 added low-risk auto-approval and media-backed public business change requests. Key files to read first: `src/components/business/request-business-change-panel.tsx`, `src/components/business/change-request-actions.ts`, `src/app/admin/change-requests/page.tsx`, `src/lib/business-change-requests.ts`, `src/lib/admin-trash.ts`, `src/components/admin/admin-business-edit-form.tsx`, `src/components/admin/admin-business-media-form.tsx`, `src/lib/moderation.ts`, `supabase/migrations/0015_admin_trash_retention.sql`, and `supabase/migrations/0016_business_change_request_media.sql`. The next likely task is to apply the new migration, deploy, smoke test change-request media upload/admin review, and then move trash cleanup to a scheduled Vercel Cron route. Remember the current decisions: smart captions are filename/context-based, not visual AI; rejected business/recommendation/revision rows, dismissed change requests, and archived creative jobs are considered trash; change-request media is shown only to admin review; public change requests stay free-text plus optional media for now; admin override stays central.

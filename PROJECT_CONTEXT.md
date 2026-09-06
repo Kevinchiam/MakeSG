@@ -192,7 +192,7 @@ Future improvements:
 ### Business Directory
 Status: Completed
 
-Description: Browse published businesses with filters, typo-tolerant search, cards, pagination, empty states, a Recommended-only filter, recommendation labels, and public change-request panels that save into the admin dashboard.
+Description: Browse published businesses with filters, typo-tolerant search, cards, pagination, empty states, a Recommended-only filter, recommendation labels, and public change-request panels. Change requests can include an email, explanation, optional photos/videos, and captions so admins can understand the issue before editing the live listing.
 
 Relevant files:
 - `src/app/businesses/page.tsx`
@@ -206,6 +206,7 @@ Relevant files:
 - `src/lib/business-change-requests.ts`
 - `src/lib/public-businesses.ts`
 - `src/lib/filters.ts`
+- `supabase/migrations/0016_business_change_request_media.sql`
 
 Future improvements:
 - Add service synonyms and query analytics.
@@ -368,13 +369,16 @@ Future improvements:
 ### Admin Dashboard
 Status: Completed
 
-Description: Admin home organised as a review command centre. Active work is grouped into business listings, creative jobs, recommendations, and change requests, with high-risk automated triage flags called out separately. Maintenance items such as trash, services, and reports are visually separated so admins know what needs a decision now versus what is upkeep or future functionality.
+Description: Admin home organised as a review command centre. Active work is grouped into business listings, creative jobs, recommendations, and change requests, with high-risk automated triage flags called out separately. Maintenance items such as trash, services, and reports are visually separated so admins know what needs a decision now versus what is upkeep or future functionality. Change requests now support media-backed evidence and are reviewed beside the live listing editor.
 
 Relevant files:
 - `src/app/admin/page.tsx`
+- `src/app/admin/change-requests/page.tsx`
 - `src/app/admin/trash/page.tsx`
 - `src/components/admin/admin-page-header.tsx`
 - `src/components/admin/moderation-summary.tsx`
+- `src/components/admin/admin-business-edit-form.tsx`
+- `src/components/admin/admin-business-media-form.tsx`
 - `src/lib/admin-trash.ts`
 
 Future improvements:
@@ -384,12 +388,15 @@ Future improvements:
 ### Admin Business Moderation
 Status: Completed
 
-Description: Admin can review, approve, reject, feature/unfeature, unpublish, delete, and directly edit business listings and portfolio media. New listings, auto-approved listings, and pending edits are visible in the queue, with pending/high-risk items prioritised. Records show plain-language review labels and automated triage risk, reason, and signals to streamline review while preserving admin override. Rejected listings and rejected pending edits move out of the main queues into the admin trash bin for seven days before cleanup.
+Description: Admin can review, approve, reject, feature/unfeature, unpublish, delete, and directly edit business listings and portfolio media. New listings, auto-approved listings, and pending edits are visible in the queue, with pending/high-risk items prioritised. Records show plain-language review labels and automated triage risk, reason, and signals to streamline review while preserving admin override. Public change requests show requester context and supporting media beside the live listing edit forms, so an admin can apply useful corrections immediately. Rejected listings and rejected pending edits move out of the main queues into the admin trash bin for seven days before cleanup.
 
 Relevant files:
 - `src/app/admin/businesses/page.tsx`
 - `src/app/admin/businesses/[id]/page.tsx`
 - `src/components/admin/admin-status-controls.tsx`
+- `src/components/admin/admin-business-edit-form.tsx`
+- `src/components/admin/admin-business-media-form.tsx`
+- `src/app/admin/change-requests/page.tsx`
 - `src/components/admin/moderation-summary.tsx`
 - `src/components/admin/actions.ts`
 
@@ -498,7 +505,10 @@ Word-of-mouth recommendation submissions tied to a business, with recommender de
 Media attached to business recommendations. Blank captions receive fallback captions before save; media for expired rejected recommendations is removed from storage during trash cleanup.
 
 ### `business_change_requests`
-Public requests to correct or update an existing business listing. Each request stores the target business, requester email, reason, admin notes, status, automated triage metadata, and timestamps. Admins review these from `/admin/change-requests` and manually update the listing if the request is valid. Dismissed rows appear in the admin trash bin before cleanup.
+Public requests to correct or update an existing business listing. Each request stores the target business, requester email, reason, admin notes, status, automated triage metadata, and timestamps. Admins review these from `/admin/change-requests` beside the live listing editor and media manager, then manually update the listing if the request is valid. Dismissed rows appear in the admin trash bin before cleanup.
+
+### `business_change_request_media`
+Photos/videos attached to public business change requests. Records reference `business_change_requests`, store the Supabase Storage bucket/path, filename, mime type, file size, caption, and sort order. Media is stored in the `business-portfolios` bucket under `change-requests/{requestId}/...`. Dismissed change-request media is removed during expired trash cleanup.
 
 ### `business_listing_revisions`
 Pending edits for published business listings. Stores proposed listing data, proposed services, proposed portfolio media, revision status, and automated triage metadata. Approved revisions overwrite the live listing; rejected revisions leave the live listing unchanged and appear in the admin trash bin before cleanup.
@@ -536,7 +546,7 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - `updateBusinessPublicationStatus(businessId, status)`: Admin moderation of business publication status.
 - `deleteBusinessEntry(businessId)`: Admin deletion of business listing.
 - `getAdminTrashItems({ purgeExpired })`: Admin helper that lists trash-bin items and optionally purges expired rows/media.
-- `requestBusinessChange(formData)`: Public business-card correction request saved for admin review.
+- `requestBusinessChange(formData)`: Public business correction request saved for admin review, with optional photos/videos and per-file captions capped at 10MB combined.
 - `updateBusinessChangeRequestStatus(requestId, status, adminNotes)`: Admin review status update for public change requests.
 - `updateCreativeJobFromForm(jobId, formData)`: Admin edit of creative job listing.
 - `deleteCreativeJobEntry(jobId)`: Admin deletion of creative job.
@@ -567,6 +577,7 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - `MobileFilterDrawer`: Mobile filters.
 - `EnquiryForm`: Business profile contact UI.
 - `RecommendBusinessForm`: Recommendation submission UI.
+- `RequestBusinessChangePanel`: Public business correction panel with email, reason, optional media upload, and captions.
 - `BusinessListingForm`: Business onboarding form.
 - `CreativeJobListingForm`: Creative job posting form.
 - `ManageCreativeJobStatus`: Private status selector.
@@ -576,6 +587,9 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - `AdminPageHeader`: Admin page heading wrapper.
 - `ModerationSummary`: Shared admin triage panel showing automated decision, risk, reason, and signals.
 - `AdminStatusControls`: Business and recommendation moderation buttons, including persisted business feature/unfeature controls.
+- `BusinessChangeRequestControls`: Admin controls for marking change requests reviewed or dismissed.
+- `AdminBusinessEditForm`: Admin business listing editor used on business records and side-by-side change-request review.
+- `AdminBusinessMediaForm`: Admin business media editor used on business records and side-by-side change-request review.
 - `AdminCreativeJobEditForm`: Admin creative-job editing form with visible save/error feedback.
 - `AdminCreativeJobDeleteButton`: Admin deletion confirmation for creative jobs.
 - `Admin Trash Page`: Admin-only queue for rejected/dismissed/archived items waiting for seven-day cleanup.
