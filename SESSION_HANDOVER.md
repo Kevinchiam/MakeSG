@@ -20,6 +20,8 @@ Restore fix: dismissed business change requests now restore to `open`, which mat
 
 Caption polish: home and About media captions now use one shared streaming caption component. Long captions from present and future directory media stream across the visible caption window on hover or keyboard focus instead of being cropped.
 
+Admin recommendation editing: admins can now review and correct recommendation submissions from `/admin/recommendations`. The new collapsible edit form supports ratings, review text, recommender details, name display permission, supporting links, media caption edits, media removal, and new recommendation media uploads.
+
 ## Objectives Completed
 
 - [x] Added smart fallback captions for uncaptained uploads.
@@ -45,6 +47,7 @@ Caption polish: home and About media captions now use one shared streaming capti
 - [x] Added storage cleanup for expired dismissed change-request media.
 - [x] Fixed trash restore for dismissed business change requests.
 - [x] Made landing and About page media captions stream consistently across all database-backed image/video tiles.
+- [x] Added admin editing for business recommendations, including attached recommendation media.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 
@@ -70,6 +73,9 @@ Adds the `business_change_request_media` table for photos/videos attached to pub
 
 ### `src/components/site/streaming-media-caption.tsx`
 Shared caption component for homepage and About page media overlays. It duplicates the visible caption text inside a masked track so long captions can stream smoothly without resizing or clipping the media tile.
+
+### `src/components/admin/admin-recommendation-edit-form.tsx`
+Collapsible admin editor for recommendation submissions. It mirrors the public recommendation fields, lets admins correct captions/remove uploads/add replacement media, and shows inline save feedback that scrolls into view.
 
 ## Files Modified
 
@@ -137,7 +143,7 @@ Business review queue now prioritises pending edits, pending listings, and high-
 Creative job review queue now prioritises pending/high-risk jobs, shows clearer queue summary badges, and uses “creatives” instead of “clients.”
 
 ### `src/app/admin/recommendations/page.tsx`
-Recommendation review now sorts pending/high-risk submissions first and includes a clear empty state.
+Recommendation review now sorts pending/high-risk submissions first, includes a clear empty state, and provides an edit form for each active recommendation.
 
 ### `src/app/admin/businesses/[id]/page.tsx`
 Business moderation controls now appear before manual edit forms, keeping approve/reject/feature decisions easier to find.
@@ -149,7 +155,7 @@ New admin creative-job edit form that preserves the previous editing fields whil
 Active admin business queues now exclude rejected listings and expose featured state and timestamps for better admin sorting and labels.
 
 ### `src/lib/business-recommendations.ts`
-Active admin recommendation queues now exclude rejected recommendations.
+Active admin recommendation queues now exclude rejected recommendations and load recommendation media metadata needed for admin editing.
 
 ### `src/lib/business-change-requests.ts`
 Active admin change-request queues now exclude dismissed requests and load supporting media URLs for admin review.
@@ -176,7 +182,7 @@ Reject feedback now tells admins that rejected items move to the trash bin for s
 Dismiss feedback now tells admins that dismissed requests move to the trash bin for seven days.
 
 ### `src/components/admin/actions.ts`
-Admin actions now revalidate `/admin/trash` when moderation, deletion, change-request status, or trash restore changes. Business feature/unfeature now revalidates public highlights and directory pages. Dismissed business change requests restore to `open`, not `pending`, because the database only allows `open`, `reviewed`, and `dismissed` for that table.
+Admin actions now revalidate `/admin/trash` when moderation, deletion, change-request status, or trash restore changes. Business feature/unfeature now revalidates public highlights and directory pages. Dismissed business change requests restore to `open`, not `pending`, because the database only allows `open`, `reviewed`, and `dismissed` for that table. Recommendation edits now save ratings, review text, contributor details, supporting links, and media changes while revalidating the affected public business profile.
 
 ### `src/app/admin/creative-jobs/[id]/page.tsx`
 Admin creative job archived action is now labelled “Move to trash,” and the edit form now shows visible save/error feedback.

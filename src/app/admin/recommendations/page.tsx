@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { MessageCircleHeart, Star } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { AdminRecommendationEditForm } from "@/components/admin/admin-recommendation-edit-form";
 import { AdminStatusControls } from "@/components/admin/admin-status-controls";
 import { ModerationSummary } from "@/components/admin/moderation-summary";
 import { Badge } from "@/components/ui/badge";
@@ -86,6 +87,7 @@ export default async function AdminRecommendationsPage() {
                 </div>
               ) : null}
               {recommendation.businessSlug ? <Link href={`/businesses/${recommendation.businessSlug}`} className="mt-4 inline-block text-sm underline">View business profile</Link> : null}
+              <AdminRecommendationEditForm recommendation={recommendation} />
             </div>
             <AdminStatusControls
               recommendationId={recommendation.id}

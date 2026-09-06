@@ -270,21 +270,22 @@ Future improvements:
 ### Business Recommendations
 Status: Completed
 
-Description: Users can recommend businesses based on real experience. Recommendations are checked for obvious abuse/spam and low-risk recommendations can appear publicly right away. Anything uncertain waits for admin review. Recommendation media also receives a smart fallback caption when contributors leave captions blank.
+Description: Users can recommend businesses based on real experience. Recommendations are checked for obvious abuse/spam and low-risk recommendations can appear publicly right away. Anything uncertain waits for admin review. Admins can edit recommendation details, ratings, contributor display settings, supporting links, and recommendation media before or after approval. Recommendation media also receives a smart fallback caption when contributors or admins leave captions blank.
 
 Relevant files:
 - `src/app/recommend-business/page.tsx`
 - `src/components/business/recommend-business-form.tsx`
 - `src/components/business/recommend-business-panel.tsx`
 - `src/components/business/recommendation-actions.ts`
+- `src/components/admin/admin-recommendation-edit-form.tsx`
 - `src/lib/media-captions.ts`
 - `src/lib/recommendation.ts`
 - `supabase/migrations/0002_business_recommendations.sql`
 - `supabase/migrations/0014_moderation_triage.sql`
 
 Future improvements:
-- Persist recommendation media in public display.
-- Add recommendation editing before approval.
+- Add admin notes and edit history for recommendation changes.
+- Add visual AI moderation for uploaded recommendation media.
 
 ### Business Duplicate Prevention
 Status: Completed
@@ -371,7 +372,7 @@ Future improvements:
 ### Admin Dashboard
 Status: Completed
 
-Description: Admin home organised as a review command centre. Active work is grouped into business listings, creative jobs, recommendations, and change requests, with high-risk automated triage flags called out separately. Maintenance items such as trash, services, and reports are visually separated so admins know what needs a decision now versus what is upkeep or future functionality. Change requests now support media-backed evidence and are reviewed beside the live listing editor.
+Description: Admin home organised as a review command centre. Active work is grouped into business listings, creative jobs, recommendations, and change requests, with high-risk automated triage flags called out separately. Maintenance items such as trash, services, and reports are visually separated so admins know what needs a decision now versus what is upkeep or future functionality. Change requests now support media-backed evidence and are reviewed beside the live listing editor. Recommendations can be edited from the review queue while retaining approve/reject override controls.
 
 Relevant files:
 - `src/app/admin/page.tsx`
@@ -381,6 +382,7 @@ Relevant files:
 - `src/components/admin/moderation-summary.tsx`
 - `src/components/admin/admin-business-edit-form.tsx`
 - `src/components/admin/admin-business-media-form.tsx`
+- `src/components/admin/admin-recommendation-edit-form.tsx`
 - `src/lib/admin-trash.ts`
 
 Future improvements:
@@ -550,6 +552,7 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - `getAdminTrashItems({ purgeExpired })`: Admin helper that lists trash-bin items and optionally purges expired rows/media.
 - `requestBusinessChange(formData)`: Public business correction request saved for admin review, with optional photos/videos and per-file captions capped at 10MB combined.
 - `updateBusinessChangeRequestStatus(requestId, status, adminNotes)`: Admin review status update for public change requests.
+- `updateBusinessRecommendationFromAdmin(recommendationId, formData)`: Admin edit of recommendation ratings, review text, contributor details, supporting links, media captions, removed media, and added media.
 - `updateCreativeJobFromForm(jobId, formData)`: Admin edit of creative job listing.
 - `deleteCreativeJobEntry(jobId)`: Admin deletion of creative job.
 - `submitBusinessListing(input)`: Business onboarding submission and portfolio upload.
@@ -593,6 +596,7 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - `BusinessChangeRequestControls`: Admin controls for marking change requests reviewed or dismissed.
 - `AdminBusinessEditForm`: Admin business listing editor used on business records and side-by-side change-request review.
 - `AdminBusinessMediaForm`: Admin business media editor used on business records and side-by-side change-request review.
+- `AdminRecommendationEditForm`: Collapsible admin recommendation editor for ratings, review text, contributor details, supporting links, and recommendation media.
 - `AdminCreativeJobEditForm`: Admin creative-job editing form with visible save/error feedback.
 - `AdminCreativeJobDeleteButton`: Admin deletion confirmation for creative jobs.
 - `Admin Trash Page`: Admin-only queue for rejected/dismissed/archived items waiting for seven-day cleanup.

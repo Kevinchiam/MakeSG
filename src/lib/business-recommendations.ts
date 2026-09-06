@@ -33,6 +33,7 @@ type RecommendationMediaRow = {
   storage_path: string;
   file_name: string;
   mime_type: string;
+  size_bytes?: number | null;
   caption?: string | null;
 };
 
@@ -48,7 +49,7 @@ export async function getApprovedRecommendationsForBusiness(businessId: string):
     const { data, error } = await supabase
       .from("business_recommendations")
       .select(
-        "id, business_id, recommender_name, recommender_role, recommender_email, relationship, project_context, recommended_for, comment, quality_rating, reliability_rating, collaboration_rating, supporting_links, permission_to_contact, permission_to_publish_name, status, created_at, business_recommendation_media(id, bucket, storage_path, file_name, mime_type, caption)",
+        "id, business_id, recommender_name, recommender_role, recommender_email, relationship, project_context, recommended_for, comment, quality_rating, reliability_rating, collaboration_rating, supporting_links, permission_to_contact, permission_to_publish_name, status, created_at, business_recommendation_media(id, bucket, storage_path, file_name, mime_type, size_bytes, caption)",
       )
       .eq("business_id", businessId)
       .eq("status", "approved")
@@ -67,7 +68,7 @@ export async function getAdminBusinessRecommendations(): Promise<AdminBusinessRe
     const { data, error } = await supabase
       .from("business_recommendations")
       .select(
-        "id, business_id, recommender_name, recommender_role, recommender_email, relationship, project_context, recommended_for, comment, quality_rating, reliability_rating, collaboration_rating, supporting_links, permission_to_contact, permission_to_publish_name, status, created_at, moderation_decision, moderation_risk, moderation_reason, moderation_signals, business_recommendation_media(id, bucket, storage_path, file_name, mime_type, caption), businesses(name, slug)",
+        "id, business_id, recommender_name, recommender_role, recommender_email, relationship, project_context, recommended_for, comment, quality_rating, reliability_rating, collaboration_rating, supporting_links, permission_to_contact, permission_to_publish_name, status, created_at, moderation_decision, moderation_risk, moderation_reason, moderation_signals, business_recommendation_media(id, bucket, storage_path, file_name, mime_type, size_bytes, caption), businesses(name, slug)",
       )
       .neq("status", "rejected")
       .order("created_at", { ascending: false });

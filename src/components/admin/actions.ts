@@ -18,6 +18,23 @@ type AdminBusinessMediaUpdateResult =
   | { ok: true }
   | { ok: false; message: string };
 
+type AdminRecommendationUpdateResult =
+  | { ok: true }
+  | { ok: false; message: string; fieldErrors?: Record<string, string> };
+
+const adminRecommendationSchema = z.object({
+  recommenderName: z.string().trim().min(1, "Enter the recommender's name."),
+  recommenderRole: z.string().trim().optional(),
+  recommenderEmail: z.string().trim().email("Enter a valid email.").optional().or(z.literal("")),
+  comment: z.string().trim().min(20, "Keep the review to at least 20 characters."),
+  qualityRating: z.coerce.number().int().min(1).max(5),
+  reliabilityRating: z.coerce.number().int().min(1).max(5),
+  collaborationRating: z.coerce.number().int().min(1).max(5),
+  supportingLinks: z.array(z.string().trim().url("Enter valid supporting links.")).max(3, "Use up to three supporting links."),
+  permissionToContact: z.boolean(),
+  permissionToPublishName: z.boolean(),
+});
+
 export async function updateBusinessPublicationStatus(businessId: string, status: PublicationStatus) {
   const supabase = createAdminClient();
   const { error } = await supabase
@@ -208,6 +225,164 @@ export async function updateBusinessRecommendationStatus(recommendationId: strin
   revalidatePath("/admin");
   revalidatePath("/admin/recommendations");
   revalidatePath("/admin/trash");
+  revalidatePath("/");
+  revalidatePath("/businesses");
+  if (business?.slug) revalidatePath(`/businesses/${business.slug}`);
+  return { ok: true };
+}
+
+export async function updateBusinessRecommendationFromAdmin(recommendationId: string, formData: FormData): Promise<AdminRecommendationUpdateResult> {
+  const supportingLinks = stringFromFormData(formData.get("supportingLinks"))
+    .split(/\r?\n/)
+    .map((link) => link.trim())
+    .filter(Boolean);
+  const parsed = adminRecommendationSchema.safeParse({
+    recommenderName: stringFromFormData(formData.get("recommenderName")),
+    recommenderRole: stringFromFormData(formData.get("recommenderRole")),
+    recommenderEmail: stringFromFormData(formData.get("recommenderEmail")),
+    comment: stringFromFormData(formData.get("comment")),
+    qualityRating: stringFromFormData(formData.get("qualityRating")),
+    reliabilityRating: stringFromFormData(formData.get("reliabilityRating")),
+    collaborationRating: stringFromFormData(formData.get("collaborationRating")),
+    supportingLinks,
+    permissionToContact: formData.get("permissionToContact") === "on",
+    permissionToPublishName: formData.get("permissionToPublishName") === "on",
+  });
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Check the highlighted fields and try again.",
+      fieldErrors: fieldErrorsFromIssues(parsed.error.issues),
+    };
+  }
+
+  const supabase = createAdminClient();
+  const { data: recommendation, error: recommendationError } = await supabase
+    .from("business_recommendations")
+    .select("id, business_id, businesses(slug, name)")
+    .eq("id", recommendationId)
+    .single();
+
+  if (recommendationError || !recommendation) {
+    return { ok: false, message: recommendationError?.message ?? "Could not find this recommendation." };
+  }
+
+  const { data: currentMedia, error: mediaLoadError } = await supabase
+    .from("business_recommendation_media")
+    .select("id, storage_path, size_bytes")
+    .eq("recommendation_id", recommendationId);
+
+  if (mediaLoadError || !currentMedia) {
+    return { ok: false, message: "Could not load this recommendation's media." };
+  }
+
+  const deletedIds = new Set(formData.getAll("deletedRecommendationMediaIds").filter((value): value is string => typeof value === "string"));
+  const newFiles = validPortfolioFiles(formData.getAll("newRecommendationMediaFiles"));
+  const newCaptions = formData.getAll("newRecommendationMediaCaptions").map((value) => stringFromFormData(value).trim());
+  const keptSizeBytes = currentMedia
+    .filter((item) => !deletedIds.has(item.id))
+    .reduce((total, item) => total + (item.size_bytes ?? 0), 0);
+  const newSizeBytes = newFiles.reduce((total, file) => total + file.size, 0);
+
+  if ((keptSizeBytes + newSizeBytes) / 1024 / 1024 > 10) {
+    return { ok: false, message: "Recommendation media must be 10MB total or smaller. Remove a file or upload smaller files." };
+  }
+
+  const data = parsed.data;
+  const { error: updateError } = await supabase
+    .from("business_recommendations")
+    .update({
+      recommender_name: data.recommenderName,
+      recommender_role: data.recommenderRole?.trim() || null,
+      recommender_email: data.recommenderEmail?.trim() || null,
+      comment: data.comment,
+      quality_rating: data.qualityRating,
+      reliability_rating: data.reliabilityRating,
+      collaboration_rating: data.collaborationRating,
+      supporting_links: data.supportingLinks,
+      permission_to_contact: data.permissionToContact,
+      permission_to_publish_name: data.permissionToPublishName,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", recommendationId);
+
+  if (updateError) {
+    return { ok: false, message: updateError.message };
+  }
+
+  const captionUpdates = formData.getAll("recommendationMediaCaptionUpdates").filter((value): value is string => typeof value === "string");
+  for (const update of captionUpdates) {
+    const [id, ...captionParts] = update.split("::");
+    if (!id || deletedIds.has(id)) continue;
+    const caption = captionParts.join("::").trim();
+    await supabase
+      .from("business_recommendation_media")
+      .update({
+        caption: smartMediaCaption({ caption, fallback: "Recommendation media" }),
+      })
+      .eq("id", id)
+      .eq("recommendation_id", recommendationId);
+  }
+
+  if (deletedIds.size > 0) {
+    const rowsToDelete = currentMedia.filter((item) => deletedIds.has(item.id));
+    const storagePaths = rowsToDelete.map((item) => item.storage_path).filter((path): path is string => Boolean(path));
+
+    if (storagePaths.length > 0) {
+      await supabase.storage.from("business-portfolios").remove(storagePaths);
+    }
+
+    await supabase.from("business_recommendation_media").delete().eq("recommendation_id", recommendationId).in("id", Array.from(deletedIds));
+  }
+
+  const remainingCount = currentMedia.filter((item) => !deletedIds.has(item.id)).length;
+  const uploadedPaths: string[] = [];
+  const uploadedMedia = [];
+  const business = Array.isArray(recommendation.businesses) ? recommendation.businesses[0] : recommendation.businesses;
+
+  for (const [index, file] of newFiles.entries()) {
+    const caption = smartMediaCaption({
+      caption: newCaptions[index],
+      fileName: file.name,
+      fallback: `${business?.name ?? "Business"} recommendation`,
+      mediaKind: file.type.startsWith("video/") ? "video" : "photo",
+    });
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload";
+    const path = `recommendations/${recommendationId}/admin-${Date.now()}-${index}.${extension}`;
+    const { error: uploadError } = await supabase.storage.from("business-portfolios").upload(path, file, {
+      contentType: file.type,
+      upsert: false,
+    });
+
+    if (uploadError) {
+      if (uploadedPaths.length > 0) await supabase.storage.from("business-portfolios").remove(uploadedPaths);
+      return { ok: false, message: uploadError.message };
+    }
+
+    uploadedPaths.push(path);
+    uploadedMedia.push({
+      recommendation_id: recommendationId,
+      bucket: "business-portfolios",
+      storage_path: path,
+      file_name: file.name,
+      mime_type: file.type,
+      size_bytes: file.size,
+      caption,
+      sort_order: remainingCount + index,
+    });
+  }
+
+  if (uploadedMedia.length > 0) {
+    const { error: insertError } = await supabase.from("business_recommendation_media").insert(uploadedMedia);
+    if (insertError) {
+      await supabase.storage.from("business-portfolios").remove(uploadedPaths);
+      return { ok: false, message: insertError.message };
+    }
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/recommendations");
   revalidatePath("/");
   revalidatePath("/businesses");
   if (business?.slug) revalidatePath(`/businesses/${business.slug}`);
