@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, BriefcaseBusiness, Building2, Camera, ClipboardList, MessageCircleHeart, SearchCheck, ShieldCheck } from "lucide-react";
 import { BusinessGrid } from "@/components/business/business-grid";
 import { SearchBar } from "@/components/site/search-bar";
+import { StreamingMediaCaption } from "@/components/site/streaming-media-caption";
 import { Button } from "@/components/ui/button";
 import { getPublicCreativeJobs } from "@/lib/creative-jobs";
 import { getPublishedBusinesses } from "@/lib/public-businesses";
@@ -207,8 +208,6 @@ function getMovingServices(businesses: Business[]) {
 
 function HomeMediaTile({ media, priority }: { media?: HomeMedia; priority: "main" | "small" }) {
   const isVideo = media?.mimeType?.startsWith("video/");
-  const shouldStreamCaption = (media?.title.length ?? 0) > 30;
-  const captionDuration = `${Math.max(8, Math.min(18, Math.round((media?.title.length ?? 0) / 4)))}s`;
 
   if (!media) {
     return (
@@ -234,10 +233,7 @@ function HomeMediaTile({ media, priority }: { media?: HomeMedia; priority: "main
       )}
       <span className="home-media-caption" aria-hidden>
         <span className="media-caption-name">{media.businessName}</span>
-        <small className={shouldStreamCaption ? "media-caption-stream" : undefined} style={{ "--caption-duration": captionDuration } as React.CSSProperties}>
-          <span className="media-caption-copy">{media.title}</span>
-          {shouldStreamCaption ? <span className="media-caption-copy" aria-hidden>{media.title}</span> : null}
-        </small>
+        <StreamingMediaCaption text={media.title} />
       </span>
     </Link>
   );

@@ -326,27 +326,36 @@ body > footer a:hover {
   color: #e8e0d2;
   font-size: 0.7rem;
   line-height: 1.35;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .home-media-caption .media-caption-copy,
 .about-media-caption .media-caption-copy {
   display: inline-block;
+  flex: 0 0 auto;
 }
 
 .home-media-caption .media-caption-stream,
 .about-media-caption .media-caption-stream {
-  display: flex;
-  gap: 2rem;
-  width: max-content;
-  min-width: 100%;
-  overflow: visible;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
   text-overflow: clip;
+  white-space: nowrap;
 }
 
-.home-media-tile:is(:hover, :focus-visible) .media-caption-stream,
-.about-media-tile:is(:hover, :focus-visible) .media-caption-stream {
+.home-media-caption .media-caption-track,
+.about-media-caption .media-caption-track {
+  display: inline-flex;
+  width: max-content;
+  min-width: max-content;
+  gap: 2rem;
+  will-change: transform;
+}
+
+.home-media-tile:is(:hover, :focus-visible) .media-caption-track,
+.about-media-tile:is(:hover, :focus-visible) .media-caption-track {
   animation: media-caption-stream var(--caption-duration, 10s) linear infinite;
 }
 
@@ -546,7 +555,6 @@ body > footer a:hover {
 .about-media-caption .media-caption-name,
 .about-media-caption small {
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -559,6 +567,14 @@ body > footer a:hover {
   display: block;
   color: #e8e0d2;
   font-size: 0.68rem;
+  text-overflow: clip;
+}
+
+.about-media-caption .media-caption-stream {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .about-action-card {

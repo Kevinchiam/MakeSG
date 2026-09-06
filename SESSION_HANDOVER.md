@@ -18,6 +18,8 @@ Newest update: public business change requests now support optional photos/video
 
 Restore fix: dismissed business change requests now restore to `open`, which matches the database status constraint. The previous restore target was `pending`, which Supabase rejected for `business_change_requests`.
 
+Caption polish: home and About media captions now use one shared streaming caption component. Long captions from present and future directory media stream across the visible caption window on hover or keyboard focus instead of being cropped.
+
 ## Objectives Completed
 
 - [x] Added smart fallback captions for uncaptained uploads.
@@ -42,6 +44,7 @@ Restore fix: dismissed business change requests now restore to `open`, which mat
 - [x] Added side-by-side admin review for change requests and live business editing.
 - [x] Added storage cleanup for expired dismissed change-request media.
 - [x] Fixed trash restore for dismissed business change requests.
+- [x] Made landing and About page media captions stream consistently across all database-backed image/video tiles.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 
@@ -64,6 +67,9 @@ Adds partial indexes for faster cleanup/filtering of rejected businesses, reject
 
 ### `supabase/migrations/0016_business_change_request_media.sql`
 Adds the `business_change_request_media` table for photos/videos attached to public listing correction requests. Rows reference `business_change_requests`, store Supabase Storage metadata, and are admin-managed through RLS.
+
+### `src/components/site/streaming-media-caption.tsx`
+Shared caption component for homepage and About page media overlays. It duplicates the visible caption text inside a masked track so long captions can stream smoothly without resizing or clipping the media tile.
 
 ## Files Modified
 
@@ -92,10 +98,13 @@ Creative job posting copy is friendlier. Reference upload copy mentions automati
 Recommendation panel copy now uses “review” language instead of “moderation” and explains optional media captions more gently.
 
 ### `src/app/page.tsx`
-Homepage copy now reflects MakeSG as a practical community platform for finding businesses, posting jobs, requesting changes, and sharing recommendations. The hero now uses a richer media-led visual panel, and the selected photos/videos shuffle from published business media on refresh.
+Homepage copy now reflects MakeSG as a practical community platform for finding businesses, posting jobs, requesting changes, and sharing recommendations. The hero now uses a richer media-led visual panel, and the selected photos/videos shuffle from published business media on refresh. Media overlay captions now use the shared streaming caption component.
 
 ### `src/app/about/page.tsx`
-About page copy no longer describes the product as fictional and now explains the platform in simpler, friendlier language. It also uses rotating published business media so the page feels less static.
+About page copy no longer describes the product as fictional and now explains the platform in simpler, friendlier language. It also uses rotating published business media so the page feels less static. Media overlay captions now use the shared streaming caption component.
+
+### `src/app/globals.css`
+Media-caption CSS now gives caption text a stable clipped viewport and moves a duplicated caption track inside it on hover/focus. This prevents long captions from being cut off on narrow homepage and About media tiles while preserving reduced-motion behaviour.
 
 ### `src/app/for-businesses/page.tsx`
 Business submission page now invites both business owners and community members to share useful businesses.

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BriefcaseBusiness, Camera, HeartHandshake, SearchCheck } from "lucide-react";
+import { StreamingMediaCaption } from "@/components/site/streaming-media-caption";
 import { getPublishedBusinesses } from "@/lib/public-businesses";
 import type { Business } from "@/lib/types";
 
@@ -106,8 +107,6 @@ function getAboutMedia(businesses: Business[]): AboutMedia[] {
 
 function AboutMediaTile({ media, className }: { media?: AboutMedia; className?: string }) {
   const isVideo = media?.mimeType?.startsWith("video/");
-  const shouldStreamCaption = (media?.title.length ?? 0) > 30;
-  const captionDuration = `${Math.max(8, Math.min(18, Math.round((media?.title.length ?? 0) / 4)))}s`;
 
   if (!media) {
     return (
@@ -132,10 +131,7 @@ function AboutMediaTile({ media, className }: { media?: AboutMedia; className?: 
       )}
       <span className="about-media-caption" aria-hidden>
         <span className="media-caption-name">{media.businessName}</span>
-        <small className={shouldStreamCaption ? "media-caption-stream" : undefined} style={{ "--caption-duration": captionDuration } as React.CSSProperties}>
-          <span className="media-caption-copy">{media.title}</span>
-          {shouldStreamCaption ? <span className="media-caption-copy" aria-hidden>{media.title}</span> : null}
-        </small>
+        <StreamingMediaCaption text={media.title} />
       </span>
     </Link>
   );

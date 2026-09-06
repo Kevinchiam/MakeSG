@@ -100,7 +100,7 @@ Creative production relies heavily on word of mouth, but reliable service discov
 - `src/components/admin`: Admin page headers, moderation controls, delete controls, and server actions for admin-managed data.
 - `src/components/business`: Business cards, filter UI, enquiry form, recommendation form, badges, and directory display components.
 - `src/components/projects`: Project brief and file-upload UI shared by project and media flows.
-- `src/components/site`: Site header, footer, mobile navigation, admin shortcut, and search bar.
+- `src/components/site`: Site header, footer, mobile navigation, admin shortcut, search bar, and shared site-level media caption UI.
 - `src/components/ui`: Small design-system primitives such as buttons, inputs, textareas, badges, pagination, skeletons, and empty states.
 - `src/features`: Feature-specific workflows that combine UI and server actions.
 - `src/features/businesses`: Business onboarding form and submission action.
@@ -162,11 +162,12 @@ Most mutations use server actions:
 ### Public Home
 Status: Completed
 
-Description: Landing/search entry for MakeSG with editorial visual direction, CSS-only motion, live directory counts, current platform feature copy, rotating portfolio media from published businesses, clickable media tiles that open the related business profile, hover/focus-only media captions, and up to six homepage business highlights ranked by recommendations, featured status, and latest updates.
+Description: Landing/search entry for MakeSG with editorial visual direction, CSS-only motion, live directory counts, current platform feature copy, rotating portfolio media from published businesses, clickable media tiles that open the related business profile, hover/focus-only media captions that stream long text instead of clipping, and up to six homepage business highlights ranked by recommendations, featured status, and latest updates.
 
 Relevant files:
 - `src/app/page.tsx`
 - `src/components/site/search-bar.tsx`
+- `src/components/site/streaming-media-caption.tsx`
 - `src/lib/public-businesses.ts`
 - `src/app/globals.css`
 
@@ -178,10 +179,11 @@ Future improvements:
 ### About Page
 Status: Completed
 
-Description: Public explanation of MakeSG with friendlier copy, platform value props, rotating live portfolio media, and clickable media tiles that reveal captions on hover or keyboard focus before linking to the related business profile.
+Description: Public explanation of MakeSG with friendlier copy, platform value props, rotating live portfolio media, and clickable media tiles that reveal streaming captions on hover or keyboard focus before linking to the related business profile.
 
 Relevant files:
 - `src/app/about/page.tsx`
+- `src/components/site/streaming-media-caption.tsx`
 - `src/app/globals.css`
 - `src/lib/public-businesses.ts`
 
@@ -564,6 +566,7 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - `SiteHeaderClient`: Responsive header, mobile menu, admin shortcut, and search link.
 - `SiteFooter`: Footer navigation and admin entry.
 - `SearchBar`: Search form that routes to `/businesses?q=...`.
+- `StreamingMediaCaption`: Shared hover/focus media-caption marquee used by home and About live media tiles so long captions from current or future uploads remain readable.
 - `Button`: Reusable button/link styling primitive.
 - `Input`: Reusable input primitive.
 - `Textarea`: Reusable textarea primitive.

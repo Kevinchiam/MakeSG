@@ -11,14 +11,17 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Added low-risk auto-approval for clean business recommendations.
 - Added an admin automation summary showing auto-approved business listings and recommendations.
 - Added moderation unit tests for auto-approval, review fallback, and blocked content.
+- Added a shared streaming media-caption component for live homepage and About page media tiles.
 
 ### Changed
 - Changed business listing and recommendation submission feedback so users can tell when content went live immediately versus went to admin review.
 - Changed admin business and recommendation queues to label auto-approved records while preserving override actions.
+- Changed home and About page media overlays so every database-backed caption uses the same hover/focus streaming behaviour.
 
 ### Fixed
 - Fixed a server-side duplicate business-name gap by rejecting duplicate business submissions even if the browser-side suggestion is bypassed.
 - Fixed trash restore for dismissed business change requests by restoring them to the valid `open` review status.
+- Fixed long live-media captions being cropped on landing and About page image tiles.
 
 ### Removed
 - No user-facing features removed.
