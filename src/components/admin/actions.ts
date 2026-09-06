@@ -532,7 +532,7 @@ export async function restoreTrashItem(kind: AdminTrashKind, id: string) {
     case "change_request":
       result = await supabase
         .from("business_change_requests")
-        .update({ status: "pending", updated_at: now })
+        .update({ status: "open", updated_at: now })
         .eq("id", id)
         .eq("status", "dismissed");
       break;

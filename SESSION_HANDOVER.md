@@ -16,6 +16,8 @@ Current session update: low-risk new business listings and business recommendati
 
 Newest update: public business change requests now support optional photos/videos and captions. Admins review each request beside the live business listing editor and media editor, so useful corrections can be applied immediately while keeping admin override intact.
 
+Restore fix: dismissed business change requests now restore to `open`, which matches the database status constraint. The previous restore target was `pending`, which Supabase rejected for `business_change_requests`.
+
 ## Objectives Completed
 
 - [x] Added smart fallback captions for uncaptained uploads.
@@ -39,6 +41,7 @@ Newest update: public business change requests now support optional photos/video
 - [x] Added media uploads and captions to public business change requests.
 - [x] Added side-by-side admin review for change requests and live business editing.
 - [x] Added storage cleanup for expired dismissed change-request media.
+- [x] Fixed trash restore for dismissed business change requests.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 
@@ -164,7 +167,7 @@ Reject feedback now tells admins that rejected items move to the trash bin for s
 Dismiss feedback now tells admins that dismissed requests move to the trash bin for seven days.
 
 ### `src/components/admin/actions.ts`
-Admin actions now revalidate `/admin/trash` when moderation, deletion, change-request status, or trash restore changes. Business feature/unfeature now revalidates public highlights and directory pages.
+Admin actions now revalidate `/admin/trash` when moderation, deletion, change-request status, or trash restore changes. Business feature/unfeature now revalidates public highlights and directory pages. Dismissed business change requests restore to `open`, not `pending`, because the database only allows `open`, `reviewed`, and `dismissed` for that table.
 
 ### `src/app/admin/creative-jobs/[id]/page.tsx`
 Admin creative job archived action is now labelled “Move to trash,” and the edit form now shows visible save/error feedback.
@@ -225,6 +228,7 @@ Added the 2026-08-29 changelog entry.
 - Admin business Feature no longer creates a false local-only status.
 - Admin creative-job saves no longer complete silently with no confirmation.
 - Failed change-request media uploads now roll back the request and clean up any files uploaded earlier in the same submission.
+- Dismissed change requests can now be restored from trash without violating the database status constraint.
 
 ## Bugs Remaining
 

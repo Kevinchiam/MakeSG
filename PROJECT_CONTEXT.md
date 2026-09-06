@@ -423,7 +423,7 @@ Future improvements:
 ### Admin Trash Bin
 Status: Completed
 
-Description: Admin-only trash view that collects rejected business listings, rejected business listing edits, rejected recommendations, dismissed change requests, and creative jobs moved to trash. Admins can restore items back to their review queues before deletion. Items remain visible for seven days, then the cleanup helper permanently deletes expired rows and associated Supabase Storage objects when the admin dashboard or trash page is visited.
+Description: Admin-only trash view that collects rejected business listings, rejected business listing edits, rejected recommendations, dismissed change requests, and creative jobs moved to trash. Admins can restore items back to their review queues before deletion. Dismissed change requests restore to `open`, which is the active review status accepted by the database. Items remain visible for seven days, then the cleanup helper permanently deletes expired rows and associated Supabase Storage objects when the admin dashboard or trash page is visited.
 
 Relevant files:
 - `src/app/admin/trash/page.tsx`
