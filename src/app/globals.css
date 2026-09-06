@@ -298,6 +298,7 @@ body > footer a:hover {
   background: rgba(33, 31, 27, 0.72);
   color: #ffffff;
   opacity: 0;
+  overflow: hidden;
   pointer-events: none;
   transform: translateY(8px);
   transition:
@@ -311,7 +312,7 @@ body > footer a:hover {
   transform: translateY(0);
 }
 
-.home-media-caption span {
+.home-media-caption .media-caption-name {
   overflow: hidden;
   font-size: 0.8rem;
   font-weight: 700;
@@ -321,11 +322,32 @@ body > footer a:hover {
 
 .home-media-caption small {
   overflow: hidden;
+  display: block;
   color: #e8e0d2;
   font-size: 0.7rem;
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.home-media-caption .media-caption-copy,
+.about-media-caption .media-caption-copy {
+  display: inline-block;
+}
+
+.home-media-caption .media-caption-stream,
+.about-media-caption .media-caption-stream {
+  display: flex;
+  gap: 2rem;
+  width: max-content;
+  min-width: 100%;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.home-media-tile:is(:hover, :focus-visible) .media-caption-stream,
+.about-media-tile:is(:hover, :focus-visible) .media-caption-stream {
+  animation: media-caption-stream var(--caption-duration, 10s) linear infinite;
 }
 
 .home-media-fallback {
@@ -507,6 +529,7 @@ body > footer a:hover {
   background: rgba(33, 31, 27, 0.72);
   color: #ffffff;
   opacity: 0;
+  overflow: hidden;
   pointer-events: none;
   transform: translateY(8px);
   transition:
@@ -520,19 +543,20 @@ body > footer a:hover {
   transform: translateY(0);
 }
 
-.about-media-caption span,
+.about-media-caption .media-caption-name,
 .about-media-caption small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.about-media-caption span {
+.about-media-caption .media-caption-name {
   font-size: 0.78rem;
   font-weight: 700;
 }
 
 .about-media-caption small {
+  display: block;
   color: #e8e0d2;
   font-size: 0.68rem;
 }
@@ -614,6 +638,18 @@ body > footer a:hover {
   }
   to {
     transform: translateX(-50%);
+  }
+}
+
+@keyframes media-caption-stream {
+  0%,
+  12% {
+    transform: translateX(0);
+  }
+
+  88%,
+  100% {
+    transform: translateX(calc(-50% - 1rem));
   }
 }
 
@@ -717,5 +753,14 @@ body > footer a:hover {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.001ms !important;
+  }
+
+  .media-caption-stream {
+    width: 100% !important;
+    animation: none !important;
+  }
+
+  .media-caption-stream .media-caption-copy + .media-caption-copy {
+    display: none !important;
   }
 }

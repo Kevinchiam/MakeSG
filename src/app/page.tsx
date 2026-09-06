@@ -207,6 +207,8 @@ function getMovingServices(businesses: Business[]) {
 
 function HomeMediaTile({ media, priority }: { media?: HomeMedia; priority: "main" | "small" }) {
   const isVideo = media?.mimeType?.startsWith("video/");
+  const shouldStreamCaption = (media?.title.length ?? 0) > 30;
+  const captionDuration = `${Math.max(8, Math.min(18, Math.round((media?.title.length ?? 0) / 4)))}s`;
 
   if (!media) {
     return (
@@ -231,8 +233,11 @@ function HomeMediaTile({ media, priority }: { media?: HomeMedia; priority: "main
         <div className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url("${media.imageUrl}")` }} role="img" aria-label={`${media.businessName}: ${media.title}`} />
       )}
       <span className="home-media-caption" aria-hidden>
-        <span>{media.businessName}</span>
-        <small>{media.title}</small>
+        <span className="media-caption-name">{media.businessName}</span>
+        <small className={shouldStreamCaption ? "media-caption-stream" : undefined} style={{ "--caption-duration": captionDuration } as React.CSSProperties}>
+          <span className="media-caption-copy">{media.title}</span>
+          {shouldStreamCaption ? <span className="media-caption-copy" aria-hidden>{media.title}</span> : null}
+        </small>
       </span>
     </Link>
   );
