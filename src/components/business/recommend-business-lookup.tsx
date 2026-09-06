@@ -68,7 +68,7 @@ export function RecommendBusinessLookup({
             <div className="border border-dashed border-[#c9bfb0] bg-[#fbfaf7] p-5 text-sm leading-6 text-[#6d675d]">
               <p className="font-semibold text-[#211f1b]">No existing listing matches that name.</p>
               <p className="mt-1">
-                If the business is not on MakeSG yet, ask them to submit a listing for review so future recommendations attach to the right profile.
+                If the business is not on MakeSG yet, you can invite them to add a listing or help onboard them yourself, so future recommendations have the right profile to land on.
               </p>
               <Button asChild className="mt-4">
                 <Link href="/for-businesses">Go to business onboarding</Link>
