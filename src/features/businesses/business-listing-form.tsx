@@ -186,7 +186,7 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
         <Field label="Public email (optional)" error={form.formState.errors.publicEmail?.message}><Input {...form.register("publicEmail")} /></Field>
         <Field label="Phone number (optional)" error={form.formState.errors.phoneNumber?.message}><Input {...form.register("phoneNumber")} placeholder="+65 8123 4567" /></Field>
         <Field label="Location (optional)" error={form.formState.errors.location?.message}><Input {...form.register("location")} placeholder="Ubi" /></Field>
-        <Field label="Business type"><select {...form.register("businessType")} className="min-h-11 border border-[#ded8cc] bg-white px-3"><option value="independent">Independent</option><option value="studio">Studio</option><option value="workshop">Workshop</option><option value="consultancy">Consultancy</option><option value="manufacturer">Manufacturer</option><option value="supplier">Supplier</option></select></Field>
+        <Field label="Business type"><select {...form.register("businessType")} className="h-11 self-start border border-[#ded8cc] bg-white px-3"><option value="independent">Independent</option><option value="studio">Studio</option><option value="workshop">Workshop</option><option value="consultancy">Consultancy</option><option value="manufacturer">Manufacturer</option><option value="supplier">Supplier</option></select></Field>
         <Field
           label="Minimum budget (SGD, optional)"
           hint="Optional. Enter the smallest project budget usually accepted, in Singapore dollars."

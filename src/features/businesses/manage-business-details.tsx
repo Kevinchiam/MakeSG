@@ -82,7 +82,7 @@ export function ManageBusinessDetails({ token, business }: { token: string; busi
           <Input name="location" defaultValue={business.location} />
         </Field>
         <Field label="Business type" error={fieldErrors.businessType}>
-          <select name="businessType" defaultValue={business.businessType} className="min-h-11 border border-[#ded8cc] bg-white px-3">
+          <select name="businessType" defaultValue={business.businessType} className="h-11 self-start border border-[#ded8cc] bg-white px-3">
             <option value="independent">Independent</option>
             <option value="studio">Studio</option>
             <option value="workshop">Workshop</option>
