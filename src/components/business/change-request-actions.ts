@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { smartMediaCaption } from "@/lib/media-captions";
+import { captionUploadedMedia } from "@/lib/ai-media-captions";
 import { assessModeration, moderationBlockMessage } from "@/lib/moderation";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -118,6 +118,16 @@ export async function requestBusinessChange(formData: FormData): Promise<ChangeR
         return { ok: false, message: uploadError.message, fieldErrors: { media: "The media could not be uploaded. Try smaller files or remove one file." } };
       }
 
+      const { data: publicUrlData } = supabase.storage.from("business-portfolios").getPublicUrl(path);
+      const mediaKind = file.type.startsWith("video/") ? "video" : "photo";
+      const caption = await captionUploadedMedia({
+        caption: mediaCaptions[index],
+        fileName: file.name,
+        fallback: "Suggested listing change",
+        mediaKind,
+        mimeType: file.type,
+        publicUrl: publicUrlData.publicUrl,
+      });
       uploadedMedia.push({
         change_request_id: request.id,
         bucket: "business-portfolios",
@@ -125,12 +135,7 @@ export async function requestBusinessChange(formData: FormData): Promise<ChangeR
         file_name: file.name,
         mime_type: file.type,
         size_bytes: file.size,
-        caption: smartMediaCaption({
-          caption: mediaCaptions[index],
-          fileName: file.name,
-          fallback: "Suggested listing change",
-          mediaKind: file.type.startsWith("video/") ? "video" : "photo",
-        }),
+        caption,
         sort_order: index,
       });
     }

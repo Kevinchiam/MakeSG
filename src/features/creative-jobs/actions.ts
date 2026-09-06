@@ -4,6 +4,7 @@ import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { services as knownServices } from "@/lib/data";
+import { captionUploadedMedia } from "@/lib/ai-media-captions";
 import { smartMediaCaption } from "@/lib/media-captions";
 import { assessModeration, moderationBlockMessage } from "@/lib/moderation";
 import type { CreativeJobStatus } from "@/lib/creative-jobs";
@@ -129,12 +130,7 @@ export async function submitCreativeJobListing(input: unknown): Promise<SubmitCr
 
   const uploadedReferences = [];
   for (const [index, file] of referenceFiles.entries()) {
-    const caption = smartMediaCaption({
-      caption: referenceCaptions[index],
-      fileName: file.name,
-      fallback: `Reference for ${data.title}`,
-      mediaKind: file.type.startsWith("video/") ? "video" : "photo",
-    });
+    const mediaKind = file.type.startsWith("video/") ? "video" : "photo";
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload";
     const path = `${job.id}/${Date.now()}-${index}.${extension}`;
     const { error: uploadError } = await supabase.storage.from("creative-job-references").upload(path, file, {
@@ -145,6 +141,14 @@ export async function submitCreativeJobListing(input: unknown): Promise<SubmitCr
     if (uploadError) continue;
 
     const { data: publicUrlData } = supabase.storage.from("creative-job-references").getPublicUrl(path);
+    const caption = await captionUploadedMedia({
+      caption: referenceCaptions[index],
+      fileName: file.name,
+      fallback: `Reference for ${data.title}`,
+      mediaKind,
+      mimeType: file.type,
+      publicUrl: publicUrlData.publicUrl,
+    });
     uploadedReferences.push({
       job_id: job.id,
       bucket: "creative-job-references",
@@ -358,12 +362,7 @@ export async function updateCreativeJobMediaByToken(token: string, formData: For
   const remainingCount = referenceRows.filter((reference) => !deletedIds.has(reference.id)).length;
   const uploadedReferences = [];
   for (const [index, file] of newFiles.entries()) {
-    const caption = smartMediaCaption({
-      caption: newCaptions[index],
-      fileName: file.name,
-      fallback: `Reference for ${job.title}`,
-      mediaKind: file.type.startsWith("video/") ? "video" : "photo",
-    });
+    const mediaKind = file.type.startsWith("video/") ? "video" : "photo";
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload";
     const path = `${job.id}/${Date.now()}-${index}.${extension}`;
     const { error: uploadError } = await supabase.storage.from("creative-job-references").upload(path, file, {
@@ -376,6 +375,14 @@ export async function updateCreativeJobMediaByToken(token: string, formData: For
     }
 
     const { data: publicUrlData } = supabase.storage.from("creative-job-references").getPublicUrl(path);
+    const caption = await captionUploadedMedia({
+      caption: newCaptions[index],
+      fileName: file.name,
+      fallback: `Reference for ${job.title}`,
+      mediaKind,
+      mimeType: file.type,
+      publicUrl: publicUrlData.publicUrl,
+    });
     uploadedReferences.push({
       job_id: job.id,
       bucket: "creative-job-references",

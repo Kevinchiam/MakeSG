@@ -41,7 +41,7 @@ Creative production relies heavily on word of mouth, but reliable service discov
 - Add notification emails for creative job submissions and changes.
 - Add rate limiting, abuse detection, and spam protection.
 - Add scheduled trash cleanup through Vercel Cron or Supabase scheduled jobs.
-- Add AI-assisted image captioning and image/content moderation after a provider and privacy approach are selected.
+- Add image/content moderation after a provider and privacy approach are selected.
 - Add analytics for search-to-contact conversion and successful job closure.
 
 ### Success Metrics
@@ -73,6 +73,7 @@ Creative production relies heavily on word of mouth, but reliable service discov
 ### Third-Party APIs
 - Supabase Auth, Postgres, Storage.
 - Resend for email delivery when configured.
+- OpenAI Responses API for optional AI-generated image captions when upload captions are blank.
 
 ### Authentication
 - Supabase Auth exists for general user-facing auth scaffolding.
@@ -106,6 +107,7 @@ Creative production relies heavily on word of mouth, but reliable service discov
 - `src/features/businesses`: Business onboarding form and submission action.
 - `src/features/creative-jobs`: Creative job posting, private job management, status management, listing-detail editing, media editing, and server actions.
 - `src/lib`: Shared data access, types, validation, permissions, filters, Supabase clients, email utilities, media caption helpers, admin trash cleanup, slugging, service data, and lightweight local placeholders.
+- `src/lib/ai-media-captions.ts`: Server-only OpenAI image caption wrapper with timeout and safe fallback behaviour.
 - `src/lib/admin-trash.ts`: Admin-only trash-bin aggregation and seven-day cleanup helper for rejected/dismissed listings and media.
 - `src/lib/media-captions.ts`: Shared smart fallback caption helper for uploaded photos/videos.
 - `src/lib/supabase`: Supabase browser, server, and admin client setup.
@@ -152,7 +154,7 @@ Most mutations use server actions:
 - Business onboarding inserts into Supabase and uploads portfolio media.
 - Business onboarding, business edits, business recommendations, change requests, and creative jobs run through rule-based moderation triage before saving.
 - Low-risk new business listings, business recommendations, and creative jobs can auto-publish. Business edits, change requests, medium-risk items, high-risk items, duplicates, and no-contact business listings still require admin review.
-- Blank upload captions receive a simple, context-aware fallback before media records are saved.
+- Blank image captions can be described by OpenAI after upload when `OPENAI_API_KEY` is configured. If AI captioning is unavailable, the upload is a video, or the contributor wrote a caption, MakeSG uses the existing simple context-aware caption fallback.
 - Rejected business listings, rejected listing edits, rejected recommendations, dismissed change requests, and archived creative jobs are treated as trash-bin items and are permanently deleted after seven days when the admin dashboard or trash page runs cleanup.
 - Creative job submission inserts a job, stores a manage token, uploads reference files, and returns the private manage link. Low-risk creative jobs auto-publish; higher-risk jobs use `pending_review`.
 - Admin pages call admin data helpers, show automated triage decisions/signals, and update moderation status with server actions.
@@ -246,7 +248,7 @@ Future improvements:
 ### Business Onboarding
 Status: Completed
 
-Description: Businesses or community members can submit listing details, service options including Other, optional website/email/phone/location/budget/lead time, and portfolio photos/videos. Required text fields show minimum-character guidance while people type, so submitters know how much detail is enough before sending. Submissions run through automated triage for abusive/spam wording, suspicious patterns, risky filenames, low-detail signals, missing contact routes, and duplicate business names. Low-risk listings with a public contact route can publish automatically; anything uncertain waits for admin review. Blank media captions are filled with a simple smart fallback based on the filename and business context. After submission, submitters receive a private edit link that can update listing details and portfolio media. Edits to already published listings create a pending revision, so the current approved public listing stays live until an admin approves the changes.
+Description: Businesses or community members can submit listing details, service options including Other, optional website/email/phone/location/budget/lead time, and portfolio photos/videos. Required text fields show minimum-character guidance while people type, so submitters know how much detail is enough before sending. Submissions run through automated triage for abusive/spam wording, suspicious patterns, risky filenames, low-detail signals, missing contact routes, and duplicate business names. Low-risk listings with a public contact route can publish automatically; anything uncertain waits for admin review. Blank image captions are AI-described when OpenAI is configured, then fall back to filename/business context if needed. After submission, submitters receive a private edit link that can update listing details and portfolio media. Edits to already published listings create a pending revision, so the current approved public listing stays live until an admin approves the changes.
 
 Relevant files:
 - `src/app/for-businesses/page.tsx`
@@ -256,6 +258,7 @@ Relevant files:
 - `src/features/businesses/manage-business-media.tsx`
 - `src/features/businesses/actions.ts`
 - `src/components/projects/file-uploader.tsx`
+- `src/lib/ai-media-captions.ts`
 - `src/lib/media-captions.ts`
 - `supabase/migrations/0003_media_uploads.sql`
 - `supabase/migrations/0010_business_manage_links.sql`
@@ -270,7 +273,7 @@ Future improvements:
 ### Business Recommendations
 Status: Completed
 
-Description: Users can recommend businesses based on real experience. Recommendations are checked for obvious abuse/spam and low-risk recommendations can appear publicly right away. Anything uncertain waits for admin review. Admins can edit recommendation details, ratings, contributor display settings, supporting links, and recommendation media before or after approval. Recommendation media also receives a smart fallback caption when contributors or admins leave captions blank.
+Description: Users can recommend businesses based on real experience. Recommendations are checked for obvious abuse/spam and low-risk recommendations can appear publicly right away. Anything uncertain waits for admin review. Admins can edit recommendation details, ratings, contributor display settings, supporting links, and recommendation media before or after approval. Recommendation images can receive AI captions when contributors or admins leave captions blank, with simple fallback captions if AI is unavailable.
 
 Relevant files:
 - `src/app/recommend-business/page.tsx`
@@ -278,6 +281,7 @@ Relevant files:
 - `src/components/business/recommend-business-panel.tsx`
 - `src/components/business/recommendation-actions.ts`
 - `src/components/admin/admin-recommendation-edit-form.tsx`
+- `src/lib/ai-media-captions.ts`
 - `src/lib/media-captions.ts`
 - `src/lib/recommendation.ts`
 - `supabase/migrations/0002_business_recommendations.sql`
@@ -506,7 +510,7 @@ Stores reported content for admin review.
 Word-of-mouth recommendation submissions tied to a business, with recommender details, relationship, strengths, comment, permissions, moderation status, and automated triage metadata. Rejected rows appear in the admin trash bin before cleanup.
 
 ### `business_recommendation_media`
-Media attached to business recommendations. Blank captions receive fallback captions before save; media for expired rejected recommendations is removed from storage during trash cleanup.
+Media attached to business recommendations. Blank image captions can receive AI captions after upload, with simple fallback captions before save; media for expired rejected recommendations is removed from storage during trash cleanup.
 
 ### `business_change_requests`
 Public requests to correct or update an existing business listing. Each request stores the target business, requester email, reason, admin notes, status, automated triage metadata, and timestamps. Admins review these from `/admin/change-requests` beside the live listing editor and media manager, then manually update the listing if the request is valid. Dismissed rows appear in the admin trash bin before cleanup.
@@ -526,7 +530,7 @@ Relationships:
 - `pending_review`, `taken`, `closed`, and `archived` jobs are hidden publicly.
 
 ### `creative_job_reference_files`
-Photos/videos attached to creative jobs. Stores storage bucket/path, public URL, filename, caption, mime type, size, and sort order. Blank captions receive fallback captions before save; media for expired archived jobs is removed from storage during trash cleanup.
+Photos/videos attached to creative jobs. Stores storage bucket/path, public URL, filename, caption, mime type, size, and sort order. Blank image captions can receive AI captions after upload, with simple fallback captions before save; media for expired archived jobs is removed from storage during trash cleanup.
 
 ### Storage Buckets
 - `avatars`: public profile avatars.
@@ -561,7 +565,8 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - `updateCreativeJobDetailsByToken(token, input)`: Private listing-detail update for creative jobs.
 - `updateCreativeJobMediaByToken(token, formData)`: Private creative job media add/remove/caption update.
 - `sendBusinessEnquiry(input)`: Sends enquiry email or returns contact fallback.
-- `smartMediaCaption(input)`: Shared server/client-safe helper used by upload flows to preserve contributor captions or generate fallback captions.
+- `captionUploadedMedia(input)`: Server helper used after uploads to preserve contributor captions, request an OpenAI image caption for blank image captions, and fall back safely when AI is unavailable.
+- `smartMediaCaption(input)`: Shared server/client-safe helper used by upload flows to preserve contributor captions or generate simple fallback captions.
 
 ## UI Components
 
@@ -699,7 +704,7 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - Creative job and business private manage links are powerful: anyone with the link can edit the listing.
 - Existing creative jobs and businesses created before manage-token rollout may not have manage links.
 - Automated moderation currently checks text, captions, links, filenames, contact presence, and simple spam patterns; it does not inspect the visual content of uploaded images/videos.
-- Smart auto-captioning is filename/context-based; it does not inspect the actual image or video content yet.
+- AI auto-captioning inspects uploaded images only when captions are blank and `OPENAI_API_KEY` is configured. Videos still use filename/context fallback captions.
 - Trash cleanup currently runs when admin pages call the cleanup helper, not on an independent schedule.
 
 ## Technical Debt
@@ -712,7 +717,7 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - Some migrations overlap because later migrations repair earlier live setup gaps.
 - Moderation triage is rule-based and should eventually be backed by provider-level text/image moderation, rate limiting, and admin audit logs.
 - Trash retention should move from admin-visit-triggered cleanup to a scheduled job before higher-volume usage.
-- Smart captions should eventually use actual image understanding instead of filename/context fallback.
+- AI image captions are called one upload at a time inside save flows; batching or background processing may be needed if upload volume grows.
 
 ## Future Ideas
 
@@ -722,7 +727,7 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - Add custom domain and verified email sender.
 - Add richer admin moderation queues.
 - Add AI-assisted text and image moderation with configurable admin thresholds.
-- Add AI-generated image/video captions and alt text for stronger accessibility.
+- Add AI-generated video captions and richer alt text for stronger accessibility.
 - Add scheduled trash cleanup and optional restore.
 - Add map view for businesses.
 - Add AI-assisted search and service matching after enough data is collected.

@@ -4,6 +4,7 @@ import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { services as knownServices } from "@/lib/data";
+import { captionUploadedMedia } from "@/lib/ai-media-captions";
 import { smartMediaCaption } from "@/lib/media-captions";
 import { assessModeration, moderationBlockMessage, type ModerationResult } from "@/lib/moderation";
 import type { PortfolioRevisionItem } from "@/lib/business-submissions";
@@ -150,12 +151,7 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
 
   const uploadedItems = [];
   for (const [index, file] of portfolioFiles.entries()) {
-    const caption = smartMediaCaption({
-      caption: portfolioCaptions[index],
-      fileName: file.name,
-      fallback: `${data.name} portfolio`,
-      mediaKind: file.type.startsWith("video/") ? "video" : "photo",
-    });
+    const mediaKind = file.type.startsWith("video/") ? "video" : "photo";
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload";
     const path = `${business.id}/${Date.now()}-${index}.${extension}`;
     const { error: uploadError } = await supabase.storage.from("business-portfolios").upload(path, file, {
@@ -166,6 +162,14 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
     if (uploadError) continue;
 
     const { data: publicUrlData } = supabase.storage.from("business-portfolios").getPublicUrl(path);
+    const caption = await captionUploadedMedia({
+      caption: portfolioCaptions[index],
+      fileName: file.name,
+      fallback: `${data.name} portfolio`,
+      mediaKind,
+      mimeType: file.type,
+      publicUrl: publicUrlData.publicUrl,
+    });
     uploadedItems.push({
       business_id: business.id,
       title: caption,
@@ -392,12 +396,7 @@ export async function updateBusinessMediaByToken(token: string, formData: FormDa
 
     const uploadedItems: PortfolioRevisionItem[] = [];
     for (const [index, file] of newFiles.entries()) {
-      const caption = smartMediaCaption({
-        caption: newCaptions[index],
-        fileName: file.name,
-        fallback: `${business.name} portfolio`,
-        mediaKind: file.type.startsWith("video/") ? "video" : "photo",
-      });
+      const mediaKind = file.type.startsWith("video/") ? "video" : "photo";
       const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload";
       const path = `${business.id}/pending-${Date.now()}-${index}.${extension}`;
       const { error: uploadError } = await supabase.storage.from("business-portfolios").upload(path, file, {
@@ -410,6 +409,14 @@ export async function updateBusinessMediaByToken(token: string, formData: FormDa
       }
 
       const { data: publicUrlData } = supabase.storage.from("business-portfolios").getPublicUrl(path);
+      const caption = await captionUploadedMedia({
+        caption: newCaptions[index],
+        fileName: file.name,
+        fallback: `${business.name} portfolio`,
+        mediaKind,
+        mimeType: file.type,
+        publicUrl: publicUrlData.publicUrl,
+      });
       uploadedItems.push({
         id: `new-${Date.now()}-${index}`,
         title: caption,
@@ -505,12 +512,7 @@ export async function updateBusinessMediaByToken(token: string, formData: FormDa
   const remainingCount = itemRows.filter((item) => !deletedIds.has(item.id)).length;
   const uploadedItems = [];
   for (const [index, file] of newFiles.entries()) {
-    const caption = smartMediaCaption({
-      caption: newCaptions[index],
-      fileName: file.name,
-      fallback: `${business.name} portfolio`,
-      mediaKind: file.type.startsWith("video/") ? "video" : "photo",
-    });
+    const mediaKind = file.type.startsWith("video/") ? "video" : "photo";
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload";
     const path = `${business.id}/${Date.now()}-${index}.${extension}`;
     const { error: uploadError } = await supabase.storage.from("business-portfolios").upload(path, file, {
@@ -523,6 +525,14 @@ export async function updateBusinessMediaByToken(token: string, formData: FormDa
     }
 
     const { data: publicUrlData } = supabase.storage.from("business-portfolios").getPublicUrl(path);
+    const caption = await captionUploadedMedia({
+      caption: newCaptions[index],
+      fileName: file.name,
+      fallback: `${business.name} portfolio`,
+      mediaKind,
+      mimeType: file.type,
+      publicUrl: publicUrlData.publicUrl,
+    });
     uploadedItems.push({
       business_id: business.id,
       title: caption,

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { smartMediaCaption } from "@/lib/media-captions";
+import { captionUploadedMedia } from "@/lib/ai-media-captions";
 import { assessModeration, moderationBlockMessage } from "@/lib/moderation";
 import { businessRecommendationSchema } from "@/lib/validation";
 
@@ -131,6 +131,16 @@ export async function submitBusinessRecommendation(formData: FormData): Promise<
     }
 
     uploadedPaths.push(path);
+    const { data: publicUrlData } = supabase.storage.from("business-portfolios").getPublicUrl(path);
+    const mediaKind = file.type.startsWith("video/") ? "video" : "photo";
+    const caption = await captionUploadedMedia({
+      caption: mediaCaptions[index],
+      fileName: file.name,
+      fallback: "Recommendation support",
+      mediaKind,
+      mimeType: file.type,
+      publicUrl: publicUrlData.publicUrl,
+    });
     uploadedMedia.push({
       recommendation_id: recommendation.id,
       bucket: "business-portfolios",
@@ -139,12 +149,7 @@ export async function submitBusinessRecommendation(formData: FormData): Promise<
       mime_type: file.type,
       size_bytes: file.size,
       sort_order: index,
-      caption: smartMediaCaption({
-        caption: mediaCaptions[index],
-        fileName: file.name,
-        fallback: "Recommendation support",
-        mediaKind: file.type.startsWith("video/") ? "video" : "photo",
-      }),
+      caption,
     });
   }
 

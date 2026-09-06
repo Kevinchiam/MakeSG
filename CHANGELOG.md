@@ -13,6 +13,8 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Added moderation unit tests for auto-approval, review fallback, and blocked content.
 - Added a shared streaming media-caption component for live homepage and About page media tiles.
 - Added a collapsible admin recommendation edit form with media caption, removal, and replacement upload controls.
+- Added optional OpenAI-powered image captions for blank uploaded image captions, with safe fallback to the existing simple caption logic.
+- Added unit tests for AI caption preservation, image captioning, fallback behaviour, and video skipping.
 
 ### Changed
 - Changed business listing and recommendation submission feedback so users can tell when content went live immediately versus went to admin review.
@@ -33,6 +35,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 ### Known Issues
 - Auto-approval is still rule-based and does not visually inspect uploaded image/video content.
 - Business listing edits remain review-first so existing approved listings stay live while edits wait for admin approval.
+- AI captions apply to images only; videos still use simple fallback captions.
 
 ## [Unreleased] - 2026-08-29
 

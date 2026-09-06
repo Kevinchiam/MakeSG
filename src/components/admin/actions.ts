@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { AdminTrashKind } from "@/lib/admin-trash";
 import type { PublicationStatus } from "@/lib/types";
 import { services as knownServices } from "@/lib/data";
+import { captionUploadedMedia } from "@/lib/ai-media-captions";
 import { smartMediaCaption } from "@/lib/media-captions";
 import { businessSchema } from "@/lib/validation";
 
@@ -342,12 +343,7 @@ export async function updateBusinessRecommendationFromAdmin(recommendationId: st
   const business = Array.isArray(recommendation.businesses) ? recommendation.businesses[0] : recommendation.businesses;
 
   for (const [index, file] of newFiles.entries()) {
-    const caption = smartMediaCaption({
-      caption: newCaptions[index],
-      fileName: file.name,
-      fallback: `${business?.name ?? "Business"} recommendation`,
-      mediaKind: file.type.startsWith("video/") ? "video" : "photo",
-    });
+    const mediaKind = file.type.startsWith("video/") ? "video" : "photo";
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload";
     const path = `recommendations/${recommendationId}/admin-${Date.now()}-${index}.${extension}`;
     const { error: uploadError } = await supabase.storage.from("business-portfolios").upload(path, file, {
@@ -361,6 +357,15 @@ export async function updateBusinessRecommendationFromAdmin(recommendationId: st
     }
 
     uploadedPaths.push(path);
+    const { data: publicUrlData } = supabase.storage.from("business-portfolios").getPublicUrl(path);
+    const caption = await captionUploadedMedia({
+      caption: newCaptions[index],
+      fileName: file.name,
+      fallback: `${business?.name ?? "Business"} recommendation`,
+      mediaKind,
+      mimeType: file.type,
+      publicUrl: publicUrlData.publicUrl,
+    });
     uploadedMedia.push({
       recommendation_id: recommendationId,
       bucket: "business-portfolios",
@@ -568,12 +573,7 @@ export async function updateBusinessMediaFromAdmin(businessId: string, formData:
   const remainingCount = itemRows.filter((item) => !deletedIds.has(item.id)).length;
   const uploadedItems = [];
   for (const [index, file] of newFiles.entries()) {
-    const caption = smartMediaCaption({
-      caption: newCaptions[index],
-      fileName: file.name,
-      fallback: `${business.name} portfolio`,
-      mediaKind: file.type.startsWith("video/") ? "video" : "photo",
-    });
+    const mediaKind = file.type.startsWith("video/") ? "video" : "photo";
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload";
     const path = `${businessId}/admin-${Date.now()}-${index}.${extension}`;
     const { error: uploadError } = await supabase.storage.from("business-portfolios").upload(path, file, {
@@ -586,6 +586,14 @@ export async function updateBusinessMediaFromAdmin(businessId: string, formData:
     }
 
     const { data: publicUrlData } = supabase.storage.from("business-portfolios").getPublicUrl(path);
+    const caption = await captionUploadedMedia({
+      caption: newCaptions[index],
+      fileName: file.name,
+      fallback: `${business.name} portfolio`,
+      mediaKind,
+      mimeType: file.type,
+      publicUrl: publicUrlData.publicUrl,
+    });
     uploadedItems.push({
       business_id: businessId,
       title: caption,

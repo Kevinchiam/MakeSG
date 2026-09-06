@@ -86,6 +86,17 @@ RESEND_FROM_EMAIL="MakeSG <verified-sender@yourdomain.com>"
 
 `RESEND_FROM_EMAIL` must use a sender/domain verified in Resend. If email is not configured or delivery fails, the enquiry form shows a fallback prompt with the business location.
 
+## AI Image Captions
+
+Blank image captions can be filled with OpenAI vision. Set this variable in Vercel to enable it:
+
+```bash
+OPENAI_API_KEY=<your-openai-api-key>
+OPENAI_IMAGE_CAPTION_MODEL=gpt-4.1-mini
+```
+
+`OPENAI_IMAGE_CAPTION_MODEL` is optional. If OpenAI is not configured, unavailable, or the upload is a video, MakeSG falls back to its simple filename/context caption.
+
 ## Architecture
 
 The app keeps database access out of presentational components. UI components receive typed data, shared validation lives in `src/lib/validation.ts`, recommendations live in `src/lib/recommendation.ts`, and Supabase clients live in `src/lib/supabase`.

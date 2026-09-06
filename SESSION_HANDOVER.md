@@ -26,6 +26,8 @@ Business onboarding guidance: the `/for-businesses` form now mirrors the creativ
 
 Media caption placement: caption inputs for new uploads now appear directly inside each uploaded file preview card. This applies across business onboarding, private business media editing, creative job posting, private creative job media editing, recommendations, business change requests, and admin media edit forms.
 
+AI captioning update: blank image captions now use the OpenAI Responses API when `OPENAI_API_KEY` is configured. User-written captions are preserved, videos keep the simple fallback caption, and failed/slow AI calls quietly fall back to the existing filename/context caption so uploads still complete.
+
 ## Objectives Completed
 
 - [x] Added smart fallback captions for uncaptained uploads.
@@ -54,6 +56,7 @@ Media caption placement: caption inputs for new uploads now appear directly insi
 - [x] Added admin editing for business recommendations, including attached recommendation media.
 - [x] Added live minimum-character guidance to business onboarding required text fields.
 - [x] Moved caption inputs below their related uploaded image/video previews across MakeSG media upload fields.
+- [x] Added optional AI image captions for blank uploaded image captions across public, private, and admin upload flows.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 
@@ -86,16 +89,22 @@ Collapsible admin editor for recommendation submissions. It mirrors the public r
 ### `src/components/projects/file-uploader.tsx`
 Shared media uploader now supports optional per-file fields rendered inside each preview card, allowing captions and future upload metadata to sit beside the exact file they describe.
 
+### `src/lib/ai-media-captions.ts`
+Server-only helper that preserves user-written captions, asks OpenAI to describe blank image captions after upload, skips videos, uses a short timeout, and falls back to the existing simple caption helper if AI is not configured or unavailable.
+
+### `tests/unit/ai-media-captions.test.ts`
+Unit coverage for preserving written captions, generating an AI caption for blank image uploads, falling back when the API fails, and skipping video uploads.
+
 ## Files Modified
 
 ### `src/features/businesses/actions.ts`
-Business portfolio uploads now use smart fallback captions. Private business media edits also apply fallback captions for new uploads and cleared captions.
+Business portfolio uploads now use AI image captions when captions are blank and OpenAI is configured. Private business media edits also apply AI captions for blank new image uploads and simple fallback captions for cleared captions/videos.
 
 ### `src/features/creative-jobs/actions.ts`
-Creative job reference uploads and private media edits now use smart fallback captions based on the job title.
+Creative job reference uploads and private media edits now use AI image captions for blank images when configured, with simple fallbacks based on the job title.
 
 ### `src/components/business/recommendation-actions.ts`
-Recommendation media uploads now use smart fallback captions when contributors do not provide captions.
+Recommendation media uploads now use AI image captions when contributors do not provide image captions, with simple fallback captions when AI is unavailable.
 
 ### `src/features/businesses/business-listing-form.tsx`
 Business onboarding copy is warmer and clearer. Upload copy explains that blank captions are acceptable. Success and duplicate-listing messages now read less formally. Required text fields now show live minimum-character guidance for business name, short summary, and full description. New portfolio captions now appear below each uploaded preview.
@@ -197,7 +206,7 @@ Reject feedback now tells admins that rejected items move to the trash bin for s
 Dismiss feedback now tells admins that dismissed requests move to the trash bin for seven days.
 
 ### `src/components/admin/actions.ts`
-Admin actions now revalidate `/admin/trash` when moderation, deletion, change-request status, or trash restore changes. Business feature/unfeature now revalidates public highlights and directory pages. Dismissed business change requests restore to `open`, not `pending`, because the database only allows `open`, `reviewed`, and `dismissed` for that table. Recommendation edits now save ratings, review text, contributor details, supporting links, and media changes while revalidating the affected public business profile.
+Admin actions now revalidate `/admin/trash` when moderation, deletion, change-request status, or trash restore changes. Business feature/unfeature now revalidates public highlights and directory pages. Dismissed business change requests restore to `open`, not `pending`, because the database only allows `open`, `reviewed`, and `dismissed` for that table. Recommendation edits now save ratings, review text, contributor details, supporting links, and media changes while revalidating the affected public business profile. Admin-added blank image captions now use AI when configured.
 
 ### `src/app/admin/creative-jobs/[id]/page.tsx`
 Admin creative job archived action is now labelled “Move to trash,” and the edit form now shows visible save/error feedback.
@@ -226,6 +235,7 @@ Added the 2026-08-29 changelog entry.
 ## API Changes
 
 - Upload-related server actions now call `smartMediaCaption()` before inserting media rows.
+- New image upload flows now call `captionUploadedMedia()` after storage upload so blank image captions can use OpenAI vision from the public media URL before the media row is saved.
 - Admin business feature/unfeature now persists to Supabase and revalidates public pages that use featured listings.
 - `getAdminTrashItems({ purgeExpired })` provides admin trash listing and cleanup.
 - `restoreTrashItem(kind, id)` restores trash items to the appropriate review queue.
@@ -263,14 +273,15 @@ Added the 2026-08-29 changelog entry.
 ## Bugs Remaining
 
 - Trash cleanup is not independently scheduled yet; it runs when admin pages call the cleanup helper.
-- Smart captions do not inspect actual image/video content.
+- AI captions inspect images only when OpenAI is configured and the contributor/admin leaves the caption blank.
 - Public forms still need rate limiting.
 - Visual image/video moderation is still rule-based metadata checking only.
 - Change-request media requires the `0016_business_change_request_media.sql` migration in production before uploads can save.
 
 ## Technical Decisions
 
-- Used filename/context fallback captions first because it is reliable, private, fast, and dependency-free.
+- Kept filename/context fallback captions as the safety net because AI captioning should never block uploads.
+- Used direct `fetch` calls to OpenAI instead of adding a dependency, keeping the feature small and server-only.
 - Used existing status fields as trash states instead of adding new trash tables, reducing schema churn.
 - Performed storage cleanup before deleting expired rows so orphaned media is less likely.
 - Kept admin override intact: trash is a retention layer, not a replacement for admin decision-making.
@@ -294,7 +305,7 @@ Added the 2026-08-29 changelog entry.
 
 - Whether restored items should remember their exact previous status instead of returning to review queues.
 - Whether seven days is enough retention before permanent deletion.
-- Whether users expect actual AI captions from image contents rather than filename-based captions.
+- Whether AI captions should be generated in the background if upload volume grows or if response time becomes noticeable.
 - Whether rejected business listings should be hidden from every future reporting/export surface.
 - Whether change requests should eventually support structured suggested fields, not just free-text reasons and supporting media.
 
@@ -309,14 +320,14 @@ Added the 2026-08-29 changelog entry.
 
 ## Performance Considerations
 
-- Smart captioning is simple string processing and adds negligible overhead.
+- AI image captioning adds one short external API call per blank image caption. Written captions and videos skip AI, and failed/slow calls fall back after a short timeout.
 - Trash indexes should keep admin cleanup queries cheap as data grows.
 - Storage deletion happens during cleanup and could become slow if many expired items accumulate; schedule/background execution would be better at scale.
 - Change-request media adds storage work to public submissions; client-side optimisation from `FileUploader` keeps image uploads smaller where possible.
 
 ## Accessibility Considerations
 
-- Fallback captions improve media descriptions, but they are not yet true alt text generated from visual content.
+- AI image captions improve media descriptions for uncaptained images, but they are still concise captions rather than full accessibility alt text.
 - New trash page uses semantic headings, list content, links, and existing focusable controls.
 - Copy changes should reduce cognitive load for first-time contributors.
 - Change-request media previews use image alt text from captions or filenames; richer visual alt text would require real image understanding.
@@ -325,7 +336,7 @@ Added the 2026-08-29 changelog entry.
 
 - Admin trash is protected by the existing admin middleware.
 - Public users cannot access `/admin/trash` without the admin cookie.
-- No secrets were added.
+- `OPENAI_API_KEY` is server-only and must stay out of browser-exposed `NEXT_PUBLIC_` variables.
 - Permanent deletion should remain admin-only or scheduled server-side.
 - Change-request media is protected by admin-only RLS at the database row level, while files are stored in the existing public portfolio bucket for preview simplicity.
 
@@ -345,9 +356,9 @@ The bundled Codex Node runtime was used because the regular shell could not find
 - Apply `supabase/migrations/0016_business_change_request_media.sql` in production Supabase.
 - Deploy to Vercel.
 - Smoke test:
-  - Business onboarding with blank media captions.
-  - Creative job posting with blank reference captions.
-  - Business recommendation with blank media captions.
+  - Business onboarding with blank image captions.
+  - Creative job posting with blank image captions.
+  - Business recommendation with blank image captions.
   - Public business change request with one or more media uploads and captions.
   - Admin change-request review page with request media beside the live business editor.
   - Reject a business and confirm it appears in `/admin/trash`.
@@ -359,10 +370,10 @@ The bundled Codex Node runtime was used because the regular shell could not find
 
 1. Apply the new Supabase migrations and redeploy.
 2. Add a scheduled cleanup route using Vercel Cron so trash purges without needing an admin visit.
-3. Add actual image/video moderation and AI captions after choosing a provider.
+3. Add actual image/video moderation after choosing a provider and privacy threshold.
 4. Add public form rate limiting.
 5. Add admin audit logs for every moderation decision.
 
 ## Ready-to-use Prompt for Next Session
 
-Continue the MakeSG project in `/Users/kevinchiam/Documents/Design Directory`. Before coding, read `AI_RULES.md`, `PROJECT_CONTEXT.md`, and `SESSION_HANDOVER.md`. The latest work on 2026-09-06 added low-risk auto-approval and media-backed public business change requests. Key files to read first: `src/components/business/request-business-change-panel.tsx`, `src/components/business/change-request-actions.ts`, `src/app/admin/change-requests/page.tsx`, `src/lib/business-change-requests.ts`, `src/lib/admin-trash.ts`, `src/components/admin/admin-business-edit-form.tsx`, `src/components/admin/admin-business-media-form.tsx`, `src/lib/moderation.ts`, `supabase/migrations/0015_admin_trash_retention.sql`, and `supabase/migrations/0016_business_change_request_media.sql`. The next likely task is to apply the new migration, deploy, smoke test change-request media upload/admin review, and then move trash cleanup to a scheduled Vercel Cron route. Remember the current decisions: smart captions are filename/context-based, not visual AI; rejected business/recommendation/revision rows, dismissed change requests, and archived creative jobs are considered trash; change-request media is shown only to admin review; public change requests stay free-text plus optional media for now; admin override stays central.
+Continue the MakeSG project in `/Users/kevinchiam/Documents/Design Directory`. Before coding, read `AI_RULES.md`, `PROJECT_CONTEXT.md`, and `SESSION_HANDOVER.md`. The latest work on 2026-09-06 added low-risk auto-approval, media-backed public business change requests, shared per-upload caption placement, and optional OpenAI image captions for blank uploaded image captions. Key files to read first: `src/lib/ai-media-captions.ts`, `src/lib/media-captions.ts`, `src/features/businesses/actions.ts`, `src/features/creative-jobs/actions.ts`, `src/components/business/recommendation-actions.ts`, `src/components/business/change-request-actions.ts`, `src/components/admin/actions.ts`, `src/components/projects/file-uploader.tsx`, `src/lib/moderation.ts`, `supabase/migrations/0015_admin_trash_retention.sql`, and `supabase/migrations/0016_business_change_request_media.sql`. The next likely task is to smoke test blank-caption image uploads on Vercel now that `OPENAI_API_KEY` is configured, then move trash cleanup to a scheduled Vercel Cron route. Remember the current decisions: user-written captions are preserved; AI captions are image-only and fall back to filename/context captions; videos still use simple fallback captions; rejected business/recommendation/revision rows, dismissed change requests, and archived creative jobs are considered trash; change-request media is shown only to admin review; public change requests stay free-text plus optional media for now; admin override stays central.
