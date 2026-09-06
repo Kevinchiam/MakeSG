@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { services as knownServices } from "@/lib/data";
 import { captionUploadedMedia } from "@/lib/ai-media-captions";
-import { smartMediaCaption } from "@/lib/media-captions";
 import { assessModeration, moderationBlockMessage, type ModerationResult } from "@/lib/moderation";
 import type { PortfolioRevisionItem } from "@/lib/business-submissions";
 import { createSlug } from "@/lib/slug";
@@ -363,12 +362,19 @@ export async function updateBusinessMediaByToken(token: string, formData: FormDa
           return [id, captionParts.join("::").trim()] as const;
         }),
     );
-    const keptPortfolio = basePortfolio
+    const keptPortfolio = await Promise.all(basePortfolio
       .filter((item) => !deletedIds.has(item.id ?? ""))
-      .map((item) => ({
+      .map(async (item) => ({
         ...item,
-        title: captionUpdates.get(item.id ?? "") ?? item.title,
-      }));
+        title: await captionUploadedMedia({
+          caption: captionUpdates.get(item.id ?? "") ?? item.title,
+          fileName: item.fileName,
+          fallback: `${business.name} portfolio`,
+          mediaKind: item.mimeType?.startsWith("video/") ? "video" : "photo",
+          mimeType: item.mimeType,
+          publicUrl: item.imageUrl,
+        }),
+      })));
     const keptSizeBytes = keptPortfolio.reduce((total, item) => total + (item.sizeBytes ?? 0), 0);
     const newSizeBytes = newFiles.reduce((total, file) => total + file.size, 0);
 
@@ -448,14 +454,14 @@ export async function updateBusinessMediaByToken(token: string, formData: FormDa
 
   const { data: currentItems, error: itemsError } = await supabase
     .from("portfolio_items")
-    .select("id, image_url, storage_path, size_bytes")
+    .select("id, image_url, storage_path, file_name, mime_type, size_bytes")
     .eq("business_id", business.id);
 
   if (itemsError || !currentItems) {
     return { ok: false, message: "Could not load the current portfolio uploads." };
   }
 
-  const itemRows = currentItems as Array<{ id: string; image_url: string | null; storage_path: string | null; size_bytes: number | null }>;
+  const itemRows = currentItems as Array<{ id: string; image_url: string | null; storage_path: string | null; file_name: string | null; mime_type: string | null; size_bytes: number | null }>;
   const deletedIds = new Set(formData.getAll("deletedPortfolioIds").filter((value): value is string => typeof value === "string"));
   const newFiles = validPortfolioFiles(formData.getAll("newPortfolioFiles"));
   const newCaptions = formData.getAll("newPortfolioCaptions").map((value) => stringFromFormData(value).trim());
@@ -491,9 +497,20 @@ export async function updateBusinessMediaByToken(token: string, formData: FormDa
     const [id, ...captionParts] = update.split("::");
     if (!id || deletedIds.has(id)) continue;
     const caption = captionParts.join("::").trim();
+    const item = itemRows.find((row) => row.id === id);
     await supabase
       .from("portfolio_items")
-      .update({ title: smartMediaCaption({ caption, fallback: `${business.name} portfolio` }), updated_at: new Date().toISOString() })
+      .update({
+        title: await captionUploadedMedia({
+          caption,
+          fileName: item?.file_name,
+          fallback: `${business.name} portfolio`,
+          mediaKind: item?.mime_type?.startsWith("video/") ? "video" : "photo",
+          mimeType: item?.mime_type,
+          publicUrl: item?.image_url,
+        }),
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", id)
       .eq("business_id", business.id);
   }

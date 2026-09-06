@@ -154,7 +154,7 @@ Most mutations use server actions:
 - Business onboarding inserts into Supabase and uploads portfolio media.
 - Business onboarding, business edits, business recommendations, change requests, and creative jobs run through rule-based moderation triage before saving.
 - Low-risk new business listings, business recommendations, and creative jobs can auto-publish. Business edits, change requests, medium-risk items, high-risk items, duplicates, and no-contact business listings still require admin review.
-- Blank image captions can be described by OpenAI after upload when `OPENAI_API_KEY` is configured. If AI captioning is unavailable, the upload is a video, or the contributor wrote a caption, MakeSG uses the existing simple context-aware caption fallback.
+- Blank image captions can be described by OpenAI after upload when `OPENAI_API_KEY` is configured. Clearing an existing image caption during edit can also regenerate from the saved image URL. If AI captioning is unavailable, the media is a video, or the contributor wrote a caption, MakeSG uses the existing simple context-aware caption fallback.
 - Rejected business listings, rejected listing edits, rejected recommendations, dismissed change requests, and archived creative jobs are treated as trash-bin items and are permanently deleted after seven days when the admin dashboard or trash page runs cleanup.
 - Creative job submission inserts a job, stores a manage token, uploads reference files, and returns the private manage link. Low-risk creative jobs auto-publish; higher-risk jobs use `pending_review`.
 - Admin pages call admin data helpers, show automated triage decisions/signals, and update moderation status with server actions.

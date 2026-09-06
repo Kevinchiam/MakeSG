@@ -26,7 +26,7 @@ Business onboarding guidance: the `/for-businesses` form now mirrors the creativ
 
 Media caption placement: caption inputs for new uploads now appear directly inside each uploaded file preview card. This applies across business onboarding, private business media editing, creative job posting, private creative job media editing, recommendations, business change requests, and admin media edit forms.
 
-AI captioning update: blank image captions now use the OpenAI Responses API when `OPENAI_API_KEY` is configured. User-written captions are preserved, videos keep the simple fallback caption, and failed/slow AI calls quietly fall back to the existing filename/context caption so uploads still complete.
+AI captioning update: blank image captions now use the OpenAI Responses API when `OPENAI_API_KEY` is configured. User-written captions are preserved, videos keep the simple fallback caption, and failed/slow AI calls quietly fall back to the existing filename/context caption so uploads still complete. Clearing an existing image caption during edit now also regenerates from the saved image URL.
 
 ## Objectives Completed
 
@@ -57,6 +57,7 @@ AI captioning update: blank image captions now use the OpenAI Responses API when
 - [x] Added live minimum-character guidance to business onboarding required text fields.
 - [x] Moved caption inputs below their related uploaded image/video previews across MakeSG media upload fields.
 - [x] Added optional AI image captions for blank uploaded image captions across public, private, and admin upload flows.
+- [x] Fixed existing media edits so cleared image captions can regenerate with AI instead of only using simple fallbacks.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 

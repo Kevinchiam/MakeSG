@@ -8,7 +8,6 @@ import type { AdminTrashKind } from "@/lib/admin-trash";
 import type { PublicationStatus } from "@/lib/types";
 import { services as knownServices } from "@/lib/data";
 import { captionUploadedMedia } from "@/lib/ai-media-captions";
-import { smartMediaCaption } from "@/lib/media-captions";
 import { businessSchema } from "@/lib/validation";
 
 type AdminBusinessUpdateResult =
@@ -271,7 +270,7 @@ export async function updateBusinessRecommendationFromAdmin(recommendationId: st
 
   const { data: currentMedia, error: mediaLoadError } = await supabase
     .from("business_recommendation_media")
-    .select("id, storage_path, size_bytes")
+    .select("id, bucket, storage_path, file_name, mime_type, size_bytes")
     .eq("recommendation_id", recommendationId);
 
   if (mediaLoadError || !currentMedia) {
@@ -317,10 +316,19 @@ export async function updateBusinessRecommendationFromAdmin(recommendationId: st
     const [id, ...captionParts] = update.split("::");
     if (!id || deletedIds.has(id)) continue;
     const caption = captionParts.join("::").trim();
+    const media = currentMedia.find((item) => item.id === id);
+    const publicUrl = media ? supabase.storage.from(media.bucket).getPublicUrl(media.storage_path).data.publicUrl : null;
     await supabase
       .from("business_recommendation_media")
       .update({
-        caption: smartMediaCaption({ caption, fallback: "Recommendation media" }),
+        caption: await captionUploadedMedia({
+          caption,
+          fileName: media?.file_name,
+          fallback: "Recommendation media",
+          mediaKind: media?.mime_type?.startsWith("video/") ? "video" : "photo",
+          mimeType: media?.mime_type,
+          publicUrl,
+        }),
       })
       .eq("id", id)
       .eq("recommendation_id", recommendationId);
@@ -522,14 +530,14 @@ export async function updateBusinessMediaFromAdmin(businessId: string, formData:
 
   const { data: currentItems, error: itemsError } = await supabase
     .from("portfolio_items")
-    .select("id, image_url, storage_path, size_bytes")
+    .select("id, image_url, storage_path, file_name, mime_type, size_bytes")
     .eq("business_id", businessId);
 
   if (itemsError || !currentItems) {
     return { ok: false, message: "Could not load the current portfolio uploads." };
   }
 
-  const itemRows = currentItems as Array<{ id: string; image_url: string | null; storage_path: string | null; size_bytes: number | null }>;
+  const itemRows = currentItems as Array<{ id: string; image_url: string | null; storage_path: string | null; file_name: string | null; mime_type: string | null; size_bytes: number | null }>;
   const deletedIds = new Set(formData.getAll("deletedPortfolioIds").filter((value): value is string => typeof value === "string"));
   const newFiles = validPortfolioFiles(formData.getAll("newPortfolioFiles"));
   const newCaptions = formData.getAll("newPortfolioCaptions").map((value) => stringFromFormData(value).trim());
@@ -547,10 +555,18 @@ export async function updateBusinessMediaFromAdmin(businessId: string, formData:
     const [id, ...captionParts] = update.split("::");
     if (!id || deletedIds.has(id)) continue;
     const caption = captionParts.join("::").trim();
+    const item = itemRows.find((row) => row.id === id);
     await supabase
       .from("portfolio_items")
       .update({
-        title: smartMediaCaption({ caption, fallback: `${business.name} portfolio` }),
+        title: await captionUploadedMedia({
+          caption,
+          fileName: item?.file_name,
+          fallback: `${business.name} portfolio`,
+          mediaKind: item?.mime_type?.startsWith("video/") ? "video" : "photo",
+          mimeType: item?.mime_type,
+          publicUrl: item?.image_url,
+        }),
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)

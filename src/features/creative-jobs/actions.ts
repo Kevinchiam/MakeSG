@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { services as knownServices } from "@/lib/data";
 import { captionUploadedMedia } from "@/lib/ai-media-captions";
-import { smartMediaCaption } from "@/lib/media-captions";
 import { assessModeration, moderationBlockMessage } from "@/lib/moderation";
 import type { CreativeJobStatus } from "@/lib/creative-jobs";
 import { createSlug } from "@/lib/slug";
@@ -304,14 +303,14 @@ export async function updateCreativeJobMediaByToken(token: string, formData: For
 
   const { data: currentReferences, error: referencesError } = await supabase
     .from("creative_job_reference_files")
-    .select("id, storage_path, size_bytes")
+    .select("id, storage_path, file_url, file_name, mime_type, size_bytes")
     .eq("job_id", job.id);
 
   if (referencesError || !currentReferences) {
     return { ok: false, message: "Could not load the current uploads." };
   }
 
-  const referenceRows = currentReferences as Array<{ id: string; storage_path: string; size_bytes: number }>;
+  const referenceRows = currentReferences as Array<{ id: string; storage_path: string; file_url: string | null; file_name: string | null; mime_type: string | null; size_bytes: number }>;
   const deletedIds = new Set(formData.getAll("deletedReferenceIds").filter((value): value is string => typeof value === "string"));
   const newFiles = validReferenceFiles(formData.getAll("newReferenceFiles"));
   const newCaptions = formData.getAll("newReferenceCaptions").map((value) => stringFromFormData(value).trim());
@@ -343,9 +342,19 @@ export async function updateCreativeJobMediaByToken(token: string, formData: For
     const [id, ...captionParts] = update.split("::");
     if (!id || deletedIds.has(id)) continue;
     const caption = captionParts.join("::").trim();
+    const reference = referenceRows.find((row) => row.id === id);
     await supabase
       .from("creative_job_reference_files")
-      .update({ caption: smartMediaCaption({ caption, fallback: `Reference for ${job.title}` }) })
+      .update({
+        caption: await captionUploadedMedia({
+          caption,
+          fileName: reference?.file_name,
+          fallback: `Reference for ${job.title}`,
+          mediaKind: reference?.mime_type?.startsWith("video/") ? "video" : "photo",
+          mimeType: reference?.mime_type,
+          publicUrl: reference?.file_url,
+        }),
+      })
       .eq("id", id)
       .eq("job_id", job.id);
   }

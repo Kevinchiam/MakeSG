@@ -28,6 +28,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Fixed a server-side duplicate business-name gap by rejecting duplicate business submissions even if the browser-side suggestion is bypassed.
 - Fixed trash restore for dismissed business change requests by restoring them to the valid `open` review status.
 - Fixed long live-media captions being cropped on landing and About page image tiles.
+- Fixed AI captions so clearing an existing image caption during edit can regenerate from the saved image, not just from newly uploaded images.
 
 ### Removed
 - No user-facing features removed.
