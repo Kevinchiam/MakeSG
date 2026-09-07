@@ -1,6 +1,5 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createSlug } from "@/lib/slug";
@@ -60,15 +59,6 @@ export async function updateBusinessPublicationStatus(businessId: string, status
 }
 
 export async function testOpenAiCaptionConnection(): Promise<AdminCaptionDiagnosticResult> {
-  if (!(await isAdminSession())) {
-    return {
-      ok: false,
-      keyAvailable: false,
-      model: process.env.OPENAI_IMAGE_CAPTION_MODEL ?? "gpt-4.1-mini",
-      message: "Log in as admin before running this check.",
-    };
-  }
-
   return testAiImageCaptionConnection();
 }
 
@@ -877,12 +867,4 @@ function revalidateBusinessAdminPaths(businessId: string) {
   revalidatePath("/admin/businesses");
   revalidatePath(`/admin/businesses/${businessId}`);
   revalidatePath("/businesses");
-}
-
-async function isAdminSession() {
-  const expectedToken = process.env.ADMIN_SESSION_TOKEN;
-  if (!expectedToken) return false;
-
-  const cookieStore = await cookies();
-  return cookieStore.get("makesg_admin")?.value === expectedToken;
 }
