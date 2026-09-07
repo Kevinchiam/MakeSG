@@ -4,6 +4,10 @@ export type AdminAuthConfig = {
   sessionToken?: string;
 };
 
+export const adminSessionCookieName = "makesg_admin_v2";
+export const legacyAdminSessionCookieName = "makesg_admin";
+export const adminSessionMaxAge = 60 * 60 * 8;
+
 export function adminAuthConfig(): AdminAuthConfig {
   return {
     username: process.env.ADMIN_USERNAME,

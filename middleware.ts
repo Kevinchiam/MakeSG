@@ -1,7 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { adminAuthConfig } from "@/lib/admin-auth";
-
-const adminSessionMaxAge = 60 * 60 * 24 * 365;
+import { adminAuthConfig, adminSessionCookieName, legacyAdminSessionCookieName } from "@/lib/admin-auth";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -10,17 +8,17 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = request.cookies.get("makesg_admin")?.value;
+  const token = request.cookies.get(adminSessionCookieName)?.value;
   const expectedToken = adminAuthConfig().sessionToken;
   if (expectedToken && token === expectedToken) {
     const response = NextResponse.next();
-    response.cookies.set("makesg_admin", expectedToken, {
+    response.cookies.set(legacyAdminSessionCookieName, "", {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: adminSessionMaxAge,
-      expires: new Date(Date.now() + adminSessionMaxAge * 1000),
+      maxAge: 0,
+      expires: new Date(0),
     });
     return response;
   }
@@ -28,7 +26,16 @@ export function middleware(request: NextRequest) {
   const loginUrl = request.nextUrl.clone();
   loginUrl.pathname = "/admin/login";
   loginUrl.searchParams.set("next", pathname);
-  return NextResponse.redirect(loginUrl);
+  const response = NextResponse.redirect(loginUrl);
+  response.cookies.set(legacyAdminSessionCookieName, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+    expires: new Date(0),
+  });
+  return response;
 }
 
 export const config = {

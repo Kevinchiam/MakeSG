@@ -19,6 +19,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Changed business and creative-job admin queue cards from full-card links to cards with dedicated review and private-link controls.
 - Changed admin login so it is disabled unless `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_TOKEN` are all configured.
 - Changed `.env.example` and README admin setup guidance to remove unsafe sample credentials.
+- Changed admin sessions from the old long-lived cookie to a versioned eight-hour cookie, forcing old browsers to log in again after deployment.
 - Updated project documentation and session handover notes with the AI caption diagnostic workflow.
 
 ### Fixed
@@ -26,6 +27,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Fixed the AI caption diagnostic image after OpenAI rejected the original inline test image as invalid.
 - Fixed the old-record gap where listings created before manage-token rollout had no way for admin to obtain a private manage link.
 - Fixed a security risk where missing admin environment variables could fall back to obvious default credentials.
+- Fixed overly persistent admin access caused by the previous one-year remembered admin cookie.
 
 ### Removed
 - No user-facing features removed.

@@ -73,7 +73,7 @@ ADMIN_PASSWORD=<strong-private-password>
 ADMIN_SESSION_TOKEN=<long-random-secret>
 ```
 
-Admin login is disabled unless all three values are configured. Do not use obvious values such as `Admin` or `MakeSG` in production.
+Admin login is disabled unless all three values are configured. Do not use obvious values such as `Admin` or `MakeSG` in production. Admin sessions expire after eight hours; rotate `ADMIN_SESSION_TOKEN` whenever every browser should be forced to log in again.
 
 ## Enquiry Emails
 

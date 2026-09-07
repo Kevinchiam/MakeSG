@@ -2,9 +2,14 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { adminAuthConfig, adminLoginConfigured, validAdminCredentials } from "@/lib/admin-auth";
-
-const adminSessionMaxAge = 60 * 60 * 24 * 365;
+import {
+  adminAuthConfig,
+  adminLoginConfigured,
+  adminSessionCookieName,
+  adminSessionMaxAge,
+  legacyAdminSessionCookieName,
+  validAdminCredentials,
+} from "@/lib/admin-auth";
 
 export async function loginAdmin(formData: FormData) {
   const username = String(formData.get("username") ?? "");
@@ -22,7 +27,15 @@ export async function loginAdmin(formData: FormData) {
   }
 
   const cookieStore = await cookies();
-  cookieStore.set("makesg_admin", sessionToken, {
+  cookieStore.set(legacyAdminSessionCookieName, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+    expires: new Date(0),
+  });
+  cookieStore.set(adminSessionCookieName, sessionToken, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

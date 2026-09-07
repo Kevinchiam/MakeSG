@@ -1,14 +1,11 @@
 import { cookies } from "next/headers";
 import { SiteHeaderClient } from "@/components/site/site-header-client";
-
-function adminSessionToken() {
-  return process.env.ADMIN_SESSION_TOKEN;
-}
+import { adminAuthConfig, adminSessionCookieName } from "@/lib/admin-auth";
 
 export async function SiteHeader() {
   const cookieStore = await cookies();
-  const token = cookieStore.get("makesg_admin")?.value;
-  const expectedToken = adminSessionToken();
+  const token = cookieStore.get(adminSessionCookieName)?.value;
+  const expectedToken = adminAuthConfig().sessionToken;
 
   return <SiteHeaderClient isAdmin={Boolean(expectedToken && token === expectedToken)} />;
 }

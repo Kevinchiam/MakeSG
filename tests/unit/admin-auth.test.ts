@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { adminLoginConfigured, validAdminCredentials } from "@/lib/admin-auth";
+import {
+  adminLoginConfigured,
+  adminSessionCookieName,
+  adminSessionMaxAge,
+  legacyAdminSessionCookieName,
+  validAdminCredentials,
+} from "@/lib/admin-auth";
 
 describe("admin auth", () => {
   it("disables login when credentials are not explicitly configured", () => {
@@ -22,5 +28,11 @@ describe("admin auth", () => {
     expect(validAdminCredentials("owner", "secret", config)).toBe(true);
     expect(validAdminCredentials("Admin", "MakeSG", config)).toBe(false);
     expect(validAdminCredentials("owner", "wrong", config)).toBe(false);
+  });
+
+  it("uses a short versioned admin session cookie", () => {
+    expect(adminSessionCookieName).toBe("makesg_admin_v2");
+    expect(adminSessionCookieName).not.toBe(legacyAdminSessionCookieName);
+    expect(adminSessionMaxAge).toBeLessThanOrEqual(60 * 60 * 8);
   });
 });
