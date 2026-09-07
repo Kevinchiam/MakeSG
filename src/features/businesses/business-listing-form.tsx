@@ -247,8 +247,8 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
           });
           setPortfolioFiles(files);
         }}
-        label="Upload portfolio photos or videos"
-        description="Photos and videos are stored safely and shown after approval. Uploads must be 10MB total or smaller. Leave captions blank and MakeSG will add a simple one."
+        label="Upload a profile image and portfolio photos or videos"
+        description="Add the image you want people to see first. The first photo becomes the business profile image on cards and the listing page; the rest appear in the portfolio after approval. Uploads must be 10MB total or smaller. Leave captions blank and MakeSG will add a simple one."
         renderFileFields={(file, index) => {
           const key = fileKey(file);
           return (

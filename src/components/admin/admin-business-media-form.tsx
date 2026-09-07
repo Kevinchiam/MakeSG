@@ -117,8 +117,8 @@ export function AdminBusinessMediaForm({
           });
           setNewFiles(files);
         }}
-        label="Add portfolio photos or videos"
-        description="Uploads must be 10MB total or smaller. Blank captions get a simple fallback caption."
+        label="Add or update profile and portfolio media"
+        description="The first approved photo is used as the business profile image on cards and the listing page. Add the strongest image first, then supporting portfolio photos or videos. Uploads must be 10MB total or smaller."
         renderFileFields={(file, index) => {
           const key = fileKey(file);
           return (

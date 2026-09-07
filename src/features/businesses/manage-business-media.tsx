@@ -101,8 +101,8 @@ export function ManageBusinessMedia({ token, portfolio }: { token: string; portf
           });
           setNewFiles(files);
         }}
-        label="Add portfolio photos or videos"
-        description="Photos and videos are stored safely and shown after approval. Uploads must be 10MB total or smaller. Leave captions blank and MakeSG will add a simple one."
+        label="Add or update profile and portfolio media"
+        description="The first approved photo is used as the business profile image on cards and the listing page. Add the strongest image first, then add supporting portfolio photos or videos. Uploads must be 10MB total or smaller. Leave captions blank and MakeSG will add a simple one."
         renderFileFields={(file, index) => {
           const key = fileKey(file);
           return (

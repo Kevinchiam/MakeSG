@@ -28,6 +28,8 @@ Media caption placement: caption inputs for new uploads now appear directly insi
 
 AI captioning update: blank image captions now use the OpenAI Responses API when `OPENAI_API_KEY` is configured. User-written captions are preserved, videos keep the simple fallback caption, and failed/slow AI calls quietly fall back to the existing filename/context caption so uploads still complete. Clearing an existing image caption during edit now also regenerates from the saved image URL.
 
+Profile image copy update: business media upload copy now tells submitters that the first approved photo becomes the business profile image on cards and the listing page, while the remaining media appears in the portfolio.
+
 ## Objectives Completed
 
 - [x] Added smart fallback captions for uncaptained uploads.
@@ -58,6 +60,7 @@ AI captioning update: blank image captions now use the OpenAI Responses API when
 - [x] Moved caption inputs below their related uploaded image/video previews across MakeSG media upload fields.
 - [x] Added optional AI image captions for blank uploaded image captions across public, private, and admin upload flows.
 - [x] Fixed existing media edits so cleared image captions can regenerate with AI instead of only using simple fallbacks.
+- [x] Clarified business media upload copy so people know where the profile image appears.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 
