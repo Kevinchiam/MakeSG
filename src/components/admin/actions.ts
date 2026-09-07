@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
@@ -26,6 +27,10 @@ type AdminRecommendationUpdateResult =
 type AdminCaptionDiagnosticResult =
   | { ok: true; message: string; keyAvailable: true; model: string; sample: string }
   | { ok: false; message: string; keyAvailable: boolean; model: string; detail?: string };
+
+type AdminPrivateLinkResult =
+  | { ok: true; manageToken: string }
+  | { ok: false; message: string };
 
 const adminRecommendationSchema = z.object({
   recommenderName: z.string().trim().min(1, "Enter the recommender's name."),
@@ -61,6 +66,68 @@ export async function updateBusinessPublicationStatus(businessId: string, status
 
 export async function testOpenAiCaptionConnection(): Promise<AdminCaptionDiagnosticResult> {
   return testAiImageCaptionConnection({ imageUrl: await getCaptionTestImageUrl() });
+}
+
+export async function ensureBusinessPrivateLink(businessId: string): Promise<AdminPrivateLinkResult> {
+  const supabase = createAdminClient();
+  const { data: business, error: loadError } = await supabase
+    .from("businesses")
+    .select("manage_token")
+    .eq("id", businessId)
+    .single();
+
+  if (loadError || !business) {
+    return { ok: false, message: loadError?.message ?? "Could not find this business listing." };
+  }
+
+  if (business.manage_token) {
+    return { ok: true, manageToken: business.manage_token };
+  }
+
+  const manageToken = createManageToken();
+  const { error } = await supabase
+    .from("businesses")
+    .update({ manage_token: manageToken, updated_at: new Date().toISOString() })
+    .eq("id", businessId);
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  revalidatePath("/admin/businesses");
+  revalidatePath(`/admin/businesses/${businessId}`);
+  return { ok: true, manageToken };
+}
+
+export async function ensureCreativeJobPrivateLink(jobId: string): Promise<AdminPrivateLinkResult> {
+  const supabase = createAdminClient();
+  const { data: job, error: loadError } = await supabase
+    .from("creative_job_listings")
+    .select("manage_token")
+    .eq("id", jobId)
+    .single();
+
+  if (loadError || !job) {
+    return { ok: false, message: loadError?.message ?? "Could not find this creative job." };
+  }
+
+  if (job.manage_token) {
+    return { ok: true, manageToken: job.manage_token };
+  }
+
+  const manageToken = createManageToken();
+  const { error } = await supabase
+    .from("creative_job_listings")
+    .update({ manage_token: manageToken, updated_at: new Date().toISOString() })
+    .eq("id", jobId);
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  revalidatePath("/admin/creative-jobs");
+  revalidatePath(`/admin/creative-jobs/${jobId}`);
+  return { ok: true, manageToken };
 }
 
 export async function updateBusinessFeaturedStatus(businessId: string, featured: boolean) {
@@ -787,6 +854,10 @@ function storagePathFromPublicUrl(url: string | null) {
   const index = url.indexOf(marker);
   if (index === -1) return null;
   return decodeURIComponent(url.slice(index + marker.length));
+}
+
+function createManageToken() {
+  return randomBytes(24).toString("hex");
 }
 
 function formDataToBusinessInput(formData: FormData) {

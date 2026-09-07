@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { AdminPrivateLinkControl } from "@/components/admin/admin-private-link-control";
 import { ModerationSummary } from "@/components/admin/moderation-summary";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -29,7 +30,7 @@ export default async function AdminBusinessesPage() {
       <div className="mt-8 grid gap-3">
         {sortedBusinesses.length ? (
           sortedBusinesses.map((business) => (
-            <Link key={business.id} href={`/admin/businesses/${business.id}`} className={`group grid gap-3 border bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-lg md:grid-cols-[1fr_auto] ${business.pendingRevision || business.publicationStatus === "pending" ? "border-[#9c4f35]" : "border-[#ded8cc]"}`}>
+            <article key={business.id} className={`grid gap-3 border bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-lg md:grid-cols-[1fr_auto] ${business.pendingRevision || business.publicationStatus === "pending" ? "border-[#9c4f35]" : "border-[#ded8cc]"}`}>
               <span>
                 <span className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold">{business.name}</span>
@@ -39,9 +40,9 @@ export default async function AdminBusinessesPage() {
                 <span className="mt-1 block text-sm text-[#6d675d]">{business.shortDescription || "No short summary provided."}</span>
                 <span className="mt-2 block text-xs uppercase tracking-wide text-[#8a8277]">Updated {formatDate(business.updatedAt || business.createdAt)}</span>
               </span>
-              <span className="flex items-start gap-2 text-sm font-semibold text-[#211f1b]">
+              <Link href={`/admin/businesses/${business.id}`} className="group flex items-start gap-2 text-sm font-semibold text-[#211f1b]">
                 Review listing <ArrowRight className="mt-0.5 h-4 w-4 transition group-hover:translate-x-1" aria-hidden />
-              </span>
+              </Link>
               <span className="md:col-span-2">
                 <ModerationSummary
                   compact
@@ -51,7 +52,10 @@ export default async function AdminBusinessesPage() {
                   signals={business.moderationSignals}
                 />
               </span>
-            </Link>
+              <div className="md:col-span-2">
+                <AdminPrivateLinkControl id={business.id} kind="business" initialManageToken={business.manageToken} compact />
+              </div>
+            </article>
           ))
         ) : (
           <EmptyState title="No business records yet" description="New business submissions and listing edits will appear here for review." />

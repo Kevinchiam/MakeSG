@@ -376,7 +376,7 @@ Future improvements:
 ### Admin Dashboard
 Status: Completed
 
-Description: Admin home organised as a review command centre. Active work is grouped into business listings, creative jobs, recommendations, and change requests, with high-risk automated triage flags called out separately. Maintenance items such as trash, services, and reports are visually separated so admins know what needs a decision now versus what is upkeep or future functionality. Change requests now support media-backed evidence and are reviewed beside the live listing editor. Recommendations can be edited from the review queue while retaining approve/reject override controls. The admin dashboard also includes an AI caption check that tests OpenAI connectivity from the deployed site and reports missing-key/API/model errors without revealing the key.
+Description: Admin home organised as a review command centre. Active work is grouped into business listings, creative jobs, recommendations, and change requests, with high-risk automated triage flags called out separately. Maintenance items such as trash, services, and reports are visually separated so admins know what needs a decision now versus what is upkeep or future functionality. Change requests now support media-backed evidence and are reviewed beside the live listing editor. Recommendations can be edited from the review queue while retaining approve/reject override controls. The admin dashboard also includes an AI caption check that tests OpenAI connectivity from the deployed site and reports missing-key/API/model errors without revealing the key. Admin business and creative-job queues expose private manage links, with a create-link fallback for older records that do not have tokens yet.
 
 Relevant files:
 - `src/app/admin/page.tsx`
@@ -387,6 +387,7 @@ Relevant files:
 - `src/components/admin/moderation-summary.tsx`
 - `src/components/admin/admin-business-edit-form.tsx`
 - `src/components/admin/admin-business-media-form.tsx`
+- `src/components/admin/admin-private-link-control.tsx`
 - `src/components/admin/admin-recommendation-edit-form.tsx`
 - `src/lib/admin-trash.ts`
 
@@ -397,7 +398,7 @@ Future improvements:
 ### Admin Business Moderation
 Status: Completed
 
-Description: Admin can review, approve, reject, feature/unfeature, unpublish, delete, and directly edit business listings and portfolio media. New listings, auto-approved listings, and pending edits are visible in the queue, with pending/high-risk items prioritised. Records show plain-language review labels and automated triage risk, reason, and signals to streamline review while preserving admin override. Public change requests show requester context and supporting media beside the live listing edit forms, so an admin can apply useful corrections immediately. Rejected listings and rejected pending edits move out of the main queues into the admin trash bin for seven days before cleanup.
+Description: Admin can review, approve, reject, feature/unfeature, unpublish, delete, directly edit business listings and portfolio media, and copy or create each listing's private manage link. New listings, auto-approved listings, and pending edits are visible in the queue, with pending/high-risk items prioritised. Records show plain-language review labels and automated triage risk, reason, and signals to streamline review while preserving admin override. Public change requests show requester context and supporting media beside the live listing edit forms, so an admin can apply useful corrections immediately. Rejected listings and rejected pending edits move out of the main queues into the admin trash bin for seven days before cleanup.
 
 Relevant files:
 - `src/app/admin/businesses/page.tsx`
@@ -415,7 +416,7 @@ Future improvements:
 ### Admin Creative Job Management
 Status: Completed
 
-Description: Admin can view, edit, status-change, move to trash, and delete creative jobs. Creative jobs flagged by automated triage can be held in `pending_review` until an admin opens or moves them to trash. Admin creative-job edits now show inline success/error feedback so saves are visible.
+Description: Admin can view, edit, status-change, move to trash, delete creative jobs, and copy or create each job's private manage link. Creative jobs flagged by automated triage can be held in `pending_review` until an admin opens or moves them to trash. Admin creative-job edits now show inline success/error feedback so saves are visible.
 
 Relevant files:
 - `src/app/admin/creative-jobs/page.tsx`
@@ -562,6 +563,8 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - `updateCreativeJobFromForm(jobId, formData)`: Admin edit of creative job listing.
 - `deleteCreativeJobEntry(jobId)`: Admin deletion of creative job.
 - `testOpenAiCaptionConnection()`: Admin-only server action that safely checks whether OpenAI image captioning is available to the running deployment.
+- `ensureBusinessPrivateLink(businessId)`: Admin action that returns an existing business manage token or creates one for older business records.
+- `ensureCreativeJobPrivateLink(jobId)`: Admin action that returns an existing creative-job manage token or creates one for older job records.
 - `submitBusinessListing(input)`: Business onboarding submission and portfolio upload.
 - `submitCreativeJobListing(input)`: Creative job creation, reference upload, and manage-token generation.
 - `updateCreativeJobStatusByToken(token, status)`: Private status update for creative jobs.
@@ -601,6 +604,7 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - `FileUploader`: Shared media/reference uploader with previews, client-side image optimisation, and optional per-file fields rendered inside each upload card for captions or related metadata.
 - `AdminPageHeader`: Admin page heading wrapper.
 - `OpenAiCaptionCheck`: Admin dashboard diagnostic card for checking whether AI captioning can reach OpenAI from the deployed site.
+- `AdminPrivateLinkControl`: Admin copy/open/create control for business and creative-job private manage links.
 - `ModerationSummary`: Shared admin triage panel showing automated decision, risk, reason, and signals.
 - `AdminStatusControls`: Business and recommendation moderation buttons, including persisted business feature/unfeature controls.
 - `BusinessChangeRequestControls`: Admin controls for marking change requests reviewed or dismissed.
@@ -707,7 +711,7 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - Supabase Auth exists but general user account flows are incomplete.
 - Some dashboard pages are scaffolds and not ready as core product experiences.
 - Creative job and business private manage links are powerful: anyone with the link can edit the listing.
-- Existing creative jobs and businesses created before manage-token rollout may not have manage links.
+- Older creative jobs and businesses created before manage-token rollout can receive manage links from the admin queue/detail controls.
 - Automated moderation currently checks text, captions, links, filenames, contact presence, and simple spam patterns; it does not inspect the visual content of uploaded images/videos.
 - AI auto-captioning inspects uploaded images only when captions are blank and `OPENAI_API_KEY` is configured. Videos still use filename/context fallback captions.
 - OpenAI diagnostics are manual from the admin dashboard; failed AI caption calls still fall back silently during normal uploads so users are not blocked.

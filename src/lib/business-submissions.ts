@@ -11,6 +11,7 @@ export type AdminBusinessSummary = ModerationTriage & {
   source: "supabase";
   endorsementCount: number;
   pendingRevision: boolean;
+  manageToken: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -130,7 +131,7 @@ export async function getAdminBusinesses(): Promise<AdminBusinessSummary[]> {
     const supabase = createAdminClient();
     const { data } = await supabase
       .from("businesses")
-      .select("id, name, short_description, publication_status, verification_status, featured, endorsement_count, created_at, updated_at, moderation_decision, moderation_risk, moderation_reason, moderation_signals, business_listing_revisions(status, moderation_decision, moderation_risk, moderation_reason, moderation_signals)")
+      .select("id, name, short_description, publication_status, verification_status, featured, endorsement_count, manage_token, created_at, updated_at, moderation_decision, moderation_risk, moderation_reason, moderation_signals, business_listing_revisions(status, moderation_decision, moderation_risk, moderation_reason, moderation_signals)")
       .neq("publication_status", "rejected")
       .order("created_at", { ascending: false });
 
@@ -145,6 +146,7 @@ export async function getAdminBusinesses(): Promise<AdminBusinessSummary[]> {
         featured: Boolean(business.featured),
         endorsementCount: business.endorsement_count ?? 0,
         pendingRevision: Boolean(pendingRevision),
+        manageToken: business.manage_token ?? null,
         createdAt: business.created_at ?? "",
         updatedAt: business.updated_at ?? "",
         source: "supabase" as const,
@@ -163,7 +165,7 @@ export async function getAdminBusiness(id: string) {
     const supabase = createAdminClient();
     const { data } = await supabase
       .from("businesses")
-      .select("id, name, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, publication_status, featured, endorsement_count, moderation_decision, moderation_risk, moderation_reason, moderation_signals, business_services(services(name, slug)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes), business_listing_revisions(id, status, proposed_data, proposed_services, proposed_portfolio, moderation_decision, moderation_risk, moderation_reason, moderation_signals)")
+      .select("id, name, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, publication_status, featured, manage_token, endorsement_count, moderation_decision, moderation_risk, moderation_reason, moderation_signals, business_services(services(name, slug)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes), business_listing_revisions(id, status, proposed_data, proposed_services, proposed_portfolio, moderation_decision, moderation_risk, moderation_reason, moderation_signals)")
       .eq("id", id)
       .single();
 
@@ -192,6 +194,7 @@ export async function getAdminBusiness(id: string) {
       publicationStatus: business.publication_status,
       featured: Boolean(business.featured),
       endorsementCount: business.endorsement_count ?? 0,
+      manageToken: business.manage_token ?? null,
       pendingRevision,
       source: "supabase" as const,
       ...moderationFields(business),

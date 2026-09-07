@@ -34,6 +34,8 @@ Private link reminder update: business listing success feedback now has a clear 
 
 AI caption diagnostic update: the admin dashboard now includes a manual AI caption check. It confirms whether the deployed site can see `OPENAI_API_KEY`, which model is being used, and whether OpenAI returns a successful image-caption response. The check is admin-only and never displays the secret key. The diagnostic now uses a tiny PNG served from MakeSG itself instead of inline image data, after OpenAI rejected the original inline test image as invalid.
 
+Private link admin update: admins can now copy or open private manage links from the business and creative-job admin queues and detail pages. If an older listing does not have a manage token yet, the admin control can create one before copying it.
+
 ## Objectives Completed
 
 - [x] Added smart fallback captions for uncaptained uploads.
@@ -67,6 +69,7 @@ AI caption diagnostic update: the admin dashboard now includes a manual AI capti
 - [x] Clarified business media upload copy so people know where the profile image appears.
 - [x] Added a stronger reminder and copy action for saving the business private edit link after listing submission.
 - [x] Added an admin-only AI caption diagnostic to help debug deployment/key/model/API issues.
+- [x] Added admin controls to copy, open, or create private manage links for business listings and creative jobs.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 
@@ -110,6 +113,9 @@ Admin dashboard card that lets admins test AI captioning from the deployed site.
 
 ### `src/app/api/ai-caption-test-image/route.ts`
 Public tiny PNG route used only by the admin AI caption diagnostic. It gives OpenAI a normal image URL from the deployed site, which better matches real Supabase upload URLs than inline base64 image data.
+
+### `src/components/admin/admin-private-link-control.tsx`
+Reusable admin control for private manage links. It can copy an existing link, open it in a new tab, or create a missing manage token for older business and creative-job records before copying.
 
 ## Files Modified
 
@@ -174,16 +180,16 @@ Recommendation lookup copy now says listings are sent for review.
 Admin home now includes trash-bin count, calls trash cleanup so expired items can be purged, and is organised into active review queues plus maintenance items. It now also includes the AI caption check card for debugging deployed caption failures.
 
 ### `src/app/admin/businesses/page.tsx`
-Business review queue now prioritises pending edits, pending listings, and high-risk items. It uses plain labels such as Pending edits, Pending review, Published, and Unpublished, and no longer shows the unused verification label.
+Business review queue now prioritises pending edits, pending listings, and high-risk items. It uses plain labels such as Pending edits, Pending review, Published, and Unpublished, no longer shows the unused verification label, and lets admins copy or create each business private manage link.
 
 ### `src/app/admin/creative-jobs/page.tsx`
-Creative job review queue now prioritises pending/high-risk jobs, shows clearer queue summary badges, and uses “creatives” instead of “clients.”
+Creative job review queue now prioritises pending/high-risk jobs, shows clearer queue summary badges, uses “creatives” instead of “clients,” and lets admins copy or create each job private manage link.
 
 ### `src/app/admin/recommendations/page.tsx`
 Recommendation review now sorts pending/high-risk submissions first, includes a clear empty state, and provides an edit form for each active recommendation.
 
 ### `src/app/admin/businesses/[id]/page.tsx`
-Business moderation controls now appear before manual edit forms, keeping approve/reject/feature decisions easier to find.
+Business moderation controls now appear before manual edit forms, keeping approve/reject/feature decisions easier to find. The page also shows a private manage-link card.
 
 ### `src/components/admin/admin-creative-job-edit-form.tsx`
 New admin creative-job edit form that preserves the previous editing fields while adding success/error feedback after saves.
@@ -225,7 +231,7 @@ Dismiss feedback now tells admins that dismissed requests move to the trash bin 
 Admin actions now revalidate `/admin/trash` when moderation, deletion, change-request status, or trash restore changes. Business feature/unfeature now revalidates public highlights and directory pages. Dismissed business change requests restore to `open`, not `pending`, because the database only allows `open`, `reviewed`, and `dismissed` for that table. Recommendation edits now save ratings, review text, contributor details, supporting links, and media changes while revalidating the affected public business profile. Admin-added blank image captions now use AI when configured. The OpenAI caption diagnostic runs from the admin dashboard and relies on the existing `/admin` page protection rather than a second cookie check.
 
 ### `src/app/admin/creative-jobs/[id]/page.tsx`
-Admin creative job archived action is now labelled “Move to trash,” and the edit form now shows visible save/error feedback.
+Admin creative job archived action is now labelled “Move to trash,” and the edit form now shows visible save/error feedback. The page also shows a private manage-link card.
 
 ### `PROJECT_CONTEXT.md`
 Updated to document smart captions, admin trash, trash cleanup limits, revised copy direction, schema implications, and future scheduled cleanup work.
@@ -261,6 +267,7 @@ Added the 2026-08-29 changelog entry.
 - Admin change-request loading now includes public URLs for attached media.
 - `testOpenAiCaptionConnection()` exposes a safe admin-only OpenAI caption diagnostic from the dashboard.
 - `GET /api/ai-caption-test-image` serves the small PNG used by that diagnostic.
+- `ensureBusinessPrivateLink()` and `ensureCreativeJobPrivateLink()` let admins create missing manage tokens for older records.
 
 ## UI Changes
 
@@ -277,6 +284,7 @@ Added the 2026-08-29 changelog entry.
 - Public change requests now allow photos/videos and captions.
 - Admin change requests now use a two-column review workspace: request evidence on one side, live listing/media editing on the other.
 - Admin home now has a compact AI caption check card so deployment/key/model/API problems can be diagnosed without exposing secrets.
+- Business and creative-job admin queues/detail pages now show private manage-link controls.
 
 ## Bugs Fixed
 
@@ -290,6 +298,7 @@ Added the 2026-08-29 changelog entry.
 - Dismissed change requests can now be restored from trash without violating the database status constraint.
 - AI caption failures are now easier to diagnose because admin can test the deployed OpenAI connection directly.
 - Fixed the diagnostic test image after OpenAI rejected the original inline image data as invalid.
+- Older records without manage tokens can now receive private links from admin rather than staying unreachable through the private edit flow.
 
 ## Bugs Remaining
 
@@ -363,6 +372,7 @@ Added the 2026-08-29 changelog entry.
 - The AI caption diagnostic only reports key availability and OpenAI response details; it never returns the key value.
 - Permanent deletion should remain admin-only or scheduled server-side.
 - Change-request media is protected by admin-only RLS at the database row level, while files are stored in the existing public portfolio bucket for preview simplicity.
+- Private manage links remain bearer links; admins should share them only with the intended business owner or creative.
 
 ## Testing Completed
 

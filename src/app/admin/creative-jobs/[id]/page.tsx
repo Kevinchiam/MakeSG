@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { AdminCreativeJobDeleteButton } from "@/components/admin/admin-creative-job-delete-button";
 import { AdminCreativeJobEditForm } from "@/components/admin/admin-creative-job-edit-form";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { AdminPrivateLinkControl } from "@/components/admin/admin-private-link-control";
 import { getAdminCreativeJob } from "@/lib/creative-jobs";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +19,7 @@ export default async function AdminCreativeJobPage({ params }: { params: Promise
         <AdminCreativeJobEditForm job={job} />
 
         <aside className="grid content-start gap-5">
+          <AdminPrivateLinkControl id={job.id} kind="creative-job" initialManageToken={job.manageToken} />
           <div className="border border-[#ded8cc] bg-white p-5">
             <h2 className="text-xl font-semibold">Reference uploads</h2>
             {job.references.length ? (
