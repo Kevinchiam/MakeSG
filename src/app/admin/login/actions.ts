@@ -2,18 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-
-function adminUsername() {
-  return process.env.ADMIN_USERNAME ?? "Admin";
-}
-
-function adminPassword() {
-  return process.env.ADMIN_PASSWORD ?? "MakeSG";
-}
-
-function adminSessionToken() {
-  return process.env.ADMIN_SESSION_TOKEN;
-}
+import { adminAuthConfig, adminLoginConfigured, validAdminCredentials } from "@/lib/admin-auth";
 
 const adminSessionMaxAge = 60 * 60 * 24 * 365;
 
@@ -21,14 +10,15 @@ export async function loginAdmin(formData: FormData) {
   const username = String(formData.get("username") ?? "");
   const password = String(formData.get("password") ?? "");
   const next = String(formData.get("next") ?? "/admin");
+  const config = adminAuthConfig();
+  const sessionToken = config.sessionToken;
 
-  if (username !== adminUsername() || password !== adminPassword()) {
-    redirect(`/admin/login?error=invalid&next=${encodeURIComponent(next)}`);
+  if (!adminLoginConfigured(config) || !sessionToken) {
+    redirect(`/admin/login?error=not-configured&next=${encodeURIComponent(next)}`);
   }
 
-  const sessionToken = adminSessionToken();
-  if (!sessionToken) {
-    redirect(`/admin/login?error=not-configured&next=${encodeURIComponent(next)}`);
+  if (!validAdminCredentials(username, password, config)) {
+    redirect(`/admin/login?error=invalid&next=${encodeURIComponent(next)}`);
   }
 
   const cookieStore = await cookies();

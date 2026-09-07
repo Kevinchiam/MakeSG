@@ -1,8 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-
-function adminSessionToken() {
-  return process.env.ADMIN_SESSION_TOKEN;
-}
+import { adminAuthConfig } from "@/lib/admin-auth";
 
 const adminSessionMaxAge = 60 * 60 * 24 * 365;
 
@@ -14,7 +11,7 @@ export function middleware(request: NextRequest) {
   }
 
   const token = request.cookies.get("makesg_admin")?.value;
-  const expectedToken = adminSessionToken();
+  const expectedToken = adminAuthConfig().sessionToken;
   if (expectedToken && token === expectedToken) {
     const response = NextResponse.next();
     response.cookies.set("makesg_admin", expectedToken, {

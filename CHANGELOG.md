@@ -11,17 +11,21 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Added unit coverage for missing-key and OpenAI-error diagnostic states.
 - Added a tiny site-served PNG route for the AI caption diagnostic.
 - Added admin controls to copy, open, or create private manage links for business listings and creative jobs.
+- Added shared admin-auth helpers and tests to enforce explicit admin configuration.
 
 ### Changed
 - Refactored AI image caption requests through a shared internal helper so normal captioning and diagnostics report failures consistently while keeping upload fallbacks intact.
 - Changed the admin AI caption diagnostic to test with a normal public image URL from MakeSG instead of inline image data.
 - Changed business and creative-job admin queue cards from full-card links to cards with dedicated review and private-link controls.
+- Changed admin login so it is disabled unless `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_TOKEN` are all configured.
+- Changed `.env.example` and README admin setup guidance to remove unsafe sample credentials.
 - Updated project documentation and session handover notes with the AI caption diagnostic workflow.
 
 ### Fixed
 - Made deployed AI-caption failures visible to admin without exposing the secret key or blocking public upload flows.
 - Fixed the AI caption diagnostic image after OpenAI rejected the original inline test image as invalid.
 - Fixed the old-record gap where listings created before manage-token rollout had no way for admin to obtain a private manage link.
+- Fixed a security risk where missing admin environment variables could fall back to obvious default credentials.
 
 ### Removed
 - No user-facing features removed.

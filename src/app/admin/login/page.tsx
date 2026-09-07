@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { loginAdmin } from "@/app/admin/login/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { adminLoginConfigured } from "@/lib/admin-auth";
 
 export const metadata: Metadata = { title: "Admin login" };
 
@@ -24,8 +25,9 @@ export default async function AdminLoginPage({ searchParams }: AdminLoginPagePro
     redirect(next);
   }
 
+  const isConfigured = adminLoginConfigured();
   const errorMessage = params.error === "not-configured"
-    ? "Admin login is not configured. Add ADMIN_SESSION_TOKEN in Vercel."
+    ? "Admin login is not configured. Add ADMIN_USERNAME, ADMIN_PASSWORD and ADMIN_SESSION_TOKEN in Vercel."
     : "Check the admin username and password.";
 
   return (
@@ -33,6 +35,11 @@ export default async function AdminLoginPage({ searchParams }: AdminLoginPagePro
       <h1 className="font-serif text-5xl font-semibold">Admin login</h1>
       <form action={loginAdmin} className="mt-8 grid gap-4 border border-[#ded8cc] bg-white p-6">
         <input type="hidden" name="next" value={params.next ?? "/admin"} />
+        {!isConfigured ? (
+          <p className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm text-[#8a3c24]" role="alert">
+            Admin access is not configured yet. Set the admin username, password and session token in Vercel before logging in.
+          </p>
+        ) : null}
         {params.error ? (
           <p className="border border-[#e2b8a7] bg-[#fff6f1] p-3 text-sm text-[#8a3c24]" role="alert">
             {errorMessage}
@@ -46,7 +53,7 @@ export default async function AdminLoginPage({ searchParams }: AdminLoginPagePro
           Password
           <Input name="password" type="password" autoComplete="current-password" required />
         </label>
-        <Button type="submit">Log in</Button>
+        <Button type="submit" disabled={!isConfigured}>Log in</Button>
       </form>
     </section>
   );

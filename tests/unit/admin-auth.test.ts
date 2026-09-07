@@ -1,0 +1,26 @@
+import { describe, expect, it } from "vitest";
+import { adminLoginConfigured, validAdminCredentials } from "@/lib/admin-auth";
+
+describe("admin auth", () => {
+  it("disables login when credentials are not explicitly configured", () => {
+    const config = {};
+
+    expect(adminLoginConfigured(config)).toBe(false);
+    expect(validAdminCredentials("Admin", "MakeSG", config)).toBe(false);
+  });
+
+  it("requires username, password and session token", () => {
+    expect(adminLoginConfigured({ username: "owner", password: "secret" })).toBe(false);
+    expect(adminLoginConfigured({ username: "owner", sessionToken: "token" })).toBe(false);
+    expect(adminLoginConfigured({ password: "secret", sessionToken: "token" })).toBe(false);
+    expect(adminLoginConfigured({ username: "owner", password: "secret", sessionToken: "token" })).toBe(true);
+  });
+
+  it("accepts only the configured credentials", () => {
+    const config = { username: "owner", password: "secret", sessionToken: "token" };
+
+    expect(validAdminCredentials("owner", "secret", config)).toBe(true);
+    expect(validAdminCredentials("Admin", "MakeSG", config)).toBe(false);
+    expect(validAdminCredentials("owner", "wrong", config)).toBe(false);
+  });
+});

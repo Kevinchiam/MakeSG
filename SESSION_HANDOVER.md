@@ -36,6 +36,8 @@ AI caption diagnostic update: the admin dashboard now includes a manual AI capti
 
 Private link admin update: admins can now copy or open private manage links from the business and creative-job admin queues and detail pages. If an older listing does not have a manage token yet, the admin control can create one before copying it.
 
+Admin security update: admin login no longer has fallback credentials. `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_TOKEN` must all be set before anyone can log in. The login page disables login when configuration is incomplete.
+
 ## Objectives Completed
 
 - [x] Added smart fallback captions for uncaptained uploads.
@@ -70,6 +72,7 @@ Private link admin update: admins can now copy or open private manage links from
 - [x] Added a stronger reminder and copy action for saving the business private edit link after listing submission.
 - [x] Added an admin-only AI caption diagnostic to help debug deployment/key/model/API issues.
 - [x] Added admin controls to copy, open, or create private manage links for business listings and creative jobs.
+- [x] Removed fallback admin credentials and required explicit admin configuration.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 
@@ -116,6 +119,12 @@ Public tiny PNG route used only by the admin AI caption diagnostic. It gives Ope
 
 ### `src/components/admin/admin-private-link-control.tsx`
 Reusable admin control for private manage links. It can copy an existing link, open it in a new tab, or create a missing manage token for older business and creative-job records before copying.
+
+### `src/lib/admin-auth.ts`
+Shared admin authentication helper. It treats admin login as unavailable unless username, password, and session token are all explicitly configured.
+
+### `tests/unit/admin-auth.test.ts`
+Unit coverage that prevents `Admin` / `MakeSG` or any other fallback credential from becoming valid when admin environment variables are missing.
 
 ## Files Modified
 
@@ -227,6 +236,21 @@ Reject feedback now tells admins that rejected items move to the trash bin for s
 ### `src/components/admin/business-change-request-controls.tsx`
 Dismiss feedback now tells admins that dismissed requests move to the trash bin for seven days.
 
+### `src/app/admin/login/actions.ts`
+Admin login now requires explicit `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_TOKEN`. There are no fallback credentials.
+
+### `src/app/admin/login/page.tsx`
+Admin login now shows a setup warning and disables the form if the required admin environment variables are incomplete.
+
+### `middleware.ts`
+Admin route protection now reads the shared admin auth configuration helper.
+
+### `.env.example`
+Removed unsafe example admin credentials.
+
+### `README.md`
+Admin setup documentation now tells maintainers to set private credentials and warns against obvious production values.
+
 ### `src/components/admin/actions.ts`
 Admin actions now revalidate `/admin/trash` when moderation, deletion, change-request status, or trash restore changes. Business feature/unfeature now revalidates public highlights and directory pages. Dismissed business change requests restore to `open`, not `pending`, because the database only allows `open`, `reviewed`, and `dismissed` for that table. Recommendation edits now save ratings, review text, contributor details, supporting links, and media changes while revalidating the affected public business profile. Admin-added blank image captions now use AI when configured. The OpenAI caption diagnostic runs from the admin dashboard and relies on the existing `/admin` page protection rather than a second cookie check.
 
@@ -299,6 +323,7 @@ Added the 2026-08-29 changelog entry.
 - AI caption failures are now easier to diagnose because admin can test the deployed OpenAI connection directly.
 - Fixed the diagnostic test image after OpenAI rejected the original inline image data as invalid.
 - Older records without manage tokens can now receive private links from admin rather than staying unreachable through the private edit flow.
+- Removed the default `Admin` / `MakeSG` login fallback that could allow unintended admin access if environment variables were missing.
 
 ## Bugs Remaining
 
@@ -373,6 +398,7 @@ Added the 2026-08-29 changelog entry.
 - Permanent deletion should remain admin-only or scheduled server-side.
 - Change-request media is protected by admin-only RLS at the database row level, while files are stored in the existing public portfolio bucket for preview simplicity.
 - Private manage links remain bearer links; admins should share them only with the intended business owner or creative.
+- Admin production credentials must be strong and stored only as environment variables.
 
 ## Testing Completed
 

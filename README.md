@@ -68,12 +68,12 @@ Apply `supabase/migrations/0003_media_uploads.sql` to allow photo/video uploads 
 Admin pages are protected by a simple admin login. Set these environment variables in production:
 
 ```bash
-ADMIN_USERNAME=Admin
-ADMIN_PASSWORD=MakeSG
+ADMIN_USERNAME=<private-admin-username>
+ADMIN_PASSWORD=<strong-private-password>
 ADMIN_SESSION_TOKEN=<long-random-secret>
 ```
 
-If unset, the default username is `Admin` and the default password is `MakeSG`. Change these before sharing the site widely.
+Admin login is disabled unless all three values are configured. Do not use obvious values such as `Admin` or `MakeSG` in production.
 
 ## Enquiry Emails
 
