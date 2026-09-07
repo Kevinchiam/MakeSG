@@ -1,6 +1,6 @@
 # MakeSG Project Context
 
-Last updated: 2026-09-06
+Last updated: 2026-09-07
 
 ## Project Overview
 
@@ -154,7 +154,7 @@ Most mutations use server actions:
 - Business onboarding inserts into Supabase and uploads portfolio media.
 - Business onboarding, business edits, business recommendations, change requests, and creative jobs run through rule-based moderation triage before saving.
 - Low-risk new business listings, business recommendations, and creative jobs can auto-publish. Business edits, change requests, medium-risk items, high-risk items, duplicates, and no-contact business listings still require admin review.
-- Blank image captions can be described by OpenAI after upload when `OPENAI_API_KEY` is configured. Clearing an existing image caption during edit can also regenerate from the saved image URL. If AI captioning is unavailable, the media is a video, or the contributor wrote a caption, MakeSG uses the existing simple context-aware caption fallback.
+- Blank image captions can be described by OpenAI after upload when `OPENAI_API_KEY` is configured. Clearing an existing image caption during edit can also regenerate from the saved image URL. If AI captioning is unavailable, the media is a video, or the contributor wrote a caption, MakeSG uses the existing simple context-aware caption fallback. Admins can run an AI caption check from `/admin` to confirm whether the deployed site can see the key and receive a response from OpenAI without exposing the secret.
 - Rejected business listings, rejected listing edits, rejected recommendations, dismissed change requests, and archived creative jobs are treated as trash-bin items and are permanently deleted after seven days when the admin dashboard or trash page runs cleanup.
 - Creative job submission inserts a job, stores a manage token, uploads reference files, and returns the private manage link. Low-risk creative jobs auto-publish; higher-risk jobs use `pending_review`.
 - Admin pages call admin data helpers, show automated triage decisions/signals, and update moderation status with server actions.
@@ -376,10 +376,11 @@ Future improvements:
 ### Admin Dashboard
 Status: Completed
 
-Description: Admin home organised as a review command centre. Active work is grouped into business listings, creative jobs, recommendations, and change requests, with high-risk automated triage flags called out separately. Maintenance items such as trash, services, and reports are visually separated so admins know what needs a decision now versus what is upkeep or future functionality. Change requests now support media-backed evidence and are reviewed beside the live listing editor. Recommendations can be edited from the review queue while retaining approve/reject override controls.
+Description: Admin home organised as a review command centre. Active work is grouped into business listings, creative jobs, recommendations, and change requests, with high-risk automated triage flags called out separately. Maintenance items such as trash, services, and reports are visually separated so admins know what needs a decision now versus what is upkeep or future functionality. Change requests now support media-backed evidence and are reviewed beside the live listing editor. Recommendations can be edited from the review queue while retaining approve/reject override controls. The admin dashboard also includes an AI caption check that tests OpenAI connectivity from the deployed site and reports missing-key/API/model errors without revealing the key.
 
 Relevant files:
 - `src/app/admin/page.tsx`
+- `src/components/admin/openai-caption-check.tsx`
 - `src/app/admin/change-requests/page.tsx`
 - `src/app/admin/trash/page.tsx`
 - `src/components/admin/admin-page-header.tsx`
@@ -559,6 +560,7 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - `updateBusinessRecommendationFromAdmin(recommendationId, formData)`: Admin edit of recommendation ratings, review text, contributor details, supporting links, media captions, removed media, and added media.
 - `updateCreativeJobFromForm(jobId, formData)`: Admin edit of creative job listing.
 - `deleteCreativeJobEntry(jobId)`: Admin deletion of creative job.
+- `testOpenAiCaptionConnection()`: Admin-only server action that safely checks whether OpenAI image captioning is available to the running deployment.
 - `submitBusinessListing(input)`: Business onboarding submission and portfolio upload.
 - `submitCreativeJobListing(input)`: Creative job creation, reference upload, and manage-token generation.
 - `updateCreativeJobStatusByToken(token, status)`: Private status update for creative jobs.
@@ -566,6 +568,7 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - `updateCreativeJobMediaByToken(token, formData)`: Private creative job media add/remove/caption update.
 - `sendBusinessEnquiry(input)`: Sends enquiry email or returns contact fallback.
 - `captionUploadedMedia(input)`: Server helper used after uploads to preserve contributor captions, request an OpenAI image caption for blank image captions, and fall back safely when AI is unavailable.
+- `testAiImageCaptionConnection()`: Server helper that sends a tiny image-caption request to OpenAI and returns key/model/API status for admin diagnostics without exposing secrets.
 - `smartMediaCaption(input)`: Shared server/client-safe helper used by upload flows to preserve contributor captions or generate simple fallback captions.
 
 ## UI Components
@@ -596,6 +599,7 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - `ManageCreativeJobMedia`: Private media/caption manager.
 - `FileUploader`: Shared media/reference uploader with previews, client-side image optimisation, and optional per-file fields rendered inside each upload card for captions or related metadata.
 - `AdminPageHeader`: Admin page heading wrapper.
+- `OpenAiCaptionCheck`: Admin dashboard diagnostic card for checking whether AI captioning can reach OpenAI from the deployed site.
 - `ModerationSummary`: Shared admin triage panel showing automated decision, risk, reason, and signals.
 - `AdminStatusControls`: Business and recommendation moderation buttons, including persisted business feature/unfeature controls.
 - `BusinessChangeRequestControls`: Admin controls for marking change requests reviewed or dismissed.
@@ -705,6 +709,7 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - Existing creative jobs and businesses created before manage-token rollout may not have manage links.
 - Automated moderation currently checks text, captions, links, filenames, contact presence, and simple spam patterns; it does not inspect the visual content of uploaded images/videos.
 - AI auto-captioning inspects uploaded images only when captions are blank and `OPENAI_API_KEY` is configured. Videos still use filename/context fallback captions.
+- OpenAI diagnostics are manual from the admin dashboard; failed AI caption calls still fall back silently during normal uploads so users are not blocked.
 - Trash cleanup currently runs when admin pages call the cleanup helper, not on an independent schedule.
 
 ## Technical Debt

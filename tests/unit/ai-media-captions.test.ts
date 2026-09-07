@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { captionUploadedMedia } from "@/lib/ai-media-captions";
+import { captionUploadedMedia, testAiImageCaptionConnection } from "@/lib/ai-media-captions";
 
 const originalApiKey = process.env.OPENAI_API_KEY;
 
@@ -82,5 +82,38 @@ describe("AI media captions", () => {
     ).resolves.toBe("Workshop process");
 
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("reports when the OpenAI key is missing", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+    delete process.env.OPENAI_API_KEY;
+
+    await expect(testAiImageCaptionConnection()).resolves.toMatchObject({
+      ok: false,
+      keyAvailable: false,
+      message: "OpenAI is not available to this deployment yet.",
+    });
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("reports OpenAI diagnostic errors without exposing the key", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+        statusText: "Unauthorized",
+        json: async () => ({ error: { message: "Incorrect API key provided.", type: "invalid_request_error", code: "invalid_api_key" } }),
+      }),
+    );
+    process.env.OPENAI_API_KEY = "secret-test-key";
+
+    await expect(testAiImageCaptionConnection()).resolves.toMatchObject({
+      ok: false,
+      keyAvailable: true,
+      message: "OpenAI was reached, but the caption test did not complete.",
+      detail: expect.not.stringContaining("secret-test-key"),
+    });
   });
 });

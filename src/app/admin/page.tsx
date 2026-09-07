@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { ArrowRight, BriefcaseBusiness, Building2, ClipboardCheck, MessageCircleHeart, ShieldAlert, Trash2, Wrench } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { OpenAiCaptionCheck } from "@/components/admin/openai-caption-check";
 import { getAdminBusinessChangeRequests } from "@/lib/business-change-requests";
 import { getAdminBusinessRecommendations } from "@/lib/business-recommendations";
 import { getAdminBusinesses } from "@/lib/business-submissions";
@@ -69,6 +70,10 @@ export default async function AdminPage() {
         <AdminLink href="/admin/creative-jobs" icon={<BriefcaseBusiness />} title="Creative jobs" count={pendingCreativeJobs} text={`${openCreativeJobs} open · ${inDiscussionCreativeJobs} in discussion`} tone={pendingCreativeJobs ? "urgent" : "default"} />
         <AdminLink href="/admin/recommendations" icon={<MessageCircleHeart />} title="Recommendations" count={pendingRecommendations} text="Review first-hand experiences before they influence a listing." tone={pendingRecommendations ? "urgent" : "default"} />
         <AdminLink href="/admin/change-requests" icon={<ClipboardCheck />} title="Change requests" count={openChangeRequests} text="Review public suggestions, then edit the business record if the correction is valid." tone={openChangeRequests ? "urgent" : "default"} />
+      </div>
+
+      <div className="mt-6">
+        <OpenAiCaptionCheck />
       </div>
 
       <div className="mt-10">

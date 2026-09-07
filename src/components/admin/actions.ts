@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createSlug } from "@/lib/slug";
@@ -7,7 +8,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { AdminTrashKind } from "@/lib/admin-trash";
 import type { PublicationStatus } from "@/lib/types";
 import { services as knownServices } from "@/lib/data";
-import { captionUploadedMedia } from "@/lib/ai-media-captions";
+import { captionUploadedMedia, testAiImageCaptionConnection } from "@/lib/ai-media-captions";
 import { businessSchema } from "@/lib/validation";
 
 type AdminBusinessUpdateResult =
@@ -21,6 +22,10 @@ type AdminBusinessMediaUpdateResult =
 type AdminRecommendationUpdateResult =
   | { ok: true }
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
+
+type AdminCaptionDiagnosticResult =
+  | { ok: true; message: string; keyAvailable: true; model: string; sample: string }
+  | { ok: false; message: string; keyAvailable: boolean; model: string; detail?: string };
 
 const adminRecommendationSchema = z.object({
   recommenderName: z.string().trim().min(1, "Enter the recommender's name."),
@@ -52,6 +57,19 @@ export async function updateBusinessPublicationStatus(businessId: string, status
   revalidatePath("/");
   revalidatePath("/businesses");
   return { ok: true };
+}
+
+export async function testOpenAiCaptionConnection(): Promise<AdminCaptionDiagnosticResult> {
+  if (!(await isAdminSession())) {
+    return {
+      ok: false,
+      keyAvailable: false,
+      model: process.env.OPENAI_IMAGE_CAPTION_MODEL ?? "gpt-4.1-mini",
+      message: "Log in as admin before running this check.",
+    };
+  }
+
+  return testAiImageCaptionConnection();
 }
 
 export async function updateBusinessFeaturedStatus(businessId: string, featured: boolean) {
@@ -859,4 +877,12 @@ function revalidateBusinessAdminPaths(businessId: string) {
   revalidatePath("/admin/businesses");
   revalidatePath(`/admin/businesses/${businessId}`);
   revalidatePath("/businesses");
+}
+
+async function isAdminSession() {
+  const expectedToken = process.env.ADMIN_SESSION_TOKEN;
+  if (!expectedToken) return false;
+
+  const cookieStore = await cookies();
+  return cookieStore.get("makesg_admin")?.value === expectedToken;
 }

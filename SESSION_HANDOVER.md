@@ -1,6 +1,6 @@
 # Session Handover
 
-Date: 2026-09-06
+Date: 2026-09-07
 
 ## Session Summary
 
@@ -31,6 +31,8 @@ AI captioning update: blank image captions now use the OpenAI Responses API when
 Profile image copy update: business media upload copy now tells submitters that the first approved photo becomes the business profile image on cards and the listing page, while the remaining media appears in the portfolio.
 
 Private link reminder update: business listing success feedback now has a clear “Save your private edit link” section with a copy button and warns that anyone with the link can edit the listing.
+
+AI caption diagnostic update: the admin dashboard now includes a manual AI caption check. It confirms whether the deployed site can see `OPENAI_API_KEY`, which model is being used, and whether OpenAI returns a successful image-caption response. The check is admin-only and never displays the secret key.
 
 ## Objectives Completed
 
@@ -64,6 +66,7 @@ Private link reminder update: business listing success feedback now has a clear 
 - [x] Fixed existing media edits so cleared image captions can regenerate with AI instead of only using simple fallbacks.
 - [x] Clarified business media upload copy so people know where the profile image appears.
 - [x] Added a stronger reminder and copy action for saving the business private edit link after listing submission.
+- [x] Added an admin-only AI caption diagnostic to help debug deployment/key/model/API issues.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 
@@ -97,10 +100,13 @@ Collapsible admin editor for recommendation submissions. It mirrors the public r
 Shared media uploader now supports optional per-file fields rendered inside each preview card, allowing captions and future upload metadata to sit beside the exact file they describe.
 
 ### `src/lib/ai-media-captions.ts`
-Server-only helper that preserves user-written captions, asks OpenAI to describe blank image captions after upload, skips videos, uses a short timeout, and falls back to the existing simple caption helper if AI is not configured or unavailable.
+Server-only helper that preserves user-written captions, asks OpenAI to describe blank image captions after upload, skips videos, uses a short timeout, and falls back to the existing simple caption helper if AI is not configured or unavailable. It now also exposes a safe diagnostic helper that tests OpenAI with a tiny image request and returns key/model/API status without exposing secrets.
 
 ### `tests/unit/ai-media-captions.test.ts`
-Unit coverage for preserving written captions, generating an AI caption for blank image uploads, falling back when the API fails, and skipping video uploads.
+Unit coverage for preserving written captions, generating an AI caption for blank image uploads, falling back when the API fails, skipping video uploads, and reporting diagnostic outcomes when OpenAI is missing or rejects a request.
+
+### `src/components/admin/openai-caption-check.tsx`
+Admin dashboard card that lets admins test AI captioning from the deployed site. It shows whether the OpenAI key is available, which model is active, and any API error returned by OpenAI, without showing the actual key.
 
 ## Files Modified
 
@@ -162,7 +168,7 @@ Validation helper text now uses “businesses” consistently and says “review
 Recommendation lookup copy now says listings are sent for review.
 
 ### `src/app/admin/page.tsx`
-Admin home now includes trash-bin count, calls trash cleanup so expired items can be purged, and is organised into active review queues plus maintenance items.
+Admin home now includes trash-bin count, calls trash cleanup so expired items can be purged, and is organised into active review queues plus maintenance items. It now also includes the AI caption check card for debugging deployed caption failures.
 
 ### `src/app/admin/businesses/page.tsx`
 Business review queue now prioritises pending edits, pending listings, and high-risk items. It uses plain labels such as Pending edits, Pending review, Published, and Unpublished, and no longer shows the unused verification label.
@@ -213,7 +219,7 @@ Reject feedback now tells admins that rejected items move to the trash bin for s
 Dismiss feedback now tells admins that dismissed requests move to the trash bin for seven days.
 
 ### `src/components/admin/actions.ts`
-Admin actions now revalidate `/admin/trash` when moderation, deletion, change-request status, or trash restore changes. Business feature/unfeature now revalidates public highlights and directory pages. Dismissed business change requests restore to `open`, not `pending`, because the database only allows `open`, `reviewed`, and `dismissed` for that table. Recommendation edits now save ratings, review text, contributor details, supporting links, and media changes while revalidating the affected public business profile. Admin-added blank image captions now use AI when configured.
+Admin actions now revalidate `/admin/trash` when moderation, deletion, change-request status, or trash restore changes. Business feature/unfeature now revalidates public highlights and directory pages. Dismissed business change requests restore to `open`, not `pending`, because the database only allows `open`, `reviewed`, and `dismissed` for that table. Recommendation edits now save ratings, review text, contributor details, supporting links, and media changes while revalidating the affected public business profile. Admin-added blank image captions now use AI when configured. A new admin-only server action runs the OpenAI caption diagnostic after confirming the admin cookie.
 
 ### `src/app/admin/creative-jobs/[id]/page.tsx`
 Admin creative job archived action is now labelled “Move to trash,” and the edit form now shows visible save/error feedback.
@@ -250,6 +256,7 @@ Added the 2026-08-29 changelog entry.
 - Active admin queue helpers filter out trash-state rows.
 - `requestBusinessChange(formData)` now accepts `changeRequestMedia` files and `changeRequestMediaCaptions`, validates type/size, uploads to Supabase Storage, and saves linked media rows.
 - Admin change-request loading now includes public URLs for attached media.
+- `testOpenAiCaptionConnection()` exposes a safe admin-only OpenAI caption diagnostic from the dashboard.
 
 ## UI Changes
 
@@ -265,6 +272,7 @@ Added the 2026-08-29 changelog entry.
 - Major public-facing copy was softened across home, About, business submission, creative job posting, recommendation, and private management pages.
 - Public change requests now allow photos/videos and captions.
 - Admin change requests now use a two-column review workspace: request evidence on one side, live listing/media editing on the other.
+- Admin home now has a compact AI caption check card so deployment/key/model/API problems can be diagnosed without exposing secrets.
 
 ## Bugs Fixed
 
@@ -276,6 +284,7 @@ Added the 2026-08-29 changelog entry.
 - Admin creative-job saves no longer complete silently with no confirmation.
 - Failed change-request media uploads now roll back the request and clean up any files uploaded earlier in the same submission.
 - Dismissed change requests can now be restored from trash without violating the database status constraint.
+- AI caption failures are now easier to diagnose because admin can test the deployed OpenAI connection directly.
 
 ## Bugs Remaining
 
@@ -289,6 +298,7 @@ Added the 2026-08-29 changelog entry.
 
 - Kept filename/context fallback captions as the safety net because AI captioning should never block uploads.
 - Used direct `fetch` calls to OpenAI instead of adding a dependency, keeping the feature small and server-only.
+- Kept the diagnostic inside admin rather than public upload flows so normal contributors are not blocked or exposed to technical errors.
 - Used existing status fields as trash states instead of adding new trash tables, reducing schema churn.
 - Performed storage cleanup before deleting expired rows so orphaned media is less likely.
 - Kept admin override intact: trash is a retention layer, not a replacement for admin decision-making.
@@ -313,6 +323,7 @@ Added the 2026-08-29 changelog entry.
 - Whether restored items should remember their exact previous status instead of returning to review queues.
 - Whether seven days is enough retention before permanent deletion.
 - Whether AI captions should be generated in the background if upload volume grows or if response time becomes noticeable.
+- Use `/admin` → “AI caption check” after changing Vercel environment variables or redeploying.
 - Whether rejected business listings should be hidden from every future reporting/export surface.
 - Whether change requests should eventually support structured suggested fields, not just free-text reasons and supporting media.
 
@@ -344,6 +355,7 @@ Added the 2026-08-29 changelog entry.
 - Admin trash is protected by the existing admin middleware.
 - Public users cannot access `/admin/trash` without the admin cookie.
 - `OPENAI_API_KEY` is server-only and must stay out of browser-exposed `NEXT_PUBLIC_` variables.
+- The AI caption diagnostic only reports key availability and OpenAI response details; it never returns the key value.
 - Permanent deletion should remain admin-only or scheduled server-side.
 - Change-request media is protected by admin-only RLS at the database row level, while files are stored in the existing public portfolio bucket for preview simplicity.
 
@@ -358,6 +370,9 @@ Added the 2026-08-29 changelog entry.
 The bundled Codex Node runtime was used because the regular shell could not find `node`.
 
 ## Testing Still Needed
+
+- After deployment, open `/admin` and run “Test AI captions” against the live site.
+- If the diagnostic passes, test a fresh blank-caption image upload and verify the saved caption is AI-generated.
 
 - Apply `supabase/migrations/0015_admin_trash_retention.sql` in production Supabase.
 - Apply `supabase/migrations/0016_business_change_request_media.sql` in production Supabase.

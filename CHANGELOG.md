@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format loosely follows Keep a Changelog and semantic sections.
 
+## [Unreleased] - 2026-09-07
+
+### Added
+- Added an admin-only AI caption diagnostic on `/admin` that checks whether the deployed site can see `OPENAI_API_KEY`, which model is active, and whether OpenAI returns an image-caption response.
+- Added unit coverage for missing-key and OpenAI-error diagnostic states.
+
+### Changed
+- Refactored AI image caption requests through a shared internal helper so normal captioning and diagnostics report failures consistently while keeping upload fallbacks intact.
+- Updated project documentation and session handover notes with the AI caption diagnostic workflow.
+
+### Fixed
+- Made deployed AI-caption failures visible to admin without exposing the secret key or blocking public upload flows.
+
+### Removed
+- No user-facing features removed.
+
+### Known Issues
+- The diagnostic is manual; admins still need to run it from `/admin` after changing Vercel environment variables or redeploying.
+- Normal upload flows intentionally fall back silently if OpenAI fails, so users are not blocked.
+
 ## [Unreleased] - 2026-09-06
 
 ### Added
