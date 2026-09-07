@@ -30,6 +30,8 @@ AI captioning update: blank image captions now use the OpenAI Responses API when
 
 Profile image copy update: business media upload copy now tells submitters that the first approved photo becomes the business profile image on cards and the listing page, while the remaining media appears in the portfolio.
 
+Private link reminder update: business listing success feedback now has a clear “Save your private edit link” section with a copy button and warns that anyone with the link can edit the listing.
+
 ## Objectives Completed
 
 - [x] Added smart fallback captions for uncaptained uploads.
@@ -61,6 +63,7 @@ Profile image copy update: business media upload copy now tells submitters that 
 - [x] Added optional AI image captions for blank uploaded image captions across public, private, and admin upload flows.
 - [x] Fixed existing media edits so cleared image captions can regenerate with AI instead of only using simple fallbacks.
 - [x] Clarified business media upload copy so people know where the profile image appears.
+- [x] Added a stronger reminder and copy action for saving the business private edit link after listing submission.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 

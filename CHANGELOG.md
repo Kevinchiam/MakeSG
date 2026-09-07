@@ -18,6 +18,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 
 ### Changed
 - Changed business media upload copy so submitters understand that the first approved photo becomes the business profile image.
+- Changed business listing success feedback to clearly remind submitters to save their private edit link and added a copy action.
 - Changed business listing and recommendation submission feedback so users can tell when content went live immediately versus went to admin review.
 - Changed admin business and recommendation queues to label auto-approved records while preserving override actions.
 - Changed home and About page media overlays so every database-backed caption uses the same hover/focus streaming behaviour.

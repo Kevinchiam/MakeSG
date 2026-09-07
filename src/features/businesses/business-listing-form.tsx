@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Send } from "lucide-react";
+import { Copy, Send } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { useForm, useWatch, type FieldPath } from "react-hook-form";
@@ -28,6 +28,7 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
   const errorRef = useRef<HTMLDivElement>(null);
   const [submittedManageUrl, setSubmittedManageUrl] = useState<string | null>(null);
   const [submittedPublicationStatus, setSubmittedPublicationStatus] = useState<"pending" | "published" | null>(null);
+  const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [otherError, setOtherError] = useState<string | null>(null);
   const [portfolioError, setPortfolioError] = useState<string | null>(null);
@@ -58,12 +59,31 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
         <h2 className="text-xl font-semibold">{isPublished ? "Thanks, the listing is now live" : "Thanks, the listing has been sent for review"}</h2>
         <p className="mt-2 text-sm leading-6 text-[#39462d]">
           {isPublished
-            ? "It passed MakeSG’s checks and can now appear in the directory. Save this private link so you can update the business information later."
-            : "Save this private link so you can update the business information later. Changes still go through review before they appear publicly."}
+            ? "It passed MakeSG’s checks and can now appear in the directory."
+            : "Changes still go through review before they appear publicly."}
         </p>
-        <div className="mt-4 grid gap-2 border border-[#b9c6ae] bg-white p-3 text-sm">
-          <span className="font-semibold">Private edit link</span>
-          <a className="break-all underline" href={submittedManageUrl}>{submittedManageUrl}</a>
+        <div className="mt-5 grid gap-3 border border-[#b9c6ae] bg-white p-4 text-sm">
+          <div>
+            <h3 className="font-semibold">Save your private edit link</h3>
+            <p className="mt-2 leading-6 text-[#39462d]">
+              Keep this link somewhere safe. You will need it to update the business details, profile image or portfolio later. Anyone with this link can edit this listing.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Input readOnly value={submittedManageUrl} className="min-w-0 flex-1" />
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={async () => {
+                await navigator.clipboard.writeText(submittedManageUrl);
+                setCopyMessage("Private edit link copied.");
+              }}
+            >
+              <Copy className="h-4 w-4" />
+              Copy
+            </Button>
+          </div>
+          {copyMessage ? <p className="font-semibold text-[#536343]" role="status">{copyMessage}</p> : null}
         </div>
       </div>
     );
@@ -88,6 +108,7 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
           setSubmitError(null);
           setOtherError(null);
           setPortfolioError(null);
+          setCopyMessage(null);
           form.clearErrors();
           try {
             const formData = new FormData();
