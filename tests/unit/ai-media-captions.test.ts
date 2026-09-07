@@ -109,11 +109,24 @@ describe("AI media captions", () => {
     );
     process.env.OPENAI_API_KEY = "secret-test-key";
 
-    await expect(testAiImageCaptionConnection()).resolves.toMatchObject({
+    await expect(testAiImageCaptionConnection({ imageUrl: "https://example.com/test.png" })).resolves.toMatchObject({
       ok: false,
       keyAvailable: true,
       message: "OpenAI was reached, but the caption test did not complete.",
       detail: expect.not.stringContaining("secret-test-key"),
     });
+  });
+
+  it("reports when the diagnostic image URL is missing", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+    process.env.OPENAI_API_KEY = "test-key";
+
+    await expect(testAiImageCaptionConnection()).resolves.toMatchObject({
+      ok: false,
+      keyAvailable: true,
+      message: "The AI caption check could not create a public test image URL.",
+    });
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 });

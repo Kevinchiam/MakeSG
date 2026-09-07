@@ -32,7 +32,7 @@ Profile image copy update: business media upload copy now tells submitters that 
 
 Private link reminder update: business listing success feedback now has a clear “Save your private edit link” section with a copy button and warns that anyone with the link can edit the listing.
 
-AI caption diagnostic update: the admin dashboard now includes a manual AI caption check. It confirms whether the deployed site can see `OPENAI_API_KEY`, which model is being used, and whether OpenAI returns a successful image-caption response. The check is admin-only and never displays the secret key.
+AI caption diagnostic update: the admin dashboard now includes a manual AI caption check. It confirms whether the deployed site can see `OPENAI_API_KEY`, which model is being used, and whether OpenAI returns a successful image-caption response. The check is admin-only and never displays the secret key. The diagnostic now uses a tiny PNG served from MakeSG itself instead of inline image data, after OpenAI rejected the original inline test image as invalid.
 
 ## Objectives Completed
 
@@ -100,13 +100,16 @@ Collapsible admin editor for recommendation submissions. It mirrors the public r
 Shared media uploader now supports optional per-file fields rendered inside each preview card, allowing captions and future upload metadata to sit beside the exact file they describe.
 
 ### `src/lib/ai-media-captions.ts`
-Server-only helper that preserves user-written captions, asks OpenAI to describe blank image captions after upload, skips videos, uses a short timeout, and falls back to the existing simple caption helper if AI is not configured or unavailable. It now also exposes a safe diagnostic helper that tests OpenAI with a tiny image request and returns key/model/API status without exposing secrets.
+Server-only helper that preserves user-written captions, asks OpenAI to describe blank image captions after upload, skips videos, uses a short timeout, and falls back to the existing simple caption helper if AI is not configured or unavailable. It now also exposes a safe diagnostic helper that tests OpenAI with a normal public image URL and returns key/model/API status without exposing secrets.
 
 ### `tests/unit/ai-media-captions.test.ts`
 Unit coverage for preserving written captions, generating an AI caption for blank image uploads, falling back when the API fails, skipping video uploads, and reporting diagnostic outcomes when OpenAI is missing or rejects a request.
 
 ### `src/components/admin/openai-caption-check.tsx`
 Admin dashboard card that lets admins test AI captioning from the deployed site. It shows whether the OpenAI key is available, which model is active, and any API error returned by OpenAI, without showing the actual key.
+
+### `src/app/api/ai-caption-test-image/route.ts`
+Public tiny PNG route used only by the admin AI caption diagnostic. It gives OpenAI a normal image URL from the deployed site, which better matches real Supabase upload URLs than inline base64 image data.
 
 ## Files Modified
 
@@ -257,6 +260,7 @@ Added the 2026-08-29 changelog entry.
 - `requestBusinessChange(formData)` now accepts `changeRequestMedia` files and `changeRequestMediaCaptions`, validates type/size, uploads to Supabase Storage, and saves linked media rows.
 - Admin change-request loading now includes public URLs for attached media.
 - `testOpenAiCaptionConnection()` exposes a safe admin-only OpenAI caption diagnostic from the dashboard.
+- `GET /api/ai-caption-test-image` serves the small PNG used by that diagnostic.
 
 ## UI Changes
 
@@ -285,6 +289,7 @@ Added the 2026-08-29 changelog entry.
 - Failed change-request media uploads now roll back the request and clean up any files uploaded earlier in the same submission.
 - Dismissed change requests can now be restored from trash without violating the database status constraint.
 - AI caption failures are now easier to diagnose because admin can test the deployed OpenAI connection directly.
+- Fixed the diagnostic test image after OpenAI rejected the original inline image data as invalid.
 
 ## Bugs Remaining
 

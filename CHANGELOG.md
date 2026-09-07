@@ -9,13 +9,16 @@ The format loosely follows Keep a Changelog and semantic sections.
 ### Added
 - Added an admin-only AI caption diagnostic on `/admin` that checks whether the deployed site can see `OPENAI_API_KEY`, which model is active, and whether OpenAI returns an image-caption response.
 - Added unit coverage for missing-key and OpenAI-error diagnostic states.
+- Added a tiny site-served PNG route for the AI caption diagnostic.
 
 ### Changed
 - Refactored AI image caption requests through a shared internal helper so normal captioning and diagnostics report failures consistently while keeping upload fallbacks intact.
+- Changed the admin AI caption diagnostic to test with a normal public image URL from MakeSG instead of inline image data.
 - Updated project documentation and session handover notes with the AI caption diagnostic workflow.
 
 ### Fixed
 - Made deployed AI-caption failures visible to admin without exposing the secret key or blocking public upload flows.
+- Fixed the AI caption diagnostic image after OpenAI rejected the original inline test image as invalid.
 
 ### Removed
 - No user-facing features removed.

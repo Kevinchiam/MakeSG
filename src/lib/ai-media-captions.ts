@@ -11,8 +11,6 @@ type CaptionUploadedMediaInput = {
 
 const DEFAULT_IMAGE_CAPTION_MODEL = "gpt-4.1-mini";
 const CAPTION_TIMEOUT_MS = 8000;
-const TEST_IMAGE_DATA_URL =
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=";
 
 export type AiCaptionDiagnosticResult =
   | {
@@ -39,7 +37,7 @@ export async function captionUploadedMedia(input: CaptionUploadedMediaInput) {
   return aiCaption ?? fallbackCaption;
 }
 
-export async function testAiImageCaptionConnection(): Promise<AiCaptionDiagnosticResult> {
+export async function testAiImageCaptionConnection(input: { imageUrl?: string | null } = {}): Promise<AiCaptionDiagnosticResult> {
   const model = process.env.OPENAI_IMAGE_CAPTION_MODEL ?? DEFAULT_IMAGE_CAPTION_MODEL;
   const apiKey = process.env.OPENAI_API_KEY;
 
@@ -53,10 +51,20 @@ export async function testAiImageCaptionConnection(): Promise<AiCaptionDiagnosti
     };
   }
 
+  if (!input.imageUrl) {
+    return {
+      ok: false,
+      keyAvailable: true,
+      model,
+      message: "The AI caption check could not create a public test image URL.",
+      detail: "Open the deployed admin dashboard and run the check from there.",
+    };
+  }
+
   const result = await requestImageCaption({
     apiKey,
     model,
-    imageUrl: TEST_IMAGE_DATA_URL,
+    imageUrl: input.imageUrl,
     prompt: "This is a connection test for MakeSG image captions. Reply with exactly: caption-ok",
     timeoutMs: CAPTION_TIMEOUT_MS,
   });

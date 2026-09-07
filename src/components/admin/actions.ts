@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { z } from "zod";
 import { createSlug } from "@/lib/slug";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -59,7 +60,7 @@ export async function updateBusinessPublicationStatus(businessId: string, status
 }
 
 export async function testOpenAiCaptionConnection(): Promise<AdminCaptionDiagnosticResult> {
-  return testAiImageCaptionConnection();
+  return testAiImageCaptionConnection({ imageUrl: await getCaptionTestImageUrl() });
 }
 
 export async function updateBusinessFeaturedStatus(businessId: string, featured: boolean) {
@@ -867,4 +868,13 @@ function revalidateBusinessAdminPaths(businessId: string) {
   revalidatePath("/admin/businesses");
   revalidatePath(`/admin/businesses/${businessId}`);
   revalidatePath("/businesses");
+}
+
+async function getCaptionTestImageUrl() {
+  const headerStore = await headers();
+  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
+  if (!host) return null;
+
+  const protocol = headerStore.get("x-forwarded-proto") ?? (host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http" : "https");
+  return `${protocol}://${host}/api/ai-caption-test-image`;
 }
