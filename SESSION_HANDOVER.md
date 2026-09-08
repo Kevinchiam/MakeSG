@@ -38,7 +38,7 @@ Private link admin update: admins can now copy or open private manage links from
 
 Admin security update: admin login no longer has fallback credentials. `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_TOKEN` must all be set before anyone can log in. The login page disables login when configuration is incomplete. Admin sessions now use a versioned cookie and expire after eight hours, so old long-lived admin cookies are ignored after deployment.
 
-Admin page guard fix: protected admin pages now call `requireAdminSession()` before loading admin data. This prevents `/admin` and internal admin pages from rendering content for signed-out visitors even if the host request gate is missed. The old `middleware.ts` file was also migrated to the Next.js 16 `proxy.ts` convention.
+Admin page guard fix: protected admin pages now call `requireAdminSession()` before loading admin data. This prevents `/admin` and internal admin pages from rendering content for signed-out visitors. One successful login should let the admin move across admin pages until logout or session expiry.
 
 ## Objectives Completed
 
@@ -76,7 +76,6 @@ Admin page guard fix: protected admin pages now call `requireAdminSession()` bef
 - [x] Added admin controls to copy, open, or create private manage links for business listings and creative jobs.
 - [x] Removed fallback admin credentials and required explicit admin configuration.
 - [x] Replaced the old one-year admin cookie with a versioned eight-hour admin session.
-- [x] Migrated admin route protection from `middleware.ts` to Next.js 16 `proxy.ts`.
 - [x] Added direct server-side admin session guards to every protected admin page.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
@@ -250,11 +249,8 @@ Admin login now requires explicit `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN
 ### `src/app/admin/login/page.tsx`
 Admin login now shows a setup warning and disables the form if the required admin environment variables are incomplete.
 
-### `proxy.ts`
-Admin route protection now uses the Next.js 16 request-gate convention. It reads the shared admin auth configuration helper, ignores the legacy admin cookie, and clears that old cookie while redirecting unauthenticated visitors. Protected admin pages also have their own session checks, so this is a first line of defence rather than the only one.
-
 ### `middleware.ts`
-Removed after migrating to `proxy.ts`.
+Removed. Admin protection now lives directly in protected admin pages through `requireAdminSession()`.
 
 ### `.env.example`
 Removed unsafe example admin credentials.

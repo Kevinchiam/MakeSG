@@ -14,8 +14,8 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Added shared admin-auth helpers and tests to enforce explicit admin configuration.
 
 ### Changed
-- Migrated admin route protection from deprecated `middleware.ts` to Next.js 16 `proxy.ts` so Vercel runs the admin gate before rendering admin pages.
 - Added direct server-side admin session checks to every protected admin page before admin data loads.
+- Removed the separate admin request gate so one valid admin login works consistently across admin page navigation.
 - Refactored AI image caption requests through a shared internal helper so normal captioning and diagnostics report failures consistently while keeping upload fallbacks intact.
 - Changed the admin AI caption diagnostic to test with a normal public image URL from MakeSG instead of inline image data.
 - Changed business and creative-job admin queue cards from full-card links to cards with dedicated review and private-link controls.

@@ -144,7 +144,7 @@ Most mutations use server actions:
 
 ### Authentication Flow
 - Public browsing does not require login.
-- Admin pages are protected by `requireAdminSession()` inside each protected admin page, with `proxy.ts` retained as an early request gate where supported.
+- Admin pages are protected by `requireAdminSession()` inside each protected admin page.
 - Admin login writes an HTTP-only versioned admin cookie if credentials match configured environment variables. Login is disabled if username, password, or session token is missing. Admin sessions expire after eight hours, and legacy one-year cookies are cleared.
 - Site header reads the admin cookie server-side and shows an admin shortcut only when the cookie is valid.
 - Supabase Auth and callback scaffolding exist for future user accounts.
@@ -361,10 +361,9 @@ Future improvements:
 ### Admin Login
 Status: Completed
 
-Description: Simple admin-only login protects admin routes through direct server-side page guards and a secure HTTP-only cookie. Admin login requires explicit `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_TOKEN` values; the app no longer falls back to public/default credentials. The current admin cookie is versioned and expires after eight hours. `proxy.ts` is retained as an early request gate where supported, but protected admin pages also refuse to load without a valid session.
+Description: Simple admin-only login protects admin routes through direct server-side page guards and a secure HTTP-only cookie. Admin login requires explicit `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_TOKEN` values; the app no longer falls back to public/default credentials. The current admin cookie is versioned and expires after eight hours. Protected admin pages refuse to load without a valid session, while one login lets admins move across admin pages until logout or expiry.
 
 Relevant files:
-- `proxy.ts`
 - `src/app/admin/login/page.tsx`
 - `src/app/admin/login/actions.ts`
 - `src/lib/admin-auth.ts`
