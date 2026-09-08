@@ -52,7 +52,7 @@ function TrashCard({ item }: { item: AdminTrashItem }) {
           <RestoreTrashItemButton id={item.id} kind={item.kind} />
           {item.href ? (
             <Button asChild type="button" variant="ghost">
-              <Link href={item.href}>Review details</Link>
+              <Link href={item.href} prefetch={false}>Review details</Link>
             </Button>
           ) : null}
         </div>

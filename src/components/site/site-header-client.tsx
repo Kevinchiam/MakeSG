@@ -36,7 +36,7 @@ export function SiteHeaderClient({ isAdmin }: { isAdmin: boolean }) {
         <div className="flex items-center gap-2">
           {showAdminShortcut ? (
             <Button asChild variant="secondary" className="hidden h-10 w-10 px-0 lg:inline-flex" title="Admin home">
-              <Link href="/admin" aria-label="Admin home">
+              <Link href="/admin" prefetch={false} aria-label="Admin home">
                 <LayoutDashboard className="h-4 w-4" aria-hidden />
               </Link>
             </Button>
@@ -63,7 +63,7 @@ export function SiteHeaderClient({ isAdmin }: { isAdmin: boolean }) {
         <nav className="border-t border-[#ded8cc] bg-[#fbfaf7] lg:hidden" aria-label="Mobile navigation">
           <div className="container-shell grid gap-1 py-3 text-sm font-medium">
             {showAdminShortcut ? (
-              <Link href="/admin" className="border-b border-[#eee7dc] py-3 font-semibold" onClick={() => setOpen(false)}>
+              <Link href="/admin" prefetch={false} className="border-b border-[#eee7dc] py-3 font-semibold" onClick={() => setOpen(false)}>
                 Admin home
               </Link>
             ) : null}

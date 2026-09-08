@@ -43,7 +43,7 @@ export default async function AdminCreativeJobsPage() {
                 <span className="mt-1 block text-sm text-[#6d675d]">{job.contactName} · {job.contactEmail}</span>
                 <span className="mt-2 block text-xs uppercase tracking-wide text-[#8a8277]">{job.projectType === "both" ? "Physical & Digital" : job.projectType} · Posted {formatDate(job.createdAt)}</span>
               </span>
-              <Link href={`/admin/creative-jobs/${job.id}`} className="group flex items-start gap-2 text-sm font-semibold text-[#211f1b]">
+              <Link href={`/admin/creative-jobs/${job.id}`} prefetch={false} className="group flex items-start gap-2 text-sm font-semibold text-[#211f1b]">
                 Review job <ArrowRight className="mt-0.5 h-4 w-4 transition group-hover:translate-x-1" aria-hidden />
               </Link>
               <span className="md:col-span-2">

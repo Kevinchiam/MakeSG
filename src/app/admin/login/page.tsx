@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { loginAdmin } from "@/app/admin/login/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { adminAuthConfig, adminLoginConfigured, adminSessionCookieName } from "@/lib/admin-auth";
+import { adminAuthConfig, adminLoginConfigured, adminSessionCookieNames } from "@/lib/admin-auth";
 
 export const metadata: Metadata = { title: "Admin login" };
 
@@ -18,9 +18,9 @@ type AdminLoginPageProps = {
 export default async function AdminLoginPage({ searchParams }: AdminLoginPageProps) {
   const params = await searchParams;
   const cookieStore = await cookies();
-  const token = cookieStore.get(adminSessionCookieName)?.value;
   const expectedToken = adminAuthConfig().sessionToken;
-  if (expectedToken && token === expectedToken) {
+  const hasValidToken = adminSessionCookieNames.some((cookieName) => cookieStore.get(cookieName)?.value === expectedToken);
+  if (expectedToken && hasValidToken) {
     const next = params.next?.startsWith("/admin") && params.next !== "/admin/login" ? params.next : "/admin";
     redirect(next);
   }

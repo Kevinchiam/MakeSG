@@ -145,7 +145,7 @@ Most mutations use server actions:
 ### Authentication Flow
 - Public browsing does not require login.
 - Admin pages are protected by `requireAdminSession()` inside each protected admin page.
-- Admin login writes an HTTP-only versioned admin cookie if credentials match configured environment variables. Login is disabled if username, password, or session token is missing. Admin sessions expire after eight hours, and legacy one-year cookies are cleared.
+- Admin login writes HTTP-only admin session cookies if credentials match configured environment variables. Login is disabled if username, password, or session token is missing. Sessions expire after eight hours. The current and legacy cookie names are both accepted only when they match the current `ADMIN_SESSION_TOKEN`, so navigation remains smooth across deployments while old leaked tokens remain invalid after rotation.
 - Site header reads the admin cookie server-side and shows an admin shortcut only when the cookie is valid.
 - Supabase Auth and callback scaffolding exist for future user accounts.
 - Creative job owners do not need accounts; they receive a private manage URL containing a long random token.

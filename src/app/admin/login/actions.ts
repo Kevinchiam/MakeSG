@@ -5,9 +5,8 @@ import { redirect } from "next/navigation";
 import {
   adminAuthConfig,
   adminLoginConfigured,
-  adminSessionCookieName,
+  adminSessionCookieNames,
   adminSessionMaxAge,
-  legacyAdminSessionCookieName,
   validAdminCredentials,
 } from "@/lib/admin-auth";
 
@@ -27,22 +26,16 @@ export async function loginAdmin(formData: FormData) {
   }
 
   const cookieStore = await cookies();
-  cookieStore.set(legacyAdminSessionCookieName, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
-    expires: new Date(0),
-  });
-  cookieStore.set(adminSessionCookieName, sessionToken, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: adminSessionMaxAge,
-    expires: new Date(Date.now() + adminSessionMaxAge * 1000),
-  });
+  for (const cookieName of adminSessionCookieNames) {
+    cookieStore.set(cookieName, sessionToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: adminSessionMaxAge,
+      expires: new Date(Date.now() + adminSessionMaxAge * 1000),
+    });
+  }
 
   redirect(next.startsWith("/admin") ? next : "/admin");
 }

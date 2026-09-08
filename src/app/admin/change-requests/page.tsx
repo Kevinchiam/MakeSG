@@ -55,7 +55,7 @@ export default async function AdminChangeRequestsPage() {
                   <div>
                     <dt className="font-semibold text-[#211f1b]">Business</dt>
                     <dd className="mt-1 flex flex-wrap gap-3 text-[#5f594f]">
-                      <Link href={`/admin/businesses/${request.businessId}`} className="underline">Admin record</Link>
+                      <Link href={`/admin/businesses/${request.businessId}`} prefetch={false} className="underline">Admin record</Link>
                       {request.businessSlug ? <Link href={`/businesses/${request.businessSlug}`} className="underline">Public listing</Link> : null}
                       {request.businessManageToken ? <Link href={`/businesses/manage/${request.businessManageToken}`} className="underline">Edit listing</Link> : null}
                     </dd>

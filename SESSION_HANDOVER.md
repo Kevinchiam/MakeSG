@@ -40,6 +40,8 @@ Admin security update: admin login no longer has fallback credentials. `ADMIN_US
 
 Admin page guard fix: protected admin pages now call `requireAdminSession()` before loading admin data. This prevents `/admin` and internal admin pages from rendering content for signed-out visitors. One successful login should let the admin move across admin pages until logout or session expiry.
 
+Admin session UX fix: admin-only links no longer prefetch, and login now writes both current and legacy admin cookie names with the current private session token. This prevents stale preloaded login redirects or mixed cookie-name deployments from forcing repeated sign-in while the admin is already logged in.
+
 ## Objectives Completed
 
 - [x] Added smart fallback captions for uncaptained uploads.
@@ -77,6 +79,7 @@ Admin page guard fix: protected admin pages now call `requireAdminSession()` bef
 - [x] Removed fallback admin credentials and required explicit admin configuration.
 - [x] Replaced the old one-year admin cookie with a versioned eight-hour admin session.
 - [x] Added direct server-side admin session guards to every protected admin page.
+- [x] Disabled admin-link prefetching and made admin session cookies compatible across current and legacy cookie names.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 

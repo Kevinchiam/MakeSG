@@ -43,7 +43,7 @@ export default async function AdminBusinessesPage() {
                 <span className="mt-1 block text-sm text-[#6d675d]">{business.shortDescription || "No short summary provided."}</span>
                 <span className="mt-2 block text-xs uppercase tracking-wide text-[#8a8277]">Updated {formatDate(business.updatedAt || business.createdAt)}</span>
               </span>
-              <Link href={`/admin/businesses/${business.id}`} className="group flex items-start gap-2 text-sm font-semibold text-[#211f1b]">
+              <Link href={`/admin/businesses/${business.id}`} prefetch={false} className="group flex items-start gap-2 text-sm font-semibold text-[#211f1b]">
                 Review listing <ArrowRight className="mt-0.5 h-4 w-4 transition group-hover:translate-x-1" aria-hidden />
               </Link>
               <span className="md:col-span-2">

@@ -107,7 +107,7 @@ function AdminLink({
   tone?: "default" | "urgent";
 }) {
   return (
-    <Link href={href} className={`group grid gap-4 border p-5 transition hover:-translate-y-0.5 hover:shadow-lg ${tone === "urgent" ? "border-[#9c4f35] bg-[#fffaf5]" : "border-[#ded8cc] bg-white"}`}>
+    <Link href={href} prefetch={false} className={`group grid gap-4 border p-5 transition hover:-translate-y-0.5 hover:shadow-lg ${tone === "urgent" ? "border-[#9c4f35] bg-[#fffaf5]" : "border-[#ded8cc] bg-white"}`}>
       <span className="flex items-start justify-between gap-4">
         <span className="flex items-center gap-3">
           <span className="grid h-10 w-10 place-items-center border border-[#ded8cc] bg-[#fbfaf7] text-[#315c6b] [&_svg]:h-5 [&_svg]:w-5">{icon}</span>

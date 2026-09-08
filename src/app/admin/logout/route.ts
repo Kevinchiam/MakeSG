@@ -1,10 +1,10 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { adminSessionCookieName, legacyAdminSessionCookieName } from "@/lib/admin-auth";
+import { adminSessionCookieNames } from "@/lib/admin-auth";
 
 export async function GET(request: Request) {
   const cookieStore = await cookies();
-  for (const cookieName of [adminSessionCookieName, legacyAdminSessionCookieName]) {
+  for (const cookieName of adminSessionCookieNames) {
     cookieStore.set(cookieName, "", {
       httpOnly: true,
       sameSite: "lax",

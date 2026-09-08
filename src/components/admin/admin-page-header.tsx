@@ -15,8 +15,8 @@ export function AdminPageHeader({ eyebrow, title, description }: AdminPageHeader
         {description ? <p className="mt-4 max-w-2xl text-[#6d675d]">{description}</p> : null}
       </div>
       <div className="flex flex-wrap items-center gap-3 text-sm">
-        <Link href="/admin" className="underline">Admin home</Link>
-        <Link href="/admin/logout" className="underline">Log out</Link>
+        <Link href="/admin" prefetch={false} className="underline">Admin home</Link>
+        <a href="/admin/logout" className="underline">Log out</a>
       </div>
     </div>
   );

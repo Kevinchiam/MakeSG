@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   adminLoginConfigured,
+  adminSessionCookieNames,
   adminSessionCookieName,
   adminSessionMaxAge,
   legacyAdminSessionCookieName,
@@ -33,6 +34,8 @@ describe("admin auth", () => {
   it("uses a short versioned admin session cookie", () => {
     expect(adminSessionCookieName).toBe("makesg_admin_v2");
     expect(adminSessionCookieName).not.toBe(legacyAdminSessionCookieName);
+    expect(adminSessionCookieNames).toContain(adminSessionCookieName);
+    expect(adminSessionCookieNames).toContain(legacyAdminSessionCookieName);
     expect(adminSessionMaxAge).toBeLessThanOrEqual(60 * 60 * 8);
   });
 
