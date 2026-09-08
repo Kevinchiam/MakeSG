@@ -144,7 +144,7 @@ Most mutations use server actions:
 ### Authentication Flow
 - Public browsing does not require login.
 - Admin pages are protected in `middleware.ts`.
-- Admin login writes an HTTP-only versioned admin cookie if credentials match configured environment variables. Login is disabled if username, password, or session token is missing. Admin sessions expire after eight hours, and legacy one-year cookies are cleared.
+- Admin login writes an HTTP-only versioned admin cookie if credentials match configured environment variables. Login is disabled if username, password, or session token is missing. Admin sessions expire after eight hours, legacy one-year cookies are cleared, and the top-level `/admin` entry requires a fresh login handoff instead of silently reusing an existing session.
 - Site header reads the admin cookie server-side and shows an admin shortcut only when the cookie is valid.
 - Supabase Auth and callback scaffolding exist for future user accounts.
 - Creative job owners do not need accounts; they receive a private manage URL containing a long random token.
@@ -360,7 +360,7 @@ Future improvements:
 ### Admin Login
 Status: Completed
 
-Description: Simple admin-only login protects admin routes through middleware and a secure HTTP-only cookie. Admin login requires explicit `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_TOKEN` values; the app no longer falls back to public/default credentials. The current admin cookie is versioned and expires after eight hours.
+Description: Simple admin-only login protects admin routes through middleware and a secure HTTP-only cookie. Admin login requires explicit `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_TOKEN` values; the app no longer falls back to public/default credentials. The current admin cookie is versioned and expires after eight hours. The `/admin` home entry also requires a one-minute login handoff cookie, so pasting the admin home URL later returns to login instead of reopening the dashboard from a remembered session.
 
 Relevant files:
 - `middleware.ts`

@@ -5,8 +5,10 @@ export type AdminAuthConfig = {
 };
 
 export const adminSessionCookieName = "makesg_admin_v2";
+export const adminEntryCookieName = "makesg_admin_entry";
 export const legacyAdminSessionCookieName = "makesg_admin";
 export const adminSessionMaxAge = 60 * 60 * 8;
+export const adminEntryMaxAge = 60;
 
 export function adminAuthConfig(): AdminAuthConfig {
   return {

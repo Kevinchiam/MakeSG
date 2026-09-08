@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  adminEntryCookieName,
+  adminEntryMaxAge,
   adminLoginConfigured,
   adminSessionCookieName,
   adminSessionMaxAge,
@@ -34,5 +36,11 @@ describe("admin auth", () => {
     expect(adminSessionCookieName).toBe("makesg_admin_v2");
     expect(adminSessionCookieName).not.toBe(legacyAdminSessionCookieName);
     expect(adminSessionMaxAge).toBeLessThanOrEqual(60 * 60 * 8);
+  });
+
+  it("uses a separate short-lived admin home entry cookie", () => {
+    expect(adminEntryCookieName).toBe("makesg_admin_entry");
+    expect(adminEntryCookieName).not.toBe(adminSessionCookieName);
+    expect(adminEntryMaxAge).toBeLessThanOrEqual(60);
   });
 });

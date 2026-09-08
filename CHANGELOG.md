@@ -20,6 +20,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Changed admin login so it is disabled unless `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_TOKEN` are all configured.
 - Changed `.env.example` and README admin setup guidance to remove unsafe sample credentials.
 - Changed admin sessions from the old long-lived cookie to a versioned eight-hour cookie, forcing old browsers to log in again after deployment.
+- Changed `/admin` home access to require a fresh one-minute login handoff instead of silently reopening from an existing admin session.
 - Updated project documentation and session handover notes with the AI caption diagnostic workflow.
 
 ### Fixed
@@ -28,6 +29,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Fixed the old-record gap where listings created before manage-token rollout had no way for admin to obtain a private manage link.
 - Fixed a security risk where missing admin environment variables could fall back to obvious default credentials.
 - Fixed overly persistent admin access caused by the previous one-year remembered admin cookie.
+- Fixed remembered-session access to admin home when the `/admin` URL is pasted after a previous login.
 
 ### Removed
 - No user-facing features removed.
