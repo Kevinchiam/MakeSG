@@ -14,13 +14,14 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Added shared admin-auth helpers and tests to enforce explicit admin configuration.
 
 ### Changed
+- Migrated admin route protection from deprecated `middleware.ts` to Next.js 16 `proxy.ts` so Vercel runs the admin gate before rendering admin pages.
+- Added direct server-side admin session checks to every protected admin page before admin data loads.
 - Refactored AI image caption requests through a shared internal helper so normal captioning and diagnostics report failures consistently while keeping upload fallbacks intact.
 - Changed the admin AI caption diagnostic to test with a normal public image URL from MakeSG instead of inline image data.
 - Changed business and creative-job admin queue cards from full-card links to cards with dedicated review and private-link controls.
 - Changed admin login so it is disabled unless `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_TOKEN` are all configured.
 - Changed `.env.example` and README admin setup guidance to remove unsafe sample credentials.
 - Changed admin sessions from the old long-lived cookie to a versioned eight-hour cookie, forcing old browsers to log in again after deployment.
-- Changed `/admin` home access to require a fresh one-minute login handoff instead of silently reopening from an existing admin session.
 - Updated project documentation and session handover notes with the AI caption diagnostic workflow.
 
 ### Fixed
@@ -29,7 +30,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Fixed the old-record gap where listings created before manage-token rollout had no way for admin to obtain a private manage link.
 - Fixed a security risk where missing admin environment variables could fall back to obvious default credentials.
 - Fixed overly persistent admin access caused by the previous one-year remembered admin cookie.
-- Fixed remembered-session access to admin home when the `/admin` URL is pasted after a previous login.
+- Fixed signed-out access to admin content by adding page-level guards instead of relying only on the route gate.
 
 ### Removed
 - No user-facing features removed.

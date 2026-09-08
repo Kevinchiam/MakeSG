@@ -5,11 +5,14 @@ import { AdminPrivateLinkControl } from "@/components/admin/admin-private-link-c
 import { ModerationSummary } from "@/components/admin/moderation-summary";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { requireAdminSession } from "@/lib/admin-session";
 import { getAdminBusinesses } from "@/lib/business-submissions";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminBusinessesPage() {
+  await requireAdminSession("/admin/businesses");
+
   const businesses = await getAdminBusinesses();
   const sortedBusinesses = [...businesses].sort((a, b) => reviewPriority(b) - reviewPriority(a));
   const pendingCount = businesses.filter((business) => business.publicationStatus === "pending" || business.pendingRevision).length;

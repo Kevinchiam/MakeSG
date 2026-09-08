@@ -36,7 +36,9 @@ AI caption diagnostic update: the admin dashboard now includes a manual AI capti
 
 Private link admin update: admins can now copy or open private manage links from the business and creative-job admin queues and detail pages. If an older listing does not have a manage token yet, the admin control can create one before copying it.
 
-Admin security update: admin login no longer has fallback credentials. `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_TOKEN` must all be set before anyone can log in. The login page disables login when configuration is incomplete. Admin sessions now use a versioned cookie and expire after eight hours, so old long-lived admin cookies are ignored after deployment. The top-level `/admin` entry now also requires a fresh one-minute login handoff, so pasting `/admin` later sends the browser back to login instead of silently reopening admin home.
+Admin security update: admin login no longer has fallback credentials. `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_TOKEN` must all be set before anyone can log in. The login page disables login when configuration is incomplete. Admin sessions now use a versioned cookie and expire after eight hours, so old long-lived admin cookies are ignored after deployment.
+
+Admin page guard fix: protected admin pages now call `requireAdminSession()` before loading admin data. This prevents `/admin` and internal admin pages from rendering content for signed-out visitors even if the host request gate is missed. The old `middleware.ts` file was also migrated to the Next.js 16 `proxy.ts` convention.
 
 ## Objectives Completed
 
@@ -74,7 +76,8 @@ Admin security update: admin login no longer has fallback credentials. `ADMIN_US
 - [x] Added admin controls to copy, open, or create private manage links for business listings and creative jobs.
 - [x] Removed fallback admin credentials and required explicit admin configuration.
 - [x] Replaced the old one-year admin cookie with a versioned eight-hour admin session.
-- [x] Required a fresh login handoff for the `/admin` home entry so remembered sessions do not reopen admin home from a pasted URL.
+- [x] Migrated admin route protection from `middleware.ts` to Next.js 16 `proxy.ts`.
+- [x] Added direct server-side admin session guards to every protected admin page.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 
@@ -123,7 +126,10 @@ Public tiny PNG route used only by the admin AI caption diagnostic. It gives Ope
 Reusable admin control for private manage links. It can copy an existing link, open it in a new tab, or create a missing manage token for older business and creative-job records before copying.
 
 ### `src/lib/admin-auth.ts`
-Shared admin authentication helper. It treats admin login as unavailable unless username, password, and session token are all explicitly configured. It also centralises the versioned cookie name, eight-hour admin session length, and one-minute admin home entry cookie.
+Shared admin authentication helper. It treats admin login as unavailable unless username, password, and session token are all explicitly configured. It also centralises the versioned cookie name and eight-hour admin session length.
+
+### `src/lib/admin-session.ts`
+Server-side helper used by protected admin pages. It checks the versioned admin cookie before admin data loads and redirects signed-out visitors to the admin login page.
 
 ### `tests/unit/admin-auth.test.ts`
 Unit coverage that prevents `Admin` / `MakeSG` or any other fallback credential from becoming valid when admin environment variables are missing.
@@ -244,8 +250,11 @@ Admin login now requires explicit `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN
 ### `src/app/admin/login/page.tsx`
 Admin login now shows a setup warning and disables the form if the required admin environment variables are incomplete.
 
+### `proxy.ts`
+Admin route protection now uses the Next.js 16 request-gate convention. It reads the shared admin auth configuration helper, ignores the legacy admin cookie, and clears that old cookie while redirecting unauthenticated visitors. Protected admin pages also have their own session checks, so this is a first line of defence rather than the only one.
+
 ### `middleware.ts`
-Admin route protection now reads the shared admin auth configuration helper, ignores the legacy admin cookie, and clears that old cookie while redirecting unauthenticated visitors. It also requires the short-lived entry cookie before `/admin` itself can open.
+Removed after migrating to `proxy.ts`.
 
 ### `.env.example`
 Removed unsafe example admin credentials.
@@ -327,7 +336,7 @@ Added the 2026-08-29 changelog entry.
 - Older records without manage tokens can now receive private links from admin rather than staying unreachable through the private edit flow.
 - Removed the default `Admin` / `MakeSG` login fallback that could allow unintended admin access if environment variables were missing.
 - Replaced old remembered admin sessions with a new cookie name so browsers must log in again after deployment.
-- Prevented a remembered admin session from reopening `/admin` when the admin home URL is pasted later.
+- Prevented signed-out visitors from rendering admin content by adding page-level session checks across admin routes.
 
 ## Bugs Remaining
 
@@ -395,7 +404,7 @@ Added the 2026-08-29 changelog entry.
 
 ## Security Considerations
 
-- Admin trash is protected by the existing admin middleware.
+- Admin trash is protected by the existing admin request gate.
 - Public users cannot access `/admin/trash` without the admin cookie.
 - `OPENAI_API_KEY` is server-only and must stay out of browser-exposed `NEXT_PUBLIC_` variables.
 - The AI caption diagnostic only reports key availability and OpenAI response details; it never returns the key value.

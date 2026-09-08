@@ -8,10 +8,13 @@ import { getAdminBusinessRecommendations } from "@/lib/business-recommendations"
 import { getAdminBusinesses } from "@/lib/business-submissions";
 import { getAdminCreativeJobs } from "@/lib/creative-jobs";
 import { getAdminTrashItems } from "@/lib/admin-trash";
+import { requireAdminSession } from "@/lib/admin-session";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
+  await requireAdminSession("/admin");
+
   const businesses = await getAdminBusinesses();
   const creativeJobs = await getAdminCreativeJobs();
   const recommendations = await getAdminBusinessRecommendations();

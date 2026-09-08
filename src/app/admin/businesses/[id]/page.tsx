@@ -6,6 +6,7 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { AdminPrivateLinkControl } from "@/components/admin/admin-private-link-control";
 import { AdminStatusControls } from "@/components/admin/admin-status-controls";
 import { ModerationSummary } from "@/components/admin/moderation-summary";
+import { requireAdminSession } from "@/lib/admin-session";
 import { getAdminBusiness } from "@/lib/business-submissions";
 import { formatCurrency } from "@/lib/utils";
 
@@ -13,6 +14,8 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminBusinessPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  await requireAdminSession(`/admin/businesses/${id}`);
+
   const business = await getAdminBusiness(id);
   if (!business) notFound();
   return (

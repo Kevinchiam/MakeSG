@@ -4,8 +4,6 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   adminAuthConfig,
-  adminEntryCookieName,
-  adminEntryMaxAge,
   adminLoginConfigured,
   adminSessionCookieName,
   adminSessionMaxAge,
@@ -36,14 +34,6 @@ export async function loginAdmin(formData: FormData) {
     path: "/",
     maxAge: 0,
     expires: new Date(0),
-  });
-  cookieStore.set(adminEntryCookieName, sessionToken, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: adminEntryMaxAge,
-    expires: new Date(Date.now() + adminEntryMaxAge * 1000),
   });
   cookieStore.set(adminSessionCookieName, sessionToken, {
     httpOnly: true,

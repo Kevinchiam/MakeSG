@@ -5,11 +5,14 @@ import { AdminPrivateLinkControl } from "@/components/admin/admin-private-link-c
 import { ModerationSummary } from "@/components/admin/moderation-summary";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { requireAdminSession } from "@/lib/admin-session";
 import { creativeJobStatusLabel, getAdminCreativeJobs } from "@/lib/creative-jobs";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminCreativeJobsPage() {
+  await requireAdminSession("/admin/creative-jobs");
+
   const jobs = await getAdminCreativeJobs();
   const sortedJobs = [...jobs].sort((a, b) => reviewPriority(b) - reviewPriority(a));
   const openCount = jobs.filter((job) => job.status === "open").length;

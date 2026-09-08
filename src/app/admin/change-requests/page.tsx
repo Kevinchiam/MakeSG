@@ -6,12 +6,15 @@ import { AdminBusinessMediaForm } from "@/components/admin/admin-business-media-
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { ModerationSummary } from "@/components/admin/moderation-summary";
 import { EmptyState } from "@/components/ui/empty-state";
+import { requireAdminSession } from "@/lib/admin-session";
 import { getAdminBusiness } from "@/lib/business-submissions";
 import { getAdminBusinessChangeRequests, type BusinessChangeRequestMedia } from "@/lib/business-change-requests";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminChangeRequestsPage() {
+  await requireAdminSession("/admin/change-requests");
+
   const requests = await getAdminBusinessChangeRequests();
   const businessesById = new Map(
     await Promise.all(

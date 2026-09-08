@@ -7,9 +7,12 @@ import { AdminStatusControls } from "@/components/admin/admin-status-controls";
 import { ModerationSummary } from "@/components/admin/moderation-summary";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { requireAdminSession } from "@/lib/admin-session";
 import { getAdminBusinessRecommendations } from "@/lib/business-recommendations";
 
 export default async function AdminRecommendationsPage() {
+  await requireAdminSession("/admin/recommendations");
+
   const recommendations = await getAdminBusinessRecommendations();
   const sortedRecommendations = [...recommendations].sort((a, b) => reviewPriority(b) - reviewPriority(a));
   const pendingCount = recommendations.filter((recommendation) => recommendation.status === "pending").length;

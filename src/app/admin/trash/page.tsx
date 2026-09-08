@@ -5,11 +5,14 @@ import { RestoreTrashItemButton } from "@/components/admin/restore-trash-item-bu
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { requireAdminSession } from "@/lib/admin-session";
 import { getAdminTrashItems, type AdminTrashItem } from "@/lib/admin-trash";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminTrashPage() {
+  await requireAdminSession("/admin/trash");
+
   const items = await getAdminTrashItems();
 
   return (

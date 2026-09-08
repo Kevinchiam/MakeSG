@@ -109,6 +109,7 @@ Creative production relies heavily on word of mouth, but reliable service discov
 - `src/lib`: Shared data access, types, validation, permissions, filters, Supabase clients, email utilities, media caption helpers, admin trash cleanup, slugging, service data, and lightweight local placeholders.
 - `src/lib/ai-media-captions.ts`: Server-only OpenAI image caption wrapper with timeout and safe fallback behaviour.
 - `src/lib/admin-auth.ts`: Shared admin-login configuration and credential validation helpers with no default credentials.
+- `src/lib/admin-session.ts`: Server-side admin page guard that redirects signed-out visitors before protected admin pages load data.
 - `src/lib/admin-trash.ts`: Admin-only trash-bin aggregation and seven-day cleanup helper for rejected/dismissed listings and media.
 - `src/lib/media-captions.ts`: Shared smart fallback caption helper for uploaded photos/videos.
 - `src/lib/supabase`: Supabase browser, server, and admin client setup.
@@ -143,8 +144,8 @@ Most mutations use server actions:
 
 ### Authentication Flow
 - Public browsing does not require login.
-- Admin pages are protected in `middleware.ts`.
-- Admin login writes an HTTP-only versioned admin cookie if credentials match configured environment variables. Login is disabled if username, password, or session token is missing. Admin sessions expire after eight hours, legacy one-year cookies are cleared, and the top-level `/admin` entry requires a fresh login handoff instead of silently reusing an existing session.
+- Admin pages are protected by `requireAdminSession()` inside each protected admin page, with `proxy.ts` retained as an early request gate where supported.
+- Admin login writes an HTTP-only versioned admin cookie if credentials match configured environment variables. Login is disabled if username, password, or session token is missing. Admin sessions expire after eight hours, and legacy one-year cookies are cleared.
 - Site header reads the admin cookie server-side and shows an admin shortcut only when the cookie is valid.
 - Supabase Auth and callback scaffolding exist for future user accounts.
 - Creative job owners do not need accounts; they receive a private manage URL containing a long random token.
@@ -360,13 +361,14 @@ Future improvements:
 ### Admin Login
 Status: Completed
 
-Description: Simple admin-only login protects admin routes through middleware and a secure HTTP-only cookie. Admin login requires explicit `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_TOKEN` values; the app no longer falls back to public/default credentials. The current admin cookie is versioned and expires after eight hours. The `/admin` home entry also requires a one-minute login handoff cookie, so pasting the admin home URL later returns to login instead of reopening the dashboard from a remembered session.
+Description: Simple admin-only login protects admin routes through direct server-side page guards and a secure HTTP-only cookie. Admin login requires explicit `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_TOKEN` values; the app no longer falls back to public/default credentials. The current admin cookie is versioned and expires after eight hours. `proxy.ts` is retained as an early request gate where supported, but protected admin pages also refuse to load without a valid session.
 
 Relevant files:
-- `middleware.ts`
+- `proxy.ts`
 - `src/app/admin/login/page.tsx`
 - `src/app/admin/login/actions.ts`
 - `src/lib/admin-auth.ts`
+- `src/lib/admin-session.ts`
 - `src/app/admin/logout/route.ts`
 - `src/components/site/site-header.tsx`
 - `src/components/site/site-header-client.tsx`
