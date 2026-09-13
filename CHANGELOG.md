@@ -7,12 +7,15 @@ The format loosely follows Keep a Changelog and semantic sections.
 ## [Unreleased] - 2026-09-13
 
 ### Added
-- No new features added.
+- Added a business onboarding Magic fill button that appears after a business name is typed and drafts editable listing details using OpenAI web search.
+- Added one removable suggested profile image from the business's own website when Magic fill can find a suitable preview image.
+- Added unit coverage for business Magic fill configuration, draft parsing, web search use, and image validation.
 
 ### Changed
 - Changed homepage directory highlights to show a random mix of up to six published businesses instead of favouring recommended, featured, or recently updated profiles.
 - Updated homepage highlight copy to describe the section as a random refresh from the live directory.
 - Changed the homepage service ticker to draw from shuffled published listings so it stays consistent with the random directory highlights.
+- Changed business onboarding so Magic fill only runs when clicked and only fills blank fields, keeping user-written details intact.
 - Updated project documentation with the new random highlight behaviour.
 
 ### Fixed

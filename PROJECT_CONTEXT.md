@@ -73,7 +73,7 @@ Creative production relies heavily on word of mouth, but reliable service discov
 ### Third-Party APIs
 - Supabase Auth, Postgres, Storage.
 - Resend for email delivery when configured.
-- OpenAI Responses API for optional AI-generated image captions when upload captions are blank.
+- OpenAI Responses API for optional AI-generated image captions when upload captions are blank and AI-assisted business onboarding drafts when Magic fill is clicked.
 
 ### Authentication
 - Supabase Auth exists for general user-facing auth scaffolding.
@@ -153,6 +153,7 @@ Most mutations use server actions:
 ### Data Flow
 - Public business pages call `getPublishedBusinesses()` or `getPublishedBusinessBySlug()` in `src/lib/public-businesses.ts`.
 - Public creative jobs call `getPublicCreativeJobs()` in `src/lib/creative-jobs.ts`.
+- Business onboarding can optionally request an AI-assisted Magic fill draft after a business name is typed. The draft uses OpenAI web search, fills blank form fields only, attempts to suggest one profile image from the business's own website, and leaves the final editable submission in the existing review flow.
 - Business onboarding inserts into Supabase and uploads portfolio media.
 - Business onboarding, business edits, business recommendations, change requests, and creative jobs run through rule-based moderation triage before saving.
 - Low-risk new business listings, business recommendations, and creative jobs can auto-publish. Business edits, change requests, medium-risk items, high-risk items, duplicates, and no-contact business listings still require admin review.
@@ -250,11 +251,12 @@ Future improvements:
 ### Business Onboarding
 Status: Completed
 
-Description: Businesses or community members can submit listing details, service options including Other, optional website/email/phone/location/budget/lead time, and profile/portfolio photos or videos. Upload copy explains that the first approved photo becomes the business profile image on cards and the listing page, while the rest appear as portfolio media. Required text fields show minimum-character guidance while people type, so submitters know how much detail is enough before sending. Submissions run through automated triage for abusive/spam wording, suspicious patterns, risky filenames, low-detail signals, missing contact routes, and duplicate business names. Low-risk listings with a public contact route can publish automatically; anything uncertain waits for admin review. Blank image captions are AI-described when OpenAI is configured, then fall back to filename/business context if needed. After submission, submitters see a clear reminder to save their private edit link, plus a copy button. The link can update listing details and portfolio media later. Edits to already published listings create a pending revision, so the current approved public listing stays live until an admin approves the changes.
+Description: Businesses or community members can submit listing details, service options including Other, optional website/email/phone/location/budget/lead time, and profile/portfolio photos or videos. After a business name is typed, Magic fill can draft blank fields from public web information, suggest services, and add one removable profile image from the business's own website when available. Upload copy explains that the first approved photo becomes the business profile image on cards and the listing page, while the rest appear as portfolio media. Required text fields show minimum-character guidance while people type, so submitters know how much detail is enough before sending. Submissions run through automated triage for abusive/spam wording, suspicious patterns, risky filenames, low-detail signals, missing contact routes, and duplicate business names. Low-risk listings with a public contact route can publish automatically; anything uncertain waits for admin review. Blank image captions are AI-described when OpenAI is configured, then fall back to filename/business context if needed. After submission, submitters see a clear reminder to save their private edit link, plus a copy button. The link can update listing details and portfolio media later. Edits to already published listings create a pending revision, so the current approved public listing stays live until an admin approves the changes.
 
 Relevant files:
 - `src/app/for-businesses/page.tsx`
 - `src/features/businesses/business-listing-form.tsx`
+- `src/lib/business-magic-fill.ts`
 - `src/app/businesses/manage/[token]/page.tsx`
 - `src/features/businesses/manage-business-details.tsx`
 - `src/features/businesses/manage-business-media.tsx`

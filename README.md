@@ -93,9 +93,12 @@ Blank image captions can be filled with OpenAI vision. Set this variable in Verc
 ```bash
 OPENAI_API_KEY=<your-openai-api-key>
 OPENAI_IMAGE_CAPTION_MODEL=gpt-4.1-mini
+OPENAI_BUSINESS_MAGIC_FILL_MODEL=gpt-4.1-mini
 ```
 
 `OPENAI_IMAGE_CAPTION_MODEL` is optional. If OpenAI is not configured, unavailable, or the upload is a video, MakeSG falls back to its simple filename/context caption.
+
+`OPENAI_BUSINESS_MAGIC_FILL_MODEL` is optional. It controls the business onboarding Magic fill button, which uses OpenAI web search to draft editable listing details after a business name is typed. Magic fill only runs when clicked, fills blank form fields, suggests one profile image from the business's own website when possible, and still requires the user to review before submitting.
 
 ## Architecture
 

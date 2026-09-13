@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Copy, Send } from "lucide-react";
+import { Copy, Send, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { useForm, useWatch, type FieldPath } from "react-hook-form";
@@ -10,7 +10,7 @@ import { FileUploader } from "@/components/projects/file-uploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { submitBusinessForApproval } from "@/features/businesses/actions";
+import { submitBusinessForApproval, suggestBusinessListingDraft } from "@/features/businesses/actions";
 import { services } from "@/lib/data";
 import { useFeedbackFocus } from "@/lib/use-feedback-focus";
 import { businessSchema } from "@/lib/validation";
@@ -30,6 +30,10 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
   const [submittedPublicationStatus, setSubmittedPublicationStatus] = useState<"pending" | "published" | null>(null);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [magicFillError, setMagicFillError] = useState<string | null>(null);
+  const [magicFillMessage, setMagicFillMessage] = useState<string | null>(null);
+  const [isMagicFilling, setIsMagicFilling] = useState(false);
+  const [magicProfileImage, setMagicProfileImage] = useState<{ url: string; caption: string; sources: string[] } | null>(null);
   const [otherError, setOtherError] = useState<string | null>(null);
   const [portfolioError, setPortfolioError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,6 +53,7 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
   const duplicateSuggestion = normalizedName.length >= 3
     ? existingBusinesses.find((business) => normalizeBusinessName(business.name) === normalizedName)
     : undefined;
+  const canUseMagicFill = businessNameLength >= minimumBusinessNameCharacters && !duplicateSuggestion;
   useFeedbackFocus(successRef, submittedManageUrl);
   useFeedbackFocus(errorRef, submitError);
 
@@ -128,6 +133,10 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
               formData.append("portfolioFiles", file);
               formData.append("portfolioCaptions", portfolioCaptions[fileKey(file)] ?? "");
             });
+            if (magicProfileImage) {
+              formData.set("magicProfileImageUrl", magicProfileImage.url);
+              formData.set("magicProfileImageCaption", magicProfileImage.caption);
+            }
 
             window.localStorage.setItem("makesg-last-business-listing", JSON.stringify({ ...data, publicationStatus: "pending" }));
             const result = await submitBusinessForApproval(formData);
@@ -175,6 +184,111 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
       >
         <Input {...form.register("name")} />
       </Field>
+      {canUseMagicFill ? (
+        <div className="grid gap-3 border border-[#ded8cc] bg-[#fbfaf7] p-4 text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="font-semibold">Want a faster start?</p>
+              <p className="mt-1 leading-6 text-[#6d675d]">
+                Magic fill can draft the blank fields from public web info. Check everything before sending.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={isMagicFilling}
+              onClick={async () => {
+                setIsMagicFilling(true);
+                setMagicFillError(null);
+                setMagicFillMessage(null);
+                setCopyMessage(null);
+                try {
+                  const result = await suggestBusinessListingDraft(watched.name ?? "");
+                  if (!result.ok) {
+                    setMagicFillError(result.message);
+                    return;
+                  }
+
+                  const draft = result.draft;
+                  fillBlankField(form.getValues("name"), () => form.setValue("name", draft.businessName, { shouldValidate: true }));
+                  fillBlankField(form.getValues("shortDescription"), () => form.setValue("shortDescription", draft.shortDescription, { shouldValidate: true }));
+                  fillBlankField(form.getValues("description"), () => form.setValue("description", draft.description, { shouldValidate: true }));
+                  fillBlankField(form.getValues("websiteUrl"), () => form.setValue("websiteUrl", draft.websiteUrl, { shouldValidate: true }));
+                  fillBlankField(form.getValues("publicEmail"), () => form.setValue("publicEmail", draft.publicEmail, { shouldValidate: true }));
+                  fillBlankField(form.getValues("phoneNumber"), () => form.setValue("phoneNumber", draft.phoneNumber, { shouldValidate: true }));
+                  fillBlankField(form.getValues("location"), () => form.setValue("location", draft.location, { shouldValidate: true }));
+                  form.setValue("businessType", draft.businessType, { shouldValidate: true });
+                  if ((form.getValues("services") ?? []).length === 0 && draft.services.length > 0) {
+                    form.setValue("services", draft.services, { shouldValidate: true });
+                  }
+                  if (!form.getValues("otherService") && draft.otherService) {
+                    form.setValue("otherService", draft.otherService, { shouldValidate: true });
+                    setOtherChecked(true);
+                  }
+                  if (draft.profileImageUrl) {
+                    setMagicProfileImage({
+                      url: draft.profileImageUrl,
+                      caption: draft.profileImageCaption || `${draft.businessName} profile image`,
+                      sources: draft.sources,
+                    });
+                  }
+                  setMagicFillMessage(result.message);
+                } finally {
+                  setIsMagicFilling(false);
+                }
+              }}
+            >
+              <Sparkles className="h-4 w-4" />
+              {isMagicFilling ? "Drafting..." : "Magic fill"}
+            </Button>
+          </div>
+          {magicFillMessage ? (
+            <p className="border border-[#b9c6ae] bg-[#eef2e8] p-3 leading-6 text-[#39462d]" role="status">
+              {magicFillMessage}
+            </p>
+          ) : null}
+          {magicFillError ? (
+            <p className="border border-[#e2b8a7] bg-[#fff6f1] p-3 leading-6 text-[#8a3c24]" role="alert">
+              {magicFillError}
+            </p>
+          ) : null}
+          {magicProfileImage ? (
+            <div className="grid gap-3 border border-[#ded8cc] bg-white p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-semibold">Suggested profile image</p>
+                  <p className="mt-1 leading-6 text-[#6d675d]">This image will be saved as the first profile image when you submit.</p>
+                </div>
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center border border-[#ded8cc] bg-white"
+                  aria-label="Remove suggested profile image"
+                  onClick={() => setMagicProfileImage(null)}
+                >
+                  <X className="h-4 w-4" aria-hidden />
+                </button>
+              </div>
+              <div
+                className="h-56 w-full border border-[#ded8cc] bg-cover bg-center"
+                style={{ backgroundImage: `url("${magicProfileImage.url}")` }}
+                role="img"
+                aria-label={magicProfileImage.caption}
+              />
+              <Field label="Caption for suggested image">
+                <Input
+                  value={magicProfileImage.caption}
+                  onChange={(event) => setMagicProfileImage((current) => current ? { ...current, caption: event.target.value } : current)}
+                />
+              </Field>
+              {magicProfileImage.sources.length > 0 ? (
+                <p className="text-xs leading-5 text-[#6d675d]">
+                  Source checked: {magicProfileImage.sources.slice(0, 2).join(", ")}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       {duplicateSuggestion ? (
         <div className="grid gap-3 border border-[#b9d3bf] bg-[#f1f8f2] p-4 text-sm text-[#39462d]" role="status">
           <div>
@@ -307,6 +421,12 @@ function minimumCharacterHint(currentLength: number, minimumLength: number, base
   }
 
   return `${currentLength} characters. Good to submit.`;
+}
+
+function fillBlankField(currentValue: unknown, fill: () => void) {
+  if (typeof currentValue === "string" && currentValue.trim()) return;
+  if (typeof currentValue === "number") return;
+  fill();
 }
 
 function setOptionalFormValue(formData: FormData, key: string, value: string | number | undefined) {

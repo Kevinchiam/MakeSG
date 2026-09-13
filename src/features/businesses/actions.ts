@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { services as knownServices } from "@/lib/data";
 import { captionUploadedMedia } from "@/lib/ai-media-captions";
+import { fetchMagicProfileImage, researchBusinessMagicFill } from "@/lib/business-magic-fill";
 import { assessModeration, moderationBlockMessage, type ModerationResult } from "@/lib/moderation";
 import type { PortfolioRevisionItem } from "@/lib/business-submissions";
 import { createSlug } from "@/lib/slug";
@@ -22,6 +23,10 @@ type UpdateBusinessResult =
 type UpdateBusinessMediaResult =
   | { ok: true }
   | { ok: false; message: string };
+
+export async function suggestBusinessListingDraft(businessName: string) {
+  return researchBusinessMagicFill(businessName);
+}
 
 export async function submitBusinessForApproval(input: unknown): Promise<SubmitBusinessResult> {
   const formInput = input instanceof FormData ? formDataToBusinessInput(input) : input;
@@ -57,6 +62,8 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
 
   const portfolioFiles = input instanceof FormData ? validPortfolioFiles(input.getAll("portfolioFiles")) : [];
   const portfolioCaptions = input instanceof FormData ? input.getAll("portfolioCaptions").map((value) => stringFromFormData(value).trim()) : [];
+  const magicProfileImageUrl = input instanceof FormData ? stringFromFormData(input.get("magicProfileImageUrl")) : "";
+  const magicProfileImageCaption = input instanceof FormData ? stringFromFormData(input.get("magicProfileImageCaption")).trim() : "";
   const totalPortfolioSizeMb = portfolioFiles.reduce((total, file) => total + file.size, 0) / 1024 / 1024;
   if (totalPortfolioSizeMb > 10) {
     return { ok: false, message: "Portfolio uploads must be 10MB total or smaller." };
@@ -72,6 +79,7 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
       data.phoneNumber,
       data.location,
       data.otherService,
+      magicProfileImageCaption,
       ...data.services,
       ...portfolioCaptions,
     ],
@@ -149,6 +157,40 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
   }
 
   const uploadedItems = [];
+  const magicProfileImage = await fetchMagicProfileImage(magicProfileImageUrl);
+  if (magicProfileImage) {
+    const path = `${business.id}/magic-profile-${Date.now()}.${magicProfileImage.extension}`;
+    const { error: uploadError } = await supabase.storage.from("business-portfolios").upload(path, magicProfileImage.blob, {
+      contentType: magicProfileImage.mimeType,
+      upsert: false,
+    });
+
+    if (!uploadError) {
+      const { data: publicUrlData } = supabase.storage.from("business-portfolios").getPublicUrl(path);
+      const caption = await captionUploadedMedia({
+        caption: magicProfileImageCaption,
+        fileName: `magic-profile.${magicProfileImage.extension}`,
+        fallback: `${data.name} profile image`,
+        mediaKind: "photo",
+        mimeType: magicProfileImage.mimeType,
+        publicUrl: publicUrlData.publicUrl,
+      });
+      uploadedItems.push({
+        business_id: business.id,
+        title: caption,
+        description: "Suggested by Magic fill from the business website.",
+        image_url: publicUrlData.publicUrl,
+        tags: [magicProfileImage.mimeType],
+        file_name: `magic-profile.${magicProfileImage.extension}`,
+        storage_path: path,
+        mime_type: magicProfileImage.mimeType,
+        size_bytes: magicProfileImage.size,
+        sort_order: 0,
+      });
+    }
+  }
+
+  const uploadedItemOffset = uploadedItems.length;
   for (const [index, file] of portfolioFiles.entries()) {
     const mediaKind = file.type.startsWith("video/") ? "video" : "photo";
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload";
@@ -179,7 +221,7 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
       storage_path: path,
       mime_type: file.type,
       size_bytes: file.size,
-      sort_order: index,
+      sort_order: uploadedItemOffset + index,
     });
   }
 
