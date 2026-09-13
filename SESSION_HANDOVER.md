@@ -6,7 +6,7 @@ Date: 2026-09-07
 
 Current session update: homepage directory highlights no longer favour recommended, featured, or recently updated businesses. The section now shows a random mix of up to six published listings on each refresh, and the copy now describes the behaviour as a rotating random sample from the live directory.
 
-Magic fill update: business onboarding now has an AI-assisted Magic fill button after a business name is typed. It uses OpenAI web search to draft editable listing details, fills only blank fields, suggests services, and tries to attach one removable profile image from the business's own website. Final submission still uses the normal MakeSG review path.
+Magic fill update: business onboarding now has an AI-assisted Magic fill button after a business name is typed. It uses OpenAI web search to draft editable listing details, fills only blank fields, suggests services, and tries to attach one removable profile image from the business's own website. The button is hidden when OpenAI is unavailable or API credits are exhausted. Final submission still uses the normal MakeSG review path.
 
 Today’s work made MakeSG feel more forgiving and easier to maintain. Uploaded media now receives a useful fallback caption when contributors leave captions blank. The public copy was softened across key pages so the platform sounds more welcoming and less formal. Admin moderation now has a trash-bin workflow: rejected or dismissed items leave the active queues, remain visible to admins for seven days, and are then permanently cleaned up with related storage files.
 
@@ -87,6 +87,7 @@ Admin session UX fix: admin-only links no longer prefetch, and login now writes 
 - [x] Changed homepage directory highlights from recommendation-weighted ranking to random published-listing selection.
 - [x] Updated homepage copy and project documentation to match the random highlight behaviour.
 - [x] Added AI-assisted Magic fill to business onboarding with click-only use, editable draft fields, service suggestions, and one removable website-sourced profile image.
+- [x] Hid Magic fill when the deployed OpenAI availability check fails, including exhausted API credits.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 

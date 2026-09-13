@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchMagicProfileImage, researchBusinessMagicFill } from "@/lib/business-magic-fill";
+import { fetchMagicProfileImage, isBusinessMagicFillAvailable, researchBusinessMagicFill } from "@/lib/business-magic-fill";
 
 const originalApiKey = process.env.OPENAI_API_KEY;
 const originalModel = process.env.OPENAI_BUSINESS_MAGIC_FILL_MODEL;
@@ -11,6 +11,19 @@ afterEach(() => {
 });
 
 describe("business magic fill", () => {
+  it("hides magic fill when OpenAI credits are exhausted", async () => {
+    process.env.OPENAI_API_KEY = "test-key";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: async () => ({ error: { message: "You have no credits remaining.", type: "insufficient_quota", code: "credit_balance_exhausted" } }),
+      }),
+    );
+
+    await expect(isBusinessMagicFillAvailable()).resolves.toBe(false);
+  });
+
   it("reports when OpenAI is not configured", async () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);

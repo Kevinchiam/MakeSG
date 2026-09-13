@@ -23,7 +23,7 @@ const minimumBusinessNameCharacters = 2;
 const minimumShortSummaryCharacters = 20;
 const minimumFullDescriptionCharacters = 80;
 
-export function BusinessListingForm({ existingBusinesses = [] }: { existingBusinesses?: ExistingBusinessSuggestion[] }) {
+export function BusinessListingForm({ existingBusinesses = [], magicFillAvailable = false }: { existingBusinesses?: ExistingBusinessSuggestion[]; magicFillAvailable?: boolean }) {
   const successRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
   const [submittedManageUrl, setSubmittedManageUrl] = useState<string | null>(null);
@@ -33,6 +33,7 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
   const [magicFillError, setMagicFillError] = useState<string | null>(null);
   const [magicFillMessage, setMagicFillMessage] = useState<string | null>(null);
   const [isMagicFilling, setIsMagicFilling] = useState(false);
+  const [magicFillUnavailable, setMagicFillUnavailable] = useState(false);
   const [magicProfileImage, setMagicProfileImage] = useState<{ url: string; caption: string; sources: string[] } | null>(null);
   const [otherError, setOtherError] = useState<string | null>(null);
   const [portfolioError, setPortfolioError] = useState<string | null>(null);
@@ -53,7 +54,7 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
   const duplicateSuggestion = normalizedName.length >= 3
     ? existingBusinesses.find((business) => normalizeBusinessName(business.name) === normalizedName)
     : undefined;
-  const canUseMagicFill = businessNameLength >= minimumBusinessNameCharacters && !duplicateSuggestion;
+  const canUseMagicFill = magicFillAvailable && !magicFillUnavailable && businessNameLength >= minimumBusinessNameCharacters && !duplicateSuggestion;
   useFeedbackFocus(successRef, submittedManageUrl);
   useFeedbackFocus(errorRef, submitError);
 
@@ -205,6 +206,10 @@ export function BusinessListingForm({ existingBusinesses = [] }: { existingBusin
                 try {
                   const result = await suggestBusinessListingDraft(watched.name ?? "");
                   if (!result.ok) {
+                    if (isMagicFillUnavailableMessage(result.message)) {
+                      setMagicFillUnavailable(true);
+                      return;
+                    }
                     setMagicFillError(result.message);
                     return;
                   }
@@ -427,6 +432,14 @@ function fillBlankField(currentValue: unknown, fill: () => void) {
   if (typeof currentValue === "string" && currentValue.trim()) return;
   if (typeof currentValue === "number") return;
   fill();
+}
+
+function isMagicFillUnavailableMessage(message: string) {
+  const normalized = message.toLowerCase();
+  return normalized.includes("insufficient_quota")
+    || normalized.includes("credit_balance_exhausted")
+    || normalized.includes("no credits remaining")
+    || normalized.includes("quota");
 }
 
 function setOptionalFormValue(formData: FormData, key: string, value: string | number | undefined) {

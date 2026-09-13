@@ -4,6 +4,7 @@ import type { BusinessType } from "@/lib/types";
 const DEFAULT_MAGIC_FILL_MODEL = "gpt-4.1-mini";
 const MAGIC_FILL_TIMEOUT_MS = 12000;
 const MAGIC_IMAGE_TIMEOUT_MS = 6000;
+const MAGIC_AVAILABILITY_TTL_MS = 5 * 60 * 1000;
 const MAX_MAGIC_IMAGE_BYTES = 10 * 1024 * 1024;
 
 type MagicFillDraft = {
@@ -37,6 +38,49 @@ type OpenAiMagicFillPayload = {
 };
 
 type RawMagicDraft = Partial<Record<keyof MagicFillDraft, unknown>>;
+
+let cachedAvailability: { available: boolean; checkedAt: number } | null = null;
+
+export async function isBusinessMagicFillAvailable() {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return false;
+
+  const now = Date.now();
+  if (cachedAvailability && now - cachedAvailability.checkedAt < MAGIC_AVAILABILITY_TTL_MS) {
+    return cachedAvailability.available;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 4000);
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: process.env.OPENAI_BUSINESS_MAGIC_FILL_MODEL ?? DEFAULT_MAGIC_FILL_MODEL,
+        input: "Reply with ok.",
+        max_output_tokens: 2,
+      }),
+      signal: controller.signal,
+    });
+
+    const available = response.ok;
+    if (!response.ok) {
+      await readOpenAiError(response);
+    }
+    cachedAvailability = { available, checkedAt: now };
+    return available;
+  } catch {
+    cachedAvailability = { available: false, checkedAt: now };
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 export async function researchBusinessMagicFill(businessName: string): Promise<BusinessMagicFillResult> {
   const name = businessName.trim();
@@ -176,7 +220,11 @@ async function requestBusinessDraft(apiKey: string, businessName: string): Promi
     });
 
     if (!response.ok) {
-      return { ok: false, message: await readOpenAiError(response) };
+      const message = await readOpenAiError(response);
+      if (isQuotaError(message)) {
+        cachedAvailability = { available: false, checkedAt: Date.now() };
+      }
+      return { ok: false, message };
     }
 
     const payload = (await response.json()) as OpenAiMagicFillPayload;
@@ -318,4 +366,12 @@ function extensionFromMimeType(mimeType: string) {
   if (mimeType === "image/png") return "png";
   if (mimeType === "image/webp") return "webp";
   return "jpg";
+}
+
+function isQuotaError(message: string) {
+  const normalized = message.toLowerCase();
+  return normalized.includes("insufficient_quota")
+    || normalized.includes("credit_balance_exhausted")
+    || normalized.includes("no credits remaining")
+    || normalized.includes("quota");
 }

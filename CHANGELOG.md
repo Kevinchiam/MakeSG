@@ -16,6 +16,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Updated homepage highlight copy to describe the section as a random refresh from the live directory.
 - Changed the homepage service ticker to draw from shuffled published listings so it stays consistent with the random directory highlights.
 - Changed business onboarding so Magic fill only runs when clicked and only fills blank fields, keeping user-written details intact.
+- Changed business onboarding so Magic fill is hidden when the deployed OpenAI connection is unavailable or API credits are exhausted.
 - Updated project documentation with the new random highlight behaviour.
 
 ### Fixed
