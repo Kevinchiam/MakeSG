@@ -13,15 +13,16 @@ afterEach(() => {
 describe("business magic fill", () => {
   it("hides magic fill when OpenAI credits are exhausted", async () => {
     process.env.OPENAI_API_KEY = "test-key";
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
+    const fetchSpy = vi.fn().mockResolvedValue({
         ok: false,
         json: async () => ({ error: { message: "You have no credits remaining.", type: "insufficient_quota", code: "credit_balance_exhausted" } }),
-      }),
-    );
+    });
+    vi.stubGlobal("fetch", fetchSpy);
 
     await expect(isBusinessMagicFillAvailable()).resolves.toBe(false);
+
+    const openAiBody = JSON.parse(fetchSpy.mock.calls[0][1].body as string) as { max_output_tokens?: number };
+    expect(openAiBody.max_output_tokens).toBe(16);
   });
 
   it("reports when OpenAI is not configured", async () => {

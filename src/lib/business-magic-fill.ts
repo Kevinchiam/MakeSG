@@ -5,6 +5,7 @@ const DEFAULT_MAGIC_FILL_MODEL = "gpt-4.1-mini";
 const MAGIC_FILL_TIMEOUT_MS = 12000;
 const MAGIC_IMAGE_TIMEOUT_MS = 6000;
 const MAGIC_AVAILABILITY_TTL_MS = 5 * 60 * 1000;
+const MAGIC_AVAILABILITY_MAX_OUTPUT_TOKENS = 16;
 const MAX_MAGIC_IMAGE_BYTES = 10 * 1024 * 1024;
 
 type MagicFillDraft = {
@@ -81,7 +82,7 @@ export async function getBusinessMagicFillStatus(): Promise<BusinessMagicFillSta
       body: JSON.stringify({
         model: process.env.OPENAI_BUSINESS_MAGIC_FILL_MODEL ?? DEFAULT_MAGIC_FILL_MODEL,
         input: "Reply with ok.",
-        max_output_tokens: 2,
+        max_output_tokens: MAGIC_AVAILABILITY_MAX_OUTPUT_TOKENS,
       }),
       signal: controller.signal,
     });

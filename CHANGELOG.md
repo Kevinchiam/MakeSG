@@ -31,6 +31,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Updated project documentation with the new random highlight behaviour.
 
 ### Fixed
+- Fixed Magic fill being paused even when OpenAI credits were available by updating the availability check to meet OpenAI's current minimum output-token requirement.
 - Fixed outdated homepage copy that said directory highlights favoured recommended profiles.
 - Fixed legal/trust ambiguity around existing listings by defaulting them to community-added until an admin-approved claim marks them as owner claimed.
 

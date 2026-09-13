@@ -195,6 +195,8 @@ Business onboarding copy is warmer and clearer. Upload copy explains that blank 
 ### `src/lib/business-magic-fill.ts`
 Server-only Magic fill helper for business onboarding. It calls OpenAI Responses with web search, asks for structured listing draft JSON, validates service/type output against local MakeSG options, fetches the business website to find an Open Graph or icon image, and validates the image before storage upload. It now reports a safe availability status/message so admins can understand why Magic fill is paused.
 
+Latest fix: the OpenAI availability probe now uses 16 output tokens, matching the Responses API minimum. This resolves the admin-only "integer below minimum value" pause message when credits are available.
+
 ### `src/features/businesses/manage-business-details.tsx`
 Private business edit success copy now says changes are waiting for review again.
 
