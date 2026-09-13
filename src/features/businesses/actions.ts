@@ -111,6 +111,7 @@ export async function submitBusinessForApproval(input: unknown): Promise<SubmitB
       minimum_budget: data.minimumBudget ?? 0,
       typical_lead_time: data.typicalLeadTime ?? 0,
       business_type: data.businessType,
+      submission_source: data.submissionSource === "owner" ? "owner" : "community",
       publication_status: publicationStatus,
       verification_status: "unverified",
       claimed: false,
@@ -791,6 +792,7 @@ async function savePendingBusinessRevision(
 function formDataToBusinessInput(formData: FormData) {
   return {
     name: stringFromFormData(formData.get("name")),
+    submissionSource: stringFromFormData(formData.get("submissionSource")) || "community",
     shortDescription: stringFromFormData(formData.get("shortDescription")),
     description: stringFromFormData(formData.get("description")),
     websiteUrl: stringFromFormData(formData.get("websiteUrl")),

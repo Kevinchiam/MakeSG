@@ -6,6 +6,8 @@ Date: 2026-09-07
 
 Current session update: homepage directory highlights no longer favour recommended, featured, or recently updated businesses. The section now shows a random mix of up to six published listings on each refresh, and the copy now describes the behaviour as a rotating random sample from the live directory.
 
+Latest ownership update: MakeSG now distinguishes whether a business listing was community-added, owner-submitted, MakeSG-added, or owner-claimed. Business onboarding asks who is sharing the listing, public business cards/profiles show a compact source label and disclaimer copy, and business owners can submit claim requests from their profile. Admin now has a dedicated claim-request queue; approving a claim marks the listing as owner claimed.
+
 Magic fill update: business onboarding now has an AI-assisted Magic fill button after a business name is typed. It uses OpenAI web search to draft editable listing details, fills only blank fields, suggests services, and tries to attach one removable profile image from the business's own website. The button is hidden when OpenAI is unavailable or API credits are exhausted. Final submission still uses the normal MakeSG review path.
 
 Today’s work made MakeSG feel more forgiving and easier to maintain. Uploaded media now receives a useful fallback caption when contributors leave captions blank. The public copy was softened across key pages so the platform sounds more welcoming and less formal. Admin moderation now has a trash-bin workflow: rejected or dismissed items leave the active queues, remain visible to admins for seven days, and are then permanently cleaned up with related storage files.
@@ -86,6 +88,10 @@ Admin session UX fix: admin-only links no longer prefetch, and login now writes 
 - [x] Disabled admin-link prefetching and made admin session cookies compatible across current and legacy cookie names.
 - [x] Changed homepage directory highlights from recommendation-weighted ranking to random published-listing selection.
 - [x] Updated homepage copy and project documentation to match the random highlight behaviour.
+- [x] Added business listing source tracking for community, owner, and MakeSG-added records.
+- [x] Added public owner-claim requests from business profiles.
+- [x] Added an admin claim-request queue with approve/reject controls.
+- [x] Updated public copy across home, About, directory, footer, and onboarding to disclose how listings may be submitted and claimed.
 - [x] Added AI-assisted Magic fill to business onboarding with click-only use, editable draft fields, service suggestions, and one removable website-sourced profile image.
 - [x] Hid Magic fill when the deployed OpenAI availability check fails, including exhausted API credits.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
@@ -135,6 +141,27 @@ Public tiny PNG route used only by the admin AI caption diagnostic. It gives Ope
 ### `src/components/admin/admin-private-link-control.tsx`
 Reusable admin control for private manage links. It can copy an existing link, open it in a new tab, or create a missing manage token for older business and creative-job records before copying.
 
+### `src/lib/business-source.ts`
+Shared helper for consistent business source labels and explanatory copy: `Community added`, `Owner submitted`, `MakeSG added`, and `Owner claimed`.
+
+### `src/lib/business-claim-requests.ts`
+Admin data loader for owner-claim requests. It joins claim rows to business names and slugs so admin can review them with useful context.
+
+### `src/components/business/claim-business-actions.ts`
+Public server action that validates owner-claim request details and saves them to Supabase for admin review.
+
+### `src/components/business/claim-business-panel.tsx`
+Public business-profile panel that lets owners or authorised representatives claim an unclaimed listing.
+
+### `src/app/admin/claim-requests/page.tsx`
+Admin-only owner-claim queue showing requester details, proof links, claim notes, related business links, and approve/reject controls.
+
+### `src/components/admin/business-claim-request-controls.tsx`
+Admin control for approving or rejecting claim requests. Approving marks the linked business as owner claimed.
+
+### `supabase/migrations/0017_business_submission_claims.sql`
+Adds `businesses.submission_source` and the `business_claim_requests` table for reviewed owner claims.
+
 ### `src/lib/admin-auth.ts`
 Shared admin authentication helper. It treats admin login as unavailable unless username, password, and session token are all explicitly configured. It also centralises the versioned cookie name and eight-hour admin session length.
 
@@ -147,7 +174,7 @@ Unit coverage that prevents `Admin` / `MakeSG` or any other fallback credential 
 ## Files Modified
 
 ### `src/features/businesses/actions.ts`
-Business portfolio uploads now use AI image captions when captions are blank and OpenAI is configured. Private business media edits also apply AI captions for blank new image uploads and simple fallback captions for cleared captions/videos.
+Business portfolio uploads now use AI image captions when captions are blank and OpenAI is configured. Private business media edits also apply AI captions for blank new image uploads and simple fallback captions for cleared captions/videos. New business submissions now save whether the listing was shared by the community or by someone authorised to represent the business.
 
 ### `src/features/creative-jobs/actions.ts`
 Creative job reference uploads and private media edits now use AI image captions for blank images when configured, with simple fallbacks based on the job title.
@@ -156,7 +183,7 @@ Creative job reference uploads and private media edits now use AI image captions
 Recommendation media uploads now use AI image captions when contributors do not provide image captions, with simple fallback captions when AI is unavailable.
 
 ### `src/features/businesses/business-listing-form.tsx`
-Business onboarding copy is warmer and clearer. Upload copy explains that blank captions are acceptable. Success and duplicate-listing messages now read less formally. Required text fields now show live minimum-character guidance for business name, short summary, and full description. New portfolio captions now appear below each uploaded preview. The form now shows Magic fill after a business name is typed; it drafts blank fields and previews a removable profile image without submitting automatically.
+Business onboarding copy is warmer and clearer. Upload copy explains that blank captions are acceptable. Success and duplicate-listing messages now read less formally. Required text fields now show live minimum-character guidance for business name, short summary, and full description. New portfolio captions now appear below each uploaded preview. The form now asks whether the listing is community-shared or owner-submitted, then shows Magic fill after a business name is typed; it drafts blank fields and previews a removable profile image without submitting automatically.
 
 ### `src/lib/business-magic-fill.ts`
 Server-only Magic fill helper for business onboarding. It calls OpenAI Responses with web search, asks for structured listing draft JSON, validates service/type output against local MakeSG options, fetches the business website to find an Open Graph or icon image, and validates the image before storage upload.
@@ -177,16 +204,43 @@ Private creative job media editing now places new-upload caption fields below th
 Recommendation panel copy now uses “review” language instead of “moderation” and explains optional media captions more gently. Recommendation upload captions now sit below their related file previews.
 
 ### `src/app/page.tsx`
-Homepage copy now reflects MakeSG as a practical community platform for finding businesses, posting jobs, requesting changes, and sharing recommendations. The hero now uses a richer media-led visual panel, and the selected photos/videos shuffle from published business media on refresh. Media overlay captions now use the shared streaming caption component. Directory highlights now randomly select up to six published businesses instead of favouring recommended, featured, or recently updated profiles.
+Homepage copy now reflects MakeSG as a practical community platform for finding businesses, posting jobs, requesting changes, sharing recommendations, and claiming owner-managed profiles. The hero now uses a richer media-led visual panel, and the selected photos/videos shuffle from published business media on refresh. Media overlay captions now use the shared streaming caption component. Directory highlights now randomly select up to six published businesses instead of favouring recommended, featured, or recently updated profiles.
 
 ### `src/app/about/page.tsx`
-About page copy no longer describes the product as fictional and now explains the platform in simpler, friendlier language. It also uses rotating published business media so the page feels less static. Media overlay captions now use the shared streaming caption component.
+About page copy no longer describes the product as fictional and now explains the platform in simpler, friendlier language. It now discloses that listings can be shared by owners, the community, or MakeSG, and that owners can claim profiles. It also uses rotating published business media so the page feels less static. Media overlay captions now use the shared streaming caption component.
 
 ### `src/app/globals.css`
 Media-caption CSS now gives caption text a stable clipped viewport and moves a duplicated caption track inside it on hover/focus. This prevents long captions from being cut off on narrow homepage and About media tiles while preserving reduced-motion behaviour.
 
 ### `src/app/for-businesses/page.tsx`
-Business submission page now invites both business owners and community members to share useful businesses.
+Business submission page now invites both business owners and community members to share useful businesses, and explains that owner claims can clarify who represents an existing profile.
+
+### `src/app/businesses/page.tsx`
+Directory intro copy now discloses that listings may be shared by owners, community members, or MakeSG, and that owners can claim profiles when they represent them.
+
+### `src/app/businesses/[slug]/page.tsx`
+Business profiles now show a listing-source notice and an owner-claim panel alongside existing contact, recommendation, and change-request actions.
+
+### `src/components/business/business-card.tsx`
+Business cards now show a compact listing-source label alongside recommendation and service labels.
+
+### `src/components/site/site-footer.tsx`
+Footer copy now includes a short disclaimer that listings may be shared by owners, the community, or MakeSG, and can be claimed after review.
+
+### `src/app/admin/page.tsx`
+Admin home now includes claim requests in the review count and links to the dedicated claim-request queue.
+
+### `src/app/admin/businesses/page.tsx`
+Admin business cards now include the listing-source label, making owner-submitted, community-added, and owner-claimed records easier to distinguish.
+
+### `src/lib/public-businesses.ts`
+Public business loading now includes `submission_source` and maps older/missing values to `community`.
+
+### `src/lib/business-submissions.ts`
+Admin business summaries now include `submissionSource` and `claimed` so queues can show the correct listing-source label.
+
+### `src/lib/validation.ts`
+Business validation now accepts `submissionSource`, defaulting to `community` for older forms or records.
 
 ### `src/app/for-creatives/page.tsx`
 Creative job page now sounds more conversational and focuses on posting work for businesses to find.
@@ -288,8 +342,10 @@ Added the 2026-08-29 changelog entry.
 
 - Added `supabase/migrations/0015_admin_trash_retention.sql`.
 - Added `supabase/migrations/0016_business_change_request_media.sql`.
+- Added `supabase/migrations/0017_business_submission_claims.sql`.
 - The migration only adds indexes; it does not delete data or change existing table shapes.
 - The new change-request media migration adds a linked media table and does not alter existing change-request rows.
+- The ownership migration adds `businesses.submission_source`, defaults existing listings to `community`, and creates `business_claim_requests` for reviewed owner claims.
 - Existing statuses are used as trash states:
   - `businesses.publication_status = 'rejected'`
   - `business_listing_revisions.status = 'rejected'`
@@ -298,6 +354,7 @@ Added the 2026-08-29 changelog entry.
 - `creative_job_listings.status = 'archived'`
 - Apply this migration in Supabase before relying on the production trash cleanup performance.
 - Apply `0016_business_change_request_media.sql` in Supabase before using media uploads on public change requests in production.
+- Apply `0017_business_submission_claims.sql` in Supabase before deploying the source labels and claim-request queue to production.
 
 ## API Changes
 
@@ -309,6 +366,8 @@ Added the 2026-08-29 changelog entry.
 - Admin dashboard and trash page trigger expired-trash cleanup.
 - Active admin queue helpers filter out trash-state rows.
 - `requestBusinessChange(formData)` now accepts `changeRequestMedia` files and `changeRequestMediaCaptions`, validates type/size, uploads to Supabase Storage, and saves linked media rows.
+- `requestBusinessClaim(formData)` saves public owner-claim requests for admin review.
+- `updateBusinessClaimRequestStatus(requestId, status, adminNotes)` approves or rejects claim requests and marks the business owner-claimed on approval.
 - Admin change-request loading now includes public URLs for attached media.
 - `testOpenAiCaptionConnection()` exposes a safe admin-only OpenAI caption diagnostic from the dashboard.
 - `GET /api/ai-caption-test-image` serves the small PNG used by that diagnostic.
@@ -328,6 +387,10 @@ Added the 2026-08-29 changelog entry.
 - Major public-facing copy was softened across home, About, business submission, creative job posting, recommendation, and private management pages.
 - Public change requests now allow photos/videos and captions.
 - Admin change requests now use a two-column review workspace: request evidence on one side, live listing/media editing on the other.
+- Business onboarding now asks whether the submitter is sharing as the business owner/representative or as a community member.
+- Public business cards and profiles now show compact listing-source labels.
+- Business profiles now include an owner-claim request panel.
+- Admin home and `/admin/claim-requests` now support claim request review.
 - Admin home now has a compact AI caption check card so deployment/key/model/API problems can be diagnosed without exposing secrets.
 - Business and creative-job admin queues/detail pages now show private manage-link controls.
 

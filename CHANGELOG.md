@@ -10,6 +10,10 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Added a business onboarding Magic fill button that appears after a business name is typed and drafts editable listing details using OpenAI web search.
 - Added one removable suggested profile image from the business's own website when Magic fill can find a suitable preview image.
 - Added unit coverage for business Magic fill configuration, draft parsing, web search use, and image validation.
+- Added business listing source tracking for community-submitted, owner-submitted, and MakeSG-added listings.
+- Added public owner-claim requests from business profiles.
+- Added a dedicated admin claim-request queue with approve/reject controls.
+- Added shared business source labels and descriptions for cards, profiles, and admin queues.
 
 ### Changed
 - Changed homepage directory highlights to show a random mix of up to six published businesses instead of favouring recommended, featured, or recently updated profiles.
@@ -17,16 +21,21 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Changed the homepage service ticker to draw from shuffled published listings so it stays consistent with the random directory highlights.
 - Changed business onboarding so Magic fill only runs when clicked and only fills blank fields, keeping user-written details intact.
 - Changed business onboarding so Magic fill is hidden when the deployed OpenAI connection is unavailable or API credits are exhausted.
+- Changed business onboarding to ask whether the listing is being shared by an owner/representative or by someone in the community.
+- Changed public home, About, directory, footer, and business-profile copy to disclose that listings may be shared by owners, community members, or MakeSG and can be claimed after review.
+- Changed admin business cards to show listing source labels.
 - Updated project documentation with the new random highlight behaviour.
 
 ### Fixed
 - Fixed outdated homepage copy that said directory highlights favoured recommended profiles.
+- Fixed legal/trust ambiguity around existing listings by defaulting them to community-added until an admin-approved claim marks them as owner claimed.
 
 ### Removed
 - Removed recommendation, featured, and recent-update weighting from homepage directory highlight selection.
 
 ### Known Issues
 - Random highlights depend on the page being rendered dynamically; the homepage is currently marked `force-dynamic`.
+- `supabase/migrations/0017_business_submission_claims.sql` must be applied before deploying the claim/source-label feature to production.
 
 ## [Unreleased] - 2026-09-07
 

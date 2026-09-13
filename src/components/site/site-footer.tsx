@@ -7,7 +7,7 @@ export function SiteFooter() {
         <div>
           <p className="font-serif text-3xl font-semibold">MakeSG</p>
           <p className="mt-4 max-w-md text-sm leading-6 text-[#d8d0c4]">
-            A Singapore directory for finding businesses, studios and workshops that help creative ideas get made.
+            A Singapore directory for finding businesses, studios and workshops that help creative ideas get made. Listings may be shared by owners, the community or MakeSG, and owners can claim profiles after review.
           </p>
         </div>
         <div>

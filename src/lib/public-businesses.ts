@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { Business, BusinessType, PublicationStatus, VerificationStatus } from "@/lib/types";
+import type { Business, BusinessSubmissionSource, BusinessType, PublicationStatus, VerificationStatus } from "@/lib/types";
 
 type PublishedBusinessRow = {
   id: string;
@@ -19,9 +19,10 @@ type PublishedBusinessRow = {
   offers_onsite_service: boolean;
   offers_remote_service: boolean;
   verification_status: VerificationStatus;
+  submission_source?: BusinessSubmissionSource | null;
   publication_status: PublicationStatus;
   featured: boolean;
-  claimed: boolean;
+  claimed?: boolean | null;
   endorsement_count?: number | null;
   hero_image_url: string | null;
   updated_at?: string | null;
@@ -44,7 +45,7 @@ export async function getPublishedBusinesses(): Promise<Business[]> {
     const { data, error } = await supabase
       .from("businesses")
       .select(
-        "id, name, slug, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, accepts_prototypes, accepts_production, offers_onsite_service, offers_remote_service, verification_status, publication_status, featured, claimed, endorsement_count, hero_image_url, updated_at, business_services(services(slug)), portfolio_items(id, title, description, image_url, tags, mime_type)",
+        "id, name, slug, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, accepts_prototypes, accepts_production, offers_onsite_service, offers_remote_service, verification_status, submission_source, publication_status, featured, claimed, endorsement_count, hero_image_url, updated_at, business_services(services(slug)), portfolio_items(id, title, description, image_url, tags, mime_type)",
       )
       .eq("publication_status", "published")
       .order("updated_at", { ascending: false });
@@ -65,7 +66,7 @@ export async function getPublishedBusinessBySlug(slug: string) {
     const { data, error } = await supabase
       .from("businesses")
       .select(
-        "id, name, slug, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, accepts_prototypes, accepts_production, offers_onsite_service, offers_remote_service, verification_status, publication_status, featured, claimed, endorsement_count, hero_image_url, updated_at, business_services(services(slug)), portfolio_items(id, title, description, image_url, tags, mime_type)",
+        "id, name, slug, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, accepts_prototypes, accepts_production, offers_onsite_service, offers_remote_service, verification_status, submission_source, publication_status, featured, claimed, endorsement_count, hero_image_url, updated_at, business_services(services(slug)), portfolio_items(id, title, description, image_url, tags, mime_type)",
       )
       .eq("slug", slug)
       .eq("publication_status", "published")
@@ -125,9 +126,10 @@ function rowToBusiness(row: PublishedBusinessRow, recommendationCount = 0): Busi
     offersOnsiteService: row.offers_onsite_service,
     offersRemoteService: row.offers_remote_service,
     verificationStatus: row.verification_status,
+    submissionSource: row.submission_source ?? "community",
     publicationStatus: row.publication_status,
     featured: row.featured,
-    claimed: row.claimed,
+    claimed: Boolean(row.claimed),
     endorsementCount: row.endorsement_count ?? 0,
     recommendationCount,
     updatedAt: row.updated_at ?? undefined,

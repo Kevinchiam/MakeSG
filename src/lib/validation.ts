@@ -75,6 +75,7 @@ export const creativeJobSchema = z.object({
 });
 
 export const businessSchema = z.object({
+  submissionSource: z.enum(["community", "owner"]).default("community"),
   name: z.string().min(2, "Business name is required."),
   shortDescription: z.string().min(20, "Add a concise summary."),
   description: z.string().min(80, "Add more detail for creative clients."),

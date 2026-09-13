@@ -22,7 +22,7 @@ Creative production relies heavily on word of mouth, but reliable service discov
 
 ### MVP Objectives
 - Publish a usable public directory of Singapore creative-production businesses.
-- Allow businesses to submit listings with services, budget, lead time, email, website, and portfolio media.
+- Allow owners and community members to submit business listings with services, budget, lead time, email, website, and portfolio media.
 - Allow people to recommend businesses they have tried.
 - Allow admins to moderate business listings, recommendations, and creative jobs.
 - Allow creatives to post public job listings without account creation.
@@ -34,7 +34,7 @@ Creative production relies heavily on word of mouth, but reliable service discov
 
 ### Future Roadmap
 - Replace remaining dashboard placeholders with fully persisted Supabase workflows.
-- Add robust user accounts for business owners and optional creative accounts.
+- Add robust user accounts for business owners and optional creative accounts, replacing the current reviewed claim-request workflow.
 - Add moderation queues with richer status history, admin notes, and automation audit trails.
 - Add stronger search ranking, synonyms, and possibly AI-assisted service matching.
 - Add map/location search once a custom geocoding provider is selected.
@@ -51,6 +51,7 @@ Creative production relies heavily on word of mouth, but reliable service discov
 - Percentage of creative jobs moved from Open to In discussion or Taken.
 - Search-to-profile and profile-to-contact conversion.
 - Percentage of submitted business listings approved without admin rework.
+- Percentage of published listings that become owner-claimed.
 - Median time from listing submission to approval.
 
 ## Tech Stack
@@ -132,7 +133,7 @@ The frontend is built with Next.js App Router. Server components fetch data and 
 Backend logic is implemented with Next.js server actions and route handlers. Supabase admin access is kept in server-only functions. Validation is shared through Zod schemas in `src/lib/validation.ts`.
 
 ### Database
-Supabase Postgres stores profiles, businesses, services, materials, business joins, portfolio items, projects, enquiries, saved businesses, reports, business recommendations, recommendation media, creative jobs, and creative job reference files.
+Supabase Postgres stores profiles, businesses, services, materials, business joins, portfolio items, projects, enquiries, saved businesses, reports, business recommendations, recommendation media, business claim requests, creative jobs, and creative job reference files.
 
 ### API Flow
 Most mutations use server actions:
@@ -152,6 +153,7 @@ Most mutations use server actions:
 
 ### Data Flow
 - Public business pages call `getPublishedBusinesses()` or `getPublishedBusinessBySlug()` in `src/lib/public-businesses.ts`.
+- Published business records show a source label: `Community added`, `Owner submitted`, `MakeSG added`, or `Owner claimed`. Existing listings default to `Community added` until an admin-approved claim marks them as owner claimed.
 - Public creative jobs call `getPublicCreativeJobs()` in `src/lib/creative-jobs.ts`.
 - Business onboarding can optionally request an AI-assisted Magic fill draft after a business name is typed. The Magic fill affordance is hidden when OpenAI is missing or the lightweight availability check fails, including exhausted API credits. When available, the draft uses OpenAI web search, fills blank form fields only, attempts to suggest one profile image from the business's own website, and leaves the final editable submission in the existing review flow.
 - Business onboarding inserts into Supabase and uploads portfolio media.
@@ -199,7 +201,7 @@ Future improvements:
 ### Business Directory
 Status: Completed
 
-Description: Browse published businesses with filters, typo-tolerant search, cards, pagination, empty states, a Recommended-only filter, recommendation labels, and public change-request panels. Change requests can include an email, explanation, optional photos/videos, and captions so admins can understand the issue before editing the live listing.
+Description: Browse published businesses with filters, typo-tolerant search, cards, pagination, empty states, a Recommended-only filter, recommendation labels, listing-source labels, and public change-request panels. Copy explains that listings may be shared by owners, community members, or MakeSG, and that owners can claim profiles after review. Change requests can include an email, explanation, optional photos/videos, and captions so admins can understand the issue before editing the live listing.
 
 Relevant files:
 - `src/app/businesses/page.tsx`
@@ -222,10 +224,13 @@ Future improvements:
 ### Business Profile
 Status: Completed
 
-Description: Public business profile with hero media, service details, portfolio media, visible email fallback, website link, location, budget, lead time, and recommendation CTA.
+Description: Public business profile with hero media, service details, portfolio media, visible email fallback, website link, location, budget, lead time, recommendation CTA, listing-source notice, and owner-claim CTA. Unclaimed listings explain that they may have been shared by the community or added from public information; claimed listings state that they are represented by the owner or an authorised representative.
 
 Relevant files:
 - `src/app/businesses/[slug]/page.tsx`
+- `src/components/business/claim-business-panel.tsx`
+- `src/components/business/claim-business-actions.ts`
+- `src/lib/business-source.ts`
 - `src/components/business/enquiry-form.tsx`
 - `src/components/business/enquiry-actions.ts`
 
@@ -251,7 +256,7 @@ Future improvements:
 ### Business Onboarding
 Status: Completed
 
-Description: Businesses or community members can submit listing details, service options including Other, optional website/email/phone/location/budget/lead time, and profile/portfolio photos or videos. After a business name is typed, Magic fill can draft blank fields from public web information, suggest services, and add one removable profile image from the business's own website when available. Magic fill is hidden when the deployed OpenAI connection is unavailable or credits are exhausted. Upload copy explains that the first approved photo becomes the business profile image on cards and the listing page, while the rest appear as portfolio media. Required text fields show minimum-character guidance while people type, so submitters know how much detail is enough before sending. Submissions run through automated triage for abusive/spam wording, suspicious patterns, risky filenames, low-detail signals, missing contact routes, and duplicate business names. Low-risk listings with a public contact route can publish automatically; anything uncertain waits for admin review. Blank image captions are AI-described when OpenAI is configured, then fall back to filename/business context if needed. After submission, submitters see a clear reminder to save their private edit link, plus a copy button. The link can update listing details and portfolio media later. Edits to already published listings create a pending revision, so the current approved public listing stays live until an admin approves the changes.
+Description: Businesses or community members can submit listing details, service options including Other, optional website/email/phone/location/budget/lead time, and profile/portfolio photos or videos. Submitters choose whether they are sharing a business they know or submitting as someone authorised to represent the business; that value is stored as the listing source and shown publicly after approval. After a business name is typed, Magic fill can draft blank fields from public web information, suggest services, and add one removable profile image from the business's own website when available. Magic fill is hidden when the deployed OpenAI connection is unavailable or credits are exhausted. Upload copy explains that the first approved photo becomes the business profile image on cards and the listing page, while the rest appear as portfolio media. Required text fields show minimum-character guidance while people type, so submitters know how much detail is enough before sending. Submissions run through automated triage for abusive/spam wording, suspicious patterns, risky filenames, low-detail signals, missing contact routes, and duplicate business names. Low-risk listings with a public contact route can publish automatically; anything uncertain waits for admin review. Blank image captions are AI-described when OpenAI is configured, then fall back to filename/business context if needed. After submission, submitters see a clear reminder to save their private edit link, plus a copy button. The link can update listing details and portfolio media later. Edits to already published listings create a pending revision, so the current approved public listing stays live until an admin approves the changes.
 
 Relevant files:
 - `src/app/for-businesses/page.tsx`
@@ -261,6 +266,7 @@ Relevant files:
 - `src/features/businesses/manage-business-details.tsx`
 - `src/features/businesses/manage-business-media.tsx`
 - `src/features/businesses/actions.ts`
+- `src/lib/business-source.ts`
 - `src/components/projects/file-uploader.tsx`
 - `src/lib/ai-media-captions.ts`
 - `src/lib/media-captions.ts`
@@ -268,11 +274,33 @@ Relevant files:
 - `supabase/migrations/0010_business_manage_links.sql`
 - `supabase/migrations/0011_business_listing_revisions.sql`
 - `supabase/migrations/0014_moderation_triage.sql`
+- `supabase/migrations/0017_business_submission_claims.sql`
 
 Future improvements:
 - Add regenerate/revoke manage link.
 - Email manage link to the business once email delivery is configured.
+- Replace claim requests with verified owner accounts and invite/transfer flows.
 - Add clearer admin rejection feedback loop.
+
+### Business Claim Requests
+Status: Completed
+
+Description: Business owners or authorised representatives can request to claim an existing public business listing from the business profile. The request asks for name, role/connection, private email, optional phone, optional proof link, and a short explanation. Admin reviews claims from `/admin/claim-requests`; approving a claim marks the business as owner claimed and updates the listing source so public pages can show the clearer trust label. Existing listings default to community-added until claimed.
+
+Relevant files:
+- `src/components/business/claim-business-panel.tsx`
+- `src/components/business/claim-business-actions.ts`
+- `src/app/admin/claim-requests/page.tsx`
+- `src/components/admin/business-claim-request-controls.tsx`
+- `src/lib/business-claim-requests.ts`
+- `src/lib/business-source.ts`
+- `src/components/admin/actions.ts`
+- `supabase/migrations/0017_business_submission_claims.sql`
+
+Future improvements:
+- Send claim approval/rejection emails once transactional email is configured.
+- Add file upload proof and richer admin verification notes.
+- Create owner accounts after claim approval instead of relying on private edit links.
 
 ### Business Recommendations
 Status: Completed
@@ -381,18 +409,20 @@ Future improvements:
 ### Admin Dashboard
 Status: Completed
 
-Description: Admin home organised as a review command centre. Active work is grouped into business listings, creative jobs, recommendations, and change requests, with high-risk automated triage flags called out separately. Maintenance items such as trash, services, and reports are visually separated so admins know what needs a decision now versus what is upkeep or future functionality. Change requests now support media-backed evidence and are reviewed beside the live listing editor. Recommendations can be edited from the review queue while retaining approve/reject override controls. The admin dashboard also includes an AI caption check that tests OpenAI connectivity from the deployed site and reports missing-key/API/model errors without revealing the key. Admin business and creative-job queues expose private manage links, with a create-link fallback for older records that do not have tokens yet.
+Description: Admin home organised as a review command centre. Active work is grouped into business listings, creative jobs, recommendations, change requests, and owner claim requests, with high-risk automated triage flags called out separately. Maintenance items such as trash, services, and reports are visually separated so admins know what needs a decision now versus what is upkeep or future functionality. Change requests now support media-backed evidence and are reviewed beside the live listing editor. Recommendations can be edited from the review queue while retaining approve/reject override controls. The admin dashboard also includes an AI caption check that tests OpenAI connectivity from the deployed site and reports missing-key/API/model errors without revealing the key. Admin business and creative-job queues expose private manage links, with a create-link fallback for older records that do not have tokens yet.
 
 Relevant files:
 - `src/app/admin/page.tsx`
 - `src/components/admin/openai-caption-check.tsx`
 - `src/app/admin/change-requests/page.tsx`
+- `src/app/admin/claim-requests/page.tsx`
 - `src/app/admin/trash/page.tsx`
 - `src/components/admin/admin-page-header.tsx`
 - `src/components/admin/moderation-summary.tsx`
 - `src/components/admin/admin-business-edit-form.tsx`
 - `src/components/admin/admin-business-media-form.tsx`
 - `src/components/admin/admin-private-link-control.tsx`
+- `src/components/admin/business-claim-request-controls.tsx`
 - `src/components/admin/admin-recommendation-edit-form.tsx`
 - `src/lib/admin-trash.ts`
 
@@ -484,7 +514,7 @@ Canonical service categories used for businesses and creative job service select
 Original material taxonomy. It still exists in the schema but the current business onboarding UI removed the materials section.
 
 ### `businesses`
-Core business listings with owner, publication status, verification status, contact details, address, budget, lead time, capabilities, hero image, and automated moderation triage metadata. Rejected rows are treated as trash-bin items and are permanently deleted after the seven-day retention period.
+Core business listings with owner, publication status, verification status, submission source, contact details, address, budget, lead time, capabilities, hero image, and automated moderation triage metadata. `submission_source` records whether a listing came from the community, an owner/authorised representative, or MakeSG; existing rows default to `community`. Rejected rows are treated as trash-bin items and are permanently deleted after the seven-day retention period.
 
 ### `business_services`
 Many-to-many join between businesses and services.
@@ -525,6 +555,9 @@ Public requests to correct or update an existing business listing. Each request 
 ### `business_change_request_media`
 Photos/videos attached to public business change requests. Records reference `business_change_requests`, store the Supabase Storage bucket/path, filename, mime type, file size, caption, and sort order. Media is stored in the `business-portfolios` bucket under `change-requests/{requestId}/...`. Dismissed change-request media is removed during expired trash cleanup.
 
+### `business_claim_requests`
+Owner-claim requests for existing public business listings. Each request stores the business, requester name, role, private email, optional phone, optional proof URL, explanation, status, admin notes, and timestamps. Admins review these from `/admin/claim-requests`; approval marks the linked business as claimed and updates its listing source to owner.
+
 ### `business_listing_revisions`
 Pending edits for published business listings. Stores proposed listing data, proposed services, proposed portfolio media, revision status, and automated triage metadata. Approved revisions overwrite the live listing; rejected revisions leave the live listing unchanged and appear in the admin trash bin before cleanup.
 
@@ -563,7 +596,9 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - `deleteBusinessEntry(businessId)`: Admin deletion of business listing.
 - `getAdminTrashItems({ purgeExpired })`: Admin helper that lists trash-bin items and optionally purges expired rows/media.
 - `requestBusinessChange(formData)`: Public business correction request saved for admin review, with optional photos/videos and per-file captions capped at 10MB combined.
+- `requestBusinessClaim(formData)`: Public owner-claim request saved for admin review.
 - `updateBusinessChangeRequestStatus(requestId, status, adminNotes)`: Admin review status update for public change requests.
+- `updateBusinessClaimRequestStatus(requestId, status, adminNotes)`: Admin claim review action; approval marks the linked business as owner claimed.
 - `updateBusinessRecommendationFromAdmin(recommendationId, formData)`: Admin edit of recommendation ratings, review text, contributor details, supporting links, media captions, removed media, and added media.
 - `updateCreativeJobFromForm(jobId, formData)`: Admin edit of creative job listing.
 - `deleteCreativeJobEntry(jobId)`: Admin deletion of creative job.
@@ -595,10 +630,11 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - `LoadingSkeleton`: Loading placeholder component.
 - `Pagination`: Pagination controls.
 - `BusinessGrid`: Directory layout and result handling.
-- `BusinessCard`: Directory result card.
+- `BusinessCard`: Directory result card with recommendation and listing-source labels.
 - `FilterPanel`: Desktop business filters.
 - `MobileFilterDrawer`: Mobile filters.
 - `EnquiryForm`: Business profile contact UI.
+- `ClaimBusinessPanel`: Public owner-claim request panel for unclaimed business profiles.
 - `RecommendBusinessForm`: Recommendation submission UI.
 - `RequestBusinessChangePanel`: Public business correction panel with email, reason, optional media upload, and captions.
 - `BusinessListingForm`: Business onboarding form.
@@ -612,6 +648,7 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - `AdminPrivateLinkControl`: Admin copy/open/create control for business and creative-job private manage links.
 - `ModerationSummary`: Shared admin triage panel showing automated decision, risk, reason, and signals.
 - `AdminStatusControls`: Business and recommendation moderation buttons, including persisted business feature/unfeature controls.
+- `BusinessClaimRequestControls`: Admin controls for approving or rejecting owner-claim requests.
 - `BusinessChangeRequestControls`: Admin controls for marking change requests reviewed or dismissed.
 - `AdminBusinessEditForm`: Admin business listing editor used on business records and side-by-side change-request review.
 - `AdminBusinessMediaForm`: Admin business media editor used on business records and side-by-side change-request review.

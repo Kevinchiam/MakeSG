@@ -21,6 +21,7 @@ const businesses: Business[] = [
     offersOnsiteService: false,
     offersRemoteService: true,
     verificationStatus: "unverified",
+    submissionSource: "community",
     publicationStatus: "published",
     featured: false,
     claimed: false,

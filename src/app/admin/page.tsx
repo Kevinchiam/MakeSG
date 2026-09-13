@@ -1,9 +1,10 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowRight, BriefcaseBusiness, Building2, ClipboardCheck, MessageCircleHeart, ShieldAlert, Trash2, Wrench } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Building2, ClipboardCheck, MessageCircleHeart, ShieldAlert, Trash2, UserCheck, Wrench } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { OpenAiCaptionCheck } from "@/components/admin/openai-caption-check";
 import { getAdminBusinessChangeRequests } from "@/lib/business-change-requests";
+import { getAdminBusinessClaimRequests } from "@/lib/business-claim-requests";
 import { getAdminBusinessRecommendations } from "@/lib/business-recommendations";
 import { getAdminBusinesses } from "@/lib/business-submissions";
 import { getAdminCreativeJobs } from "@/lib/creative-jobs";
@@ -19,6 +20,7 @@ export default async function AdminPage() {
   const creativeJobs = await getAdminCreativeJobs();
   const recommendations = await getAdminBusinessRecommendations();
   const changeRequests = await getAdminBusinessChangeRequests();
+  const claimRequests = await getAdminBusinessClaimRequests();
   const trashItems = await getAdminTrashItems();
   const pending = businesses.filter((b) => b.publicationStatus === "pending" || b.pendingRevision).length;
   const openCreativeJobs = creativeJobs.filter((job) => job.status === "open").length;
@@ -26,7 +28,8 @@ export default async function AdminPage() {
   const inDiscussionCreativeJobs = creativeJobs.filter((job) => job.status === "in_discussion").length;
   const pendingRecommendations = recommendations.filter((recommendation) => recommendation.status === "pending").length;
   const openChangeRequests = changeRequests.filter((request) => request.status === "open").length;
-  const totalReviewItems = pending + pendingCreativeJobs + pendingRecommendations + openChangeRequests;
+  const pendingClaimRequests = claimRequests.filter((request) => request.status === "pending").length;
+  const totalReviewItems = pending + pendingCreativeJobs + pendingRecommendations + openChangeRequests + pendingClaimRequests;
   const autoApprovedBusinesses = businesses.filter((business) => business.publicationStatus === "published" && business.moderationDecision === "auto_approved").length;
   const autoApprovedRecommendations = recommendations.filter((recommendation) => recommendation.status === "approved" && recommendation.moderationDecision === "auto_approved").length;
   const autoApprovedItems = autoApprovedBusinesses + autoApprovedRecommendations;
@@ -47,7 +50,7 @@ export default async function AdminPage() {
         <section className="border border-[#ded8cc] bg-white p-6">
           <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Review queue</p>
           <h2 className="mt-2 font-serif text-3xl font-semibold">{totalReviewItems} item{totalReviewItems === 1 ? "" : "s"} need attention</h2>
-          <p className="mt-3 text-sm leading-6 text-[#6d675d]">Review pending listings, job posts, recommendations and requested changes. High-risk items are flagged so you can handle them first.</p>
+          <p className="mt-3 text-sm leading-6 text-[#6d675d]">Review pending listings, job posts, recommendations, requested changes, and owner claims. High-risk items are flagged so you can handle them first.</p>
         </section>
         <section className="border border-[#ded8cc] bg-[#fbfaf7] p-6">
           <div className="flex items-start gap-3">
@@ -73,6 +76,7 @@ export default async function AdminPage() {
         <AdminLink href="/admin/creative-jobs" icon={<BriefcaseBusiness />} title="Creative jobs" count={pendingCreativeJobs} text={`${openCreativeJobs} open · ${inDiscussionCreativeJobs} in discussion`} tone={pendingCreativeJobs ? "urgent" : "default"} />
         <AdminLink href="/admin/recommendations" icon={<MessageCircleHeart />} title="Recommendations" count={pendingRecommendations} text="Review first-hand experiences before they influence a listing." tone={pendingRecommendations ? "urgent" : "default"} />
         <AdminLink href="/admin/change-requests" icon={<ClipboardCheck />} title="Change requests" count={openChangeRequests} text="Review public suggestions, then edit the business record if the correction is valid." tone={openChangeRequests ? "urgent" : "default"} />
+        <AdminLink href="/admin/claim-requests" icon={<UserCheck />} title="Claim requests" count={pendingClaimRequests} text="Check whether someone is authorised to manage a listed business." tone={pendingClaimRequests ? "urgent" : "default"} />
       </div>
 
       <div className="mt-6">

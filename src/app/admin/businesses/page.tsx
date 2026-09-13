@@ -6,6 +6,7 @@ import { ModerationSummary } from "@/components/admin/moderation-summary";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { requireAdminSession } from "@/lib/admin-session";
+import { businessSourceLabel } from "@/lib/business-source";
 import { getAdminBusinesses } from "@/lib/business-submissions";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +39,7 @@ export default async function AdminBusinessesPage() {
                 <span className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold">{business.name}</span>
                   {business.featured ? <Badge>Featured</Badge> : null}
+                  <Badge>{businessSourceLabel(business)}</Badge>
                   <Badge className={business.moderationRisk === "high" ? "border-[#9c4f35] bg-[#fffaf5] text-[#9c4f35]" : undefined}>{businessLabel(business)}</Badge>
                 </span>
                 <span className="mt-1 block text-sm text-[#6d675d]">{business.shortDescription || "No short summary provided."}</span>

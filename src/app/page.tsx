@@ -103,9 +103,9 @@ export default async function Home() {
         <h2 className="home-reveal font-serif text-4xl font-semibold">Three ways people use MakeSG</h2>
         <div className="mt-8 grid gap-5 md:grid-cols-3">
           {[
-            ["Find a business", "Search for fabrication, photography, videography, production, design and specialist services."],
-            ["Post a creative job", "Share what you need made so businesses can browse open work and reach out directly."],
-            ["Strengthen the directory", "Recommend businesses you trust or request corrections when a listing needs updating."],
+              ["Find a business", "Search for fabrication, photography, videography, production, design and specialist services."],
+              ["Post a creative job", "Share what you need made so businesses can browse open work and reach out directly."],
+              ["Strengthen the directory", "Recommend businesses you trust, request corrections, or claim a listing that represents your business."],
           ].map(([title, text], index) => (
             <article key={title} className="home-reveal home-journey-card border border-[#ded8cc] bg-white p-6" style={{ "--step-index": index } as React.CSSProperties}>
               <h3 className="text-xl font-semibold">{title}</h3>
@@ -118,7 +118,7 @@ export default async function Home() {
       <section className="border-y border-[#ded8cc] bg-white">
         <div className="container-shell grid gap-8 py-14 md:grid-cols-3">
           <Feature icon={<SearchCheck />} title="Smarter search" text="Search across names, services, descriptions and portfolio text, even when your wording is not exact." index={0} />
-          <Feature icon={<MessageCircleHeart />} title="Community recommendations" text="People can share first-hand experiences, with admin review before anything goes public." index={1} />
+          <Feature icon={<MessageCircleHeart />} title="Community recommendations" text="People can share first-hand experiences, and businesses can claim profiles that represent them." index={1} />
           <Feature icon={<ClipboardList />} title="Creative jobs" text="Post a job and manage its status through a private link, no account needed." index={2} />
         </div>
       </section>
@@ -128,7 +128,7 @@ export default async function Home() {
           <Callout
             icon={<Building2 />}
             title="Know a useful business?"
-            text="Submit a business you run, work with or want others to discover. Approved listings get a private edit link, and correction requests go to admin review."
+            text="Submit a business you run, work with or want others to discover. Listings say how they were shared, and business owners can claim them after review."
             href="/for-businesses"
             label="Submit a business"
           />

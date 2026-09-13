@@ -5,6 +5,7 @@ import { MaterialTag } from "@/components/business/material-tag";
 import { RequestBusinessChangePanel } from "@/components/business/request-business-change-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { businessSourceLabel } from "@/lib/business-source";
 import { getApprovedRecommendationsForBusiness, services } from "@/lib/data";
 import type { Business } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
@@ -41,6 +42,7 @@ export function BusinessCard({ business }: { business: Business }) {
               <MessageCircleHeart className="h-3.5 w-3.5" aria-hidden /> Recommended
             </Badge>
           ) : null}
+          <Badge>{businessSourceLabel(business)}</Badge>
           {topServices.map((service) => (
             <Badge key={service}>{service}</Badge>
           ))}

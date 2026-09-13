@@ -3,12 +3,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ExternalLink, Mail, MapPin, MessageCircleHeart, Phone, Star } from "lucide-react";
+import { ClaimBusinessPanel } from "@/components/business/claim-business-panel";
 import { MaterialTag } from "@/components/business/material-tag";
 import { RecommendBusinessPanel } from "@/components/business/recommend-business-panel";
 import { RequestBusinessChangePanel } from "@/components/business/request-business-change-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { services } from "@/lib/data";
+import { businessSourceDescription, businessSourceLabel } from "@/lib/business-source";
 import { getApprovedRecommendationsForBusiness } from "@/lib/business-recommendations";
 import { getPublishedBusinessBySlug } from "@/lib/public-businesses";
 import { formatCurrency } from "@/lib/utils";
@@ -62,9 +64,17 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
           <div className="mt-8 flex flex-wrap items-end justify-between gap-4">
             <div>
               <h1 className="mt-2 max-w-4xl font-serif text-5xl font-semibold leading-tight">{business.name}</h1>
-              {wordOfMouth.length ? (
-                <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Badge>{businessSourceLabel(business)}</Badge>
+                {wordOfMouth.length ? (
                   <Badge className="border-[#536343] bg-[#eef2e8] text-[#39462d]">{wordOfMouth.length} word-of-mouth recommendation{wordOfMouth.length === 1 ? "" : "s"}</Badge>
+                ) : null}
+              </div>
+              {business.claimed || business.submissionSource ? (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <p className="max-w-2xl border border-[#ded8cc] bg-[#fbfaf7] p-3 text-sm leading-6 text-[#6d675d]">
+                    {businessSourceDescription(business)}
+                  </p>
                 </div>
               ) : null}
             </div>
@@ -203,6 +213,9 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
           </div>
           <div className="border border-[#ded8cc] bg-white p-5">
             <RequestBusinessChangePanel businessId={business.id} businessName={business.name} />
+          </div>
+          <div className="border border-[#ded8cc] bg-white p-5">
+            <ClaimBusinessPanel businessId={business.id} businessName={business.name} claimed={business.claimed} />
           </div>
           <RecommendBusinessPanel businessId={business.id} businessName={business.name} />
         </aside>

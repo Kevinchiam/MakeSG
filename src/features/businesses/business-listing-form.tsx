@@ -43,7 +43,7 @@ export function BusinessListingForm({ existingBusinesses = [], magicFillAvailabl
   const [otherChecked, setOtherChecked] = useState(false);
   const form = useForm<BusinessInput, unknown, BusinessOutput>({
     resolver: zodResolver(businessSchema),
-    defaultValues: { services: [], businessType: "studio", otherService: "" },
+    defaultValues: { submissionSource: "community", services: [], businessType: "studio", otherService: "" },
   });
   const watched = useWatch({ control: form.control }) as BusinessInput;
   const selectedServices = watched.services ?? [];
@@ -118,6 +118,7 @@ export function BusinessListingForm({ existingBusinesses = [], magicFillAvailabl
           form.clearErrors();
           try {
             const formData = new FormData();
+            formData.set("submissionSource", data.submissionSource ?? "community");
             formData.set("name", data.name);
             formData.set("shortDescription", data.shortDescription);
             formData.set("description", data.description);
@@ -178,6 +179,28 @@ export function BusinessListingForm({ existingBusinesses = [], magicFillAvailabl
           Uploading portfolio files and saving the listing. This can take a little longer for large photos or videos.
         </p>
       ) : null}
+      <Field
+        label="Who is sharing this listing?"
+        hint="This helps MakeSG explain whether a profile came from the business or the community. Admin still reviews submissions before they appear."
+        error={form.formState.errors.submissionSource?.message}
+      >
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label className="flex cursor-pointer gap-3 border border-[#ded8cc] bg-[#fbfaf7] p-3 text-sm leading-6">
+            <input type="radio" value="community" {...form.register("submissionSource")} className="mt-1" />
+            <span>
+              <span className="block font-semibold">I am sharing a business I know</span>
+              <span className="block text-[#6d675d]">For collaborators, customers, friends, or community members.</span>
+            </span>
+          </label>
+          <label className="flex cursor-pointer gap-3 border border-[#ded8cc] bg-[#fbfaf7] p-3 text-sm leading-6">
+            <input type="radio" value="owner" {...form.register("submissionSource")} className="mt-1" />
+            <span>
+              <span className="block font-semibold">I own or represent this business</span>
+              <span className="block text-[#6d675d]">Use this when you are authorised to share and update the listing.</span>
+            </span>
+          </label>
+        </div>
+      </Field>
       <Field
         label="Business name"
         hint={minimumCharacterHint(businessNameLength, minimumBusinessNameCharacters, "Minimum 2 characters.")}

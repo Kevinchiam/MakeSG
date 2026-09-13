@@ -52,6 +52,9 @@ export default async function AboutPage() {
               MakeSG gives those recommendations a shared home. You can browse businesses, look at photos and videos, post creative jobs, recommend someone good, or request a correction when a listing needs a small update.
             </p>
             <p>
+              Listings can come from owners, people who have worked with the business, or MakeSG’s own research. Each listing is reviewed, and business owners can claim a profile so visitors know it is represented by someone authorised.
+            </p>
+            <p>
               The goal is simple: help ideas move from wondering who can do this to knowing who to talk to, with less friction.
             </p>
           </div>
@@ -62,7 +65,7 @@ export default async function AboutPage() {
         <div className="container-shell grid gap-5 py-14 md:grid-cols-3">
           <AboutStep icon={<Camera />} title="See the work" text="Portfolio media makes each listing more tangible, so people can quickly understand style, scope and fit." />
           <AboutStep icon={<BriefcaseBusiness />} title="Post open jobs" text="Creatives can share what they need made, then manage the job status through a private link." />
-          <AboutStep icon={<HeartHandshake />} title="Keep it useful" text="Recommendations and change requests go through review so the directory can stay helpful as it grows." />
+          <AboutStep icon={<HeartHandshake />} title="Keep it useful" text="Recommendations, change requests and owner claims go through review so the directory can stay helpful as it grows." />
         </div>
       </section>
     </>

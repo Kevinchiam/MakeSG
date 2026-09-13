@@ -21,7 +21,7 @@ export default async function ForBusinessesPage() {
           <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Share a business</p>
           <h1 className="mt-2 font-serif text-5xl font-semibold">Help people discover a good creative business</h1>
           <p className="mt-5 text-lg leading-8 text-[#6d675d]">
-            Add a business you run, have worked with, or think the MakeSG community should know about. Share what you know now; the optional details can be updated later with a private edit link.
+            Add a business you run, have worked with, or think the MakeSG community should know about. Tell us whether you are sharing it as the owner or as someone in the community; approved listings can be corrected later, and owners can claim existing profiles.
           </p>
           <div className="mt-8 grid gap-4">
             <Step icon={<Building2 />} title="Describe what the business does" />

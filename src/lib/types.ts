@@ -8,6 +8,7 @@ export type BusinessType =
   | "supplier";
 export type PublicationStatus = "draft" | "pending" | "published" | "rejected" | "suspended";
 export type VerificationStatus = "unverified" | "claimed" | "verified";
+export type BusinessSubmissionSource = "community" | "owner" | "admin";
 export type ProjectType = "physical" | "digital" | "both";
 export type ProjectScale = "one-off" | "prototype" | "small-batch" | "production" | "installation";
 export type BusinessRecommendationStatus = "pending" | "approved" | "rejected";
@@ -71,6 +72,7 @@ export type Business = {
   offersOnsiteService: boolean;
   offersRemoteService: boolean;
   verificationStatus: VerificationStatus;
+  submissionSource: BusinessSubmissionSource;
   publicationStatus: PublicationStatus;
   featured: boolean;
   claimed: boolean;

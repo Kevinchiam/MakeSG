@@ -32,6 +32,10 @@ type AdminPrivateLinkResult =
   | { ok: true; manageToken: string }
   | { ok: false; message: string };
 
+type AdminClaimRequestResult =
+  | { ok: true }
+  | { ok: false; message: string };
+
 const adminRecommendationSchema = z.object({
   recommenderName: z.string().trim().min(1, "Enter the recommender's name."),
   recommenderRole: z.string().trim().optional(),
@@ -151,6 +155,62 @@ export async function updateBusinessFeaturedStatus(businessId: string, featured:
   revalidatePath("/admin");
   revalidatePath("/admin/businesses");
   revalidatePath(`/admin/businesses/${businessId}`);
+  revalidatePath("/businesses");
+  if (business?.slug) revalidatePath(`/businesses/${business.slug}`);
+  return { ok: true };
+}
+
+export async function updateBusinessClaimRequestStatus(
+  requestId: string,
+  status: "approved" | "rejected",
+  adminNotes: string,
+): Promise<AdminClaimRequestResult> {
+  const supabase = createAdminClient();
+  const { data: claimRequest, error: loadError } = await supabase
+    .from("business_claim_requests")
+    .select("business_id, businesses(slug)")
+    .eq("id", requestId)
+    .single();
+
+  if (loadError || !claimRequest) {
+    return { ok: false, message: loadError?.message ?? "Could not find this claim request." };
+  }
+
+  const { error: updateError } = await supabase
+    .from("business_claim_requests")
+    .update({
+      status,
+      admin_notes: adminNotes.trim() || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", requestId);
+
+  if (updateError) {
+    return { ok: false, message: updateError.message };
+  }
+
+  if (status === "approved") {
+    const { error: businessError } = await supabase
+      .from("businesses")
+      .update({
+        claimed: true,
+        verification_status: "claimed",
+        submission_source: "owner",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", claimRequest.business_id);
+
+    if (businessError) {
+      return { ok: false, message: businessError.message };
+    }
+  }
+
+  const business = Array.isArray(claimRequest.businesses) ? claimRequest.businesses[0] : claimRequest.businesses;
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/admin/claim-requests");
+  revalidatePath("/admin/businesses");
+  revalidatePath(`/admin/businesses/${claimRequest.business_id}`);
   revalidatePath("/businesses");
   if (business?.slug) revalidatePath(`/businesses/${business.slug}`);
   return { ok: true };
@@ -862,6 +922,7 @@ function createManageToken() {
 
 function formDataToBusinessInput(formData: FormData) {
   return {
+    submissionSource: stringFromFormData(formData.get("submissionSource")) || "community",
     name: stringFromFormData(formData.get("name")),
     shortDescription: stringFromFormData(formData.get("shortDescription")),
     description: stringFromFormData(formData.get("description")),

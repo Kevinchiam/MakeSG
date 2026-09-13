@@ -25,7 +25,9 @@ export default async function BusinessesPage({ searchParams }: { searchParams: P
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Directory</p>
           <h1 className="mt-2 font-serif text-5xl font-semibold">Browse businesses</h1>
-          <p className="mt-3 text-[#6d675d]">{results.length} published business{results.length === 1 ? "" : "es"} found.</p>
+          <p className="mt-3 max-w-2xl leading-7 text-[#6d675d]">
+            {results.length} published business{results.length === 1 ? "" : "es"} found. Listings may be shared by business owners, community members, or MakeSG, and owners can claim a profile when it represents them.
+          </p>
         </div>
         <MobileFilterDrawer />
       </div>
