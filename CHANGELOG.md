@@ -15,6 +15,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Added a dedicated admin claim-request queue with approve/reject controls.
 - Added shared business source labels and descriptions for cards, profiles, and admin queues.
 - Added an admin business detail control for manually setting a listing to Community added, Owner added, Owner claimed, or Admin maintained.
+- Added an admin-only Magic fill paused note on business onboarding when OpenAI is missing, failing, or out of credits.
 
 ### Changed
 - Changed homepage directory highlights to show a random mix of up to six published businesses instead of favouring recommended, featured, or recently updated profiles.
@@ -22,6 +23,7 @@ The format loosely follows Keep a Changelog and semantic sections.
 - Changed the homepage service ticker to draw from shuffled published listings so it stays consistent with the random directory highlights.
 - Changed business onboarding so Magic fill only runs when clicked and only fills blank fields, keeping user-written details intact.
 - Changed business onboarding so Magic fill is hidden when the deployed OpenAI connection is unavailable or API credits are exhausted.
+- Changed Magic fill availability checks to return a safe admin-readable reason instead of only a hidden boolean state.
 - Changed business onboarding to ask whether the listing is being shared by an owner/representative or by someone in the community.
 - Changed business source wording from Owner submitted/MakeSG added to Owner added/Admin maintained.
 - Changed public home, About, directory, footer, and business-profile copy to disclose that listings may be shared by owners, community members, or MakeSG and can be claimed after review.

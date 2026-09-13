@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Building2, CheckCircle2, Clock } from "lucide-react";
 import { BusinessListingForm } from "@/features/businesses/business-listing-form";
-import { isBusinessMagicFillAvailable } from "@/lib/business-magic-fill";
+import { getBusinessMagicFillStatus } from "@/lib/business-magic-fill";
+import { hasAdminSession } from "@/lib/admin-session";
 import { getExistingBusinessSuggestions } from "@/lib/business-submissions";
 
 export const metadata: Metadata = { title: "For businesses" };
@@ -9,9 +10,10 @@ export const metadata: Metadata = { title: "For businesses" };
 export const dynamic = "force-dynamic";
 
 export default async function ForBusinessesPage() {
-  const [existingBusinesses, magicFillAvailable] = await Promise.all([
+  const [existingBusinesses, magicFillStatus, adminSignedIn] = await Promise.all([
     getExistingBusinessSuggestions(),
-    isBusinessMagicFillAvailable(),
+    getBusinessMagicFillStatus(),
+    hasAdminSession(),
   ]);
 
   return (
@@ -29,7 +31,11 @@ export default async function ForBusinessesPage() {
             <Step icon={<CheckCircle2 />} title="Send it for review" />
           </div>
         </div>
-        <BusinessListingForm existingBusinesses={existingBusinesses} magicFillAvailable={magicFillAvailable} />
+        <BusinessListingForm
+          existingBusinesses={existingBusinesses}
+          magicFillAvailable={magicFillStatus.available}
+          magicFillAdminMessage={!magicFillStatus.available && adminSignedIn ? magicFillStatus.message : null}
+        />
       </div>
     </section>
   );

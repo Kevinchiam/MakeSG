@@ -39,15 +39,33 @@ type OpenAiMagicFillPayload = {
 
 type RawMagicDraft = Partial<Record<keyof MagicFillDraft, unknown>>;
 
-let cachedAvailability: { available: boolean; checkedAt: number } | null = null;
+type BusinessMagicFillStatus = {
+  available: boolean;
+  message: string;
+};
+
+let cachedAvailability: (BusinessMagicFillStatus & { checkedAt: number }) | null = null;
 
 export async function isBusinessMagicFillAvailable() {
+  const status = await getBusinessMagicFillStatus();
+  return status.available;
+}
+
+export async function getBusinessMagicFillStatus(): Promise<BusinessMagicFillStatus> {
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return false;
+  if (!apiKey) {
+    return {
+      available: false,
+      message: "Magic fill is paused because `OPENAI_API_KEY` is not available to this deployment.",
+    };
+  }
 
   const now = Date.now();
   if (cachedAvailability && now - cachedAvailability.checkedAt < MAGIC_AVAILABILITY_TTL_MS) {
-    return cachedAvailability.available;
+    return {
+      available: cachedAvailability.available,
+      message: cachedAvailability.message,
+    };
   }
 
   const controller = new AbortController();
@@ -68,15 +86,26 @@ export async function isBusinessMagicFillAvailable() {
       signal: controller.signal,
     });
 
-    const available = response.ok;
     if (!response.ok) {
-      await readOpenAiError(response);
+      const message = await readOpenAiError(response);
+      const adminMessage = isQuotaError(message)
+        ? "Magic fill is paused because the OpenAI account has no credits or quota available."
+        : `Magic fill is paused because OpenAI returned an error: ${message}`;
+      cachedAvailability = { available: false, message: adminMessage, checkedAt: now };
+      return { available: false, message: adminMessage };
     }
-    cachedAvailability = { available, checkedAt: now };
-    return available;
+
+    const status = {
+      available: true,
+      message: "Magic fill is available.",
+      checkedAt: now,
+    };
+    cachedAvailability = status;
+    return { available: status.available, message: status.message };
   } catch {
-    cachedAvailability = { available: false, checkedAt: now };
-    return false;
+    const message = "Magic fill is paused because the live OpenAI availability check could not complete.";
+    cachedAvailability = { available: false, message, checkedAt: now };
+    return { available: false, message };
   } finally {
     clearTimeout(timeout);
   }
@@ -222,7 +251,11 @@ async function requestBusinessDraft(apiKey: string, businessName: string): Promi
     if (!response.ok) {
       const message = await readOpenAiError(response);
       if (isQuotaError(message)) {
-        cachedAvailability = { available: false, checkedAt: Date.now() };
+        cachedAvailability = {
+          available: false,
+          message: "Magic fill is paused because the OpenAI account has no credits or quota available.",
+          checkedAt: Date.now(),
+        };
       }
       return { ok: false, message };
     }

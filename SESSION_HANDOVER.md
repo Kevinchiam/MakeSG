@@ -10,6 +10,8 @@ Latest ownership update: MakeSG now distinguishes whether a business listing is 
 
 Magic fill update: business onboarding now has an AI-assisted Magic fill button after a business name is typed. It uses OpenAI web search to draft editable listing details, fills only blank fields, suggests services, and tries to attach one removable profile image from the business's own website. The button is hidden when OpenAI is unavailable or API credits are exhausted. Final submission still uses the normal MakeSG review path.
 
+Magic fill visibility update: public visitors still do not see Magic fill when OpenAI is unavailable, missing, or out of credits. Signed-in admins now see a small explanatory note in the business onboarding form so the feature no longer looks like it disappeared silently.
+
 Today’s work made MakeSG feel more forgiving and easier to maintain. Uploaded media now receives a useful fallback caption when contributors leave captions blank. The public copy was softened across key pages so the platform sounds more welcoming and less formal. Admin moderation now has a trash-bin workflow: rejected or dismissed items leave the active queues, remain visible to admins for seven days, and are then permanently cleaned up with related storage files.
 
 Later in the session, the home and About pages were given a more visual editorial treatment using approved business portfolio media. That media now rotates from the database on each server render so refreshes can surface different published work.
@@ -95,6 +97,7 @@ Admin session UX fix: admin-only links no longer prefetch, and login now writes 
 - [x] Updated public copy across home, About, directory, footer, and onboarding to disclose how listings may be submitted and claimed.
 - [x] Added AI-assisted Magic fill to business onboarding with click-only use, editable draft fields, service suggestions, and one removable website-sourced profile image.
 - [x] Hid Magic fill when the deployed OpenAI availability check fails, including exhausted API credits.
+- [x] Added an admin-only Magic fill paused note that explains whether OpenAI is missing, failing, or out of credits.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 
@@ -187,10 +190,10 @@ Creative job reference uploads and private media edits now use AI image captions
 Recommendation media uploads now use AI image captions when contributors do not provide image captions, with simple fallback captions when AI is unavailable.
 
 ### `src/features/businesses/business-listing-form.tsx`
-Business onboarding copy is warmer and clearer. Upload copy explains that blank captions are acceptable. Success and duplicate-listing messages now read less formally. Required text fields now show live minimum-character guidance for business name, short summary, and full description. New portfolio captions now appear below each uploaded preview. The form now asks whether the listing is community-shared or owner-submitted, then shows Magic fill after a business name is typed; it drafts blank fields and previews a removable profile image without submitting automatically.
+Business onboarding copy is warmer and clearer. Upload copy explains that blank captions are acceptable. Success and duplicate-listing messages now read less formally. Required text fields now show live minimum-character guidance for business name, short summary, and full description. New portfolio captions now appear below each uploaded preview. The form now asks whether the listing is community-shared or owner-submitted, then shows Magic fill after a business name is typed; it drafts blank fields and previews a removable profile image without submitting automatically. If Magic fill is unavailable, signed-in admins now see a quiet diagnostic note while public visitors see the normal form.
 
 ### `src/lib/business-magic-fill.ts`
-Server-only Magic fill helper for business onboarding. It calls OpenAI Responses with web search, asks for structured listing draft JSON, validates service/type output against local MakeSG options, fetches the business website to find an Open Graph or icon image, and validates the image before storage upload.
+Server-only Magic fill helper for business onboarding. It calls OpenAI Responses with web search, asks for structured listing draft JSON, validates service/type output against local MakeSG options, fetches the business website to find an Open Graph or icon image, and validates the image before storage upload. It now reports a safe availability status/message so admins can understand why Magic fill is paused.
 
 ### `src/features/businesses/manage-business-details.tsx`
 Private business edit success copy now says changes are waiting for review again.

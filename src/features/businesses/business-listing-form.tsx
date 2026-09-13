@@ -23,7 +23,15 @@ const minimumBusinessNameCharacters = 2;
 const minimumShortSummaryCharacters = 20;
 const minimumFullDescriptionCharacters = 80;
 
-export function BusinessListingForm({ existingBusinesses = [], magicFillAvailable = false }: { existingBusinesses?: ExistingBusinessSuggestion[]; magicFillAvailable?: boolean }) {
+export function BusinessListingForm({
+  existingBusinesses = [],
+  magicFillAvailable = false,
+  magicFillAdminMessage = null,
+}: {
+  existingBusinesses?: ExistingBusinessSuggestion[];
+  magicFillAvailable?: boolean;
+  magicFillAdminMessage?: string | null;
+}) {
   const successRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
   const [submittedManageUrl, setSubmittedManageUrl] = useState<string | null>(null);
@@ -315,6 +323,14 @@ export function BusinessListingForm({ existingBusinesses = [], magicFillAvailabl
               ) : null}
             </div>
           ) : null}
+        </div>
+      ) : magicFillAdminMessage ? (
+        <div className="grid gap-2 border border-[#ded8cc] bg-[#fbfaf7] p-4 text-sm">
+          <p className="font-semibold">Magic fill is paused</p>
+          <p className="leading-6 text-[#6d675d]">{magicFillAdminMessage}</p>
+          <p className="text-xs leading-5 text-[#8a8277]">
+            This note is only shown to admins. Public visitors will simply continue with the normal form.
+          </p>
         </div>
       ) : null}
       {duplicateSuggestion ? (
