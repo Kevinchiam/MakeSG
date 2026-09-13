@@ -1,6 +1,6 @@
 # MakeSG Project Context
 
-Last updated: 2026-09-07
+Last updated: 2026-09-13
 
 ## Project Overview
 
@@ -166,7 +166,7 @@ Most mutations use server actions:
 ### Public Home
 Status: Completed
 
-Description: Landing/search entry for MakeSG with editorial visual direction, CSS-only motion, live directory counts, current platform feature copy, rotating portfolio media from published businesses, clickable media tiles that open the related business profile, hover/focus-only media captions that stream long text instead of clipping, and up to six homepage business highlights ranked by recommendations, featured status, and latest updates.
+Description: Landing/search entry for MakeSG with editorial visual direction, CSS-only motion, live directory counts, current platform feature copy, rotating portfolio media from published businesses, clickable media tiles that open the related business profile, hover/focus-only media captions that stream long text instead of clipping, and up to six homepage business highlights randomly selected from published listings on each refresh.
 
 Relevant files:
 - `src/app/page.tsx`

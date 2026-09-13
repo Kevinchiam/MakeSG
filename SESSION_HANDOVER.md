@@ -4,6 +4,8 @@ Date: 2026-09-07
 
 ## Session Summary
 
+Current session update: homepage directory highlights no longer favour recommended, featured, or recently updated businesses. The section now shows a random mix of up to six published listings on each refresh, and the copy now describes the behaviour as a rotating random sample from the live directory.
+
 Today’s work made MakeSG feel more forgiving and easier to maintain. Uploaded media now receives a useful fallback caption when contributors leave captions blank. The public copy was softened across key pages so the platform sounds more welcoming and less formal. Admin moderation now has a trash-bin workflow: rejected or dismissed items leave the active queues, remain visible to admins for seven days, and are then permanently cleaned up with related storage files.
 
 Later in the session, the home and About pages were given a more visual editorial treatment using approved business portfolio media. That media now rotates from the database on each server render so refreshes can surface different published work.
@@ -80,6 +82,8 @@ Admin session UX fix: admin-only links no longer prefetch, and login now writes 
 - [x] Replaced the old one-year admin cookie with a versioned eight-hour admin session.
 - [x] Added direct server-side admin session guards to every protected admin page.
 - [x] Disabled admin-link prefetching and made admin session cookies compatible across current and legacy cookie names.
+- [x] Changed homepage directory highlights from recommendation-weighted ranking to random published-listing selection.
+- [x] Updated homepage copy and project documentation to match the random highlight behaviour.
 - [x] Updated `PROJECT_CONTEXT.md`, `SESSION_HANDOVER.md`, and `CHANGELOG.md`.
 - [x] Ran lint, TypeScript checks, production build, unit tests, and diff checks successfully.
 
@@ -166,7 +170,7 @@ Private creative job media editing now places new-upload caption fields below th
 Recommendation panel copy now uses “review” language instead of “moderation” and explains optional media captions more gently. Recommendation upload captions now sit below their related file previews.
 
 ### `src/app/page.tsx`
-Homepage copy now reflects MakeSG as a practical community platform for finding businesses, posting jobs, requesting changes, and sharing recommendations. The hero now uses a richer media-led visual panel, and the selected photos/videos shuffle from published business media on refresh. Media overlay captions now use the shared streaming caption component.
+Homepage copy now reflects MakeSG as a practical community platform for finding businesses, posting jobs, requesting changes, and sharing recommendations. The hero now uses a richer media-led visual panel, and the selected photos/videos shuffle from published business media on refresh. Media overlay captions now use the shared streaming caption component. Directory highlights now randomly select up to six published businesses instead of favouring recommended, featured, or recently updated profiles.
 
 ### `src/app/about/page.tsx`
 About page copy no longer describes the product as fictional and now explains the platform in simpler, friendlier language. It also uses rotating published business media so the page feels less static. Media overlay captions now use the shared streaming caption component.

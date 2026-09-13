@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const [businesses, creativeJobs] = await Promise.all([getPublishedBusinesses(), getPublicCreativeJobs()]);
-  const featured = getHomepageBusinesses(businesses);
+  const directoryHighlights = getHomepageBusinesses(businesses);
   const heroMedia = getHomepageMedia(businesses);
   const openCreativeJobs = creativeJobs.filter((job) => job.status === "open").length;
   const recommendedBusinesses = businesses.filter((business) => (business.recommendationCount ?? 0) > 0).length;
@@ -88,13 +88,13 @@ export default async function Home() {
               <p className="home-reveal text-sm font-semibold uppercase tracking-wide text-[#9c4f35]">Directory highlights</p>
               <h2 className="home-reveal home-reveal-delay-1 mt-2 font-serif text-4xl font-semibold">Useful businesses to start with</h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-[#6d675d]">
-                These highlights refresh from the live directory, favouring businesses that are recommended, featured or recently updated.
+                These highlights refresh from the live directory, showing a random mix of listed businesses each time.
               </p>
             </div>
             <Button asChild variant="secondary"><Link href="/businesses">Browse directory</Link></Button>
           </div>
           <div className="home-featured-grid">
-            <BusinessGrid businesses={featured} />
+            <BusinessGrid businesses={directoryHighlights} />
           </div>
         </div>
       </section>
@@ -146,18 +146,7 @@ export default async function Home() {
 }
 
 function getHomepageBusinesses(businesses: Business[]) {
-  return [...businesses].sort((a, b) => {
-    const recommendationDifference = (b.recommendationCount ?? 0) - (a.recommendationCount ?? 0);
-    if (recommendationDifference) return recommendationDifference;
-
-    if (a.featured !== b.featured) return a.featured ? -1 : 1;
-
-    const aUpdated = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
-    const bUpdated = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
-    if (aUpdated !== bUpdated) return bUpdated - aUpdated;
-
-    return a.name.localeCompare(b.name);
-  }).slice(0, 6);
+  return shuffleItems(businesses).slice(0, 6);
 }
 
 type HomeMedia = {
@@ -197,7 +186,7 @@ function getHomepageMedia(businesses: Business[]): HomeMedia[] {
 }
 
 function getMovingServices(businesses: Business[]) {
-  const serviceNames = getHomepageBusinesses(businesses)
+  const serviceNames = shuffleItems(businesses)
     .flatMap((business) => business.services)
     .map(formatServiceSlug)
     .filter(Boolean);

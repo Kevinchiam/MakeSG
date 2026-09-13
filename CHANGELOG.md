@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format loosely follows Keep a Changelog and semantic sections.
 
+## [Unreleased] - 2026-09-13
+
+### Added
+- No new features added.
+
+### Changed
+- Changed homepage directory highlights to show a random mix of up to six published businesses instead of favouring recommended, featured, or recently updated profiles.
+- Updated homepage highlight copy to describe the section as a random refresh from the live directory.
+- Changed the homepage service ticker to draw from shuffled published listings so it stays consistent with the random directory highlights.
+- Updated project documentation with the new random highlight behaviour.
+
+### Fixed
+- Fixed outdated homepage copy that said directory highlights favoured recommended profiles.
+
+### Removed
+- Removed recommendation, featured, and recent-update weighting from homepage directory highlight selection.
+
+### Known Issues
+- Random highlights depend on the page being rendered dynamically; the homepage is currently marked `force-dynamic`.
+
 ## [Unreleased] - 2026-09-07
 
 ### Added
