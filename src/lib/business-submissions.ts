@@ -171,7 +171,7 @@ export async function getAdminBusiness(id: string) {
     const supabase = createAdminClient();
     const { data } = await supabase
       .from("businesses")
-      .select("id, name, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, publication_status, featured, manage_token, endorsement_count, moderation_decision, moderation_risk, moderation_reason, moderation_signals, business_services(services(name, slug)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes), business_listing_revisions(id, status, proposed_data, proposed_services, proposed_portfolio, moderation_decision, moderation_risk, moderation_reason, moderation_signals)")
+      .select("id, name, short_description, description, website_url, public_email, public_phone, address, minimum_budget, typical_lead_time, business_type, publication_status, verification_status, submission_source, claimed, featured, manage_token, endorsement_count, moderation_decision, moderation_risk, moderation_reason, moderation_signals, business_services(services(name, slug)), portfolio_items(id, title, description, image_url, tags, file_name, storage_path, mime_type, size_bytes), business_listing_revisions(id, status, proposed_data, proposed_services, proposed_portfolio, moderation_decision, moderation_risk, moderation_reason, moderation_signals)")
       .eq("id", id)
       .single();
 
@@ -198,6 +198,9 @@ export async function getAdminBusiness(id: string) {
       }) ?? [],
       portfolio: business.portfolio_items?.filter((item) => Boolean(item.image_url)).map(portfolioRowToItem) ?? [],
       publicationStatus: business.publication_status,
+      verificationStatus: business.verification_status,
+      submissionSource: business.submission_source ?? "community",
+      claimed: Boolean(business.claimed),
       featured: Boolean(business.featured),
       endorsementCount: business.endorsement_count ?? 0,
       manageToken: business.manage_token ?? null,

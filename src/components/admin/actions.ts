@@ -11,6 +11,7 @@ import type { PublicationStatus } from "@/lib/types";
 import { services as knownServices } from "@/lib/data";
 import { captionUploadedMedia, testAiImageCaptionConnection } from "@/lib/ai-media-captions";
 import { businessSchema } from "@/lib/validation";
+import type { BusinessSourceStatus } from "@/lib/business-source";
 
 type AdminBusinessUpdateResult =
   | { ok: true }
@@ -34,6 +35,10 @@ type AdminPrivateLinkResult =
 
 type AdminClaimRequestResult =
   | { ok: true }
+  | { ok: false; message: string };
+
+type AdminBusinessSourceResult =
+  | { ok: true; label: string }
   | { ok: false; message: string };
 
 const adminRecommendationSchema = z.object({
@@ -158,6 +163,81 @@ export async function updateBusinessFeaturedStatus(businessId: string, featured:
   revalidatePath("/businesses");
   if (business?.slug) revalidatePath(`/businesses/${business.slug}`);
   return { ok: true };
+}
+
+export async function updateBusinessListingSourceStatus(
+  businessId: string,
+  sourceStatus: BusinessSourceStatus,
+): Promise<AdminBusinessSourceResult> {
+  const update = businessSourceStatusUpdate(sourceStatus);
+  if (!update) {
+    return { ok: false, message: "Choose a valid listing source." };
+  }
+
+  const supabase = createAdminClient();
+  const { data: business } = await supabase
+    .from("businesses")
+    .select("slug")
+    .eq("id", businessId)
+    .single();
+
+  const { error } = await supabase
+    .from("businesses")
+    .update({
+      submission_source: update.submissionSource,
+      claimed: update.claimed,
+      verification_status: update.verificationStatus,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", businessId);
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/about");
+  revalidatePath("/admin");
+  revalidatePath("/admin/businesses");
+  revalidatePath(`/admin/businesses/${businessId}`);
+  revalidatePath("/businesses");
+  if (business?.slug) revalidatePath(`/businesses/${business.slug}`);
+  return { ok: true, label: update.label };
+}
+
+function businessSourceStatusUpdate(sourceStatus: BusinessSourceStatus) {
+  switch (sourceStatus) {
+    case "community_added":
+      return {
+        submissionSource: "community",
+        claimed: false,
+        verificationStatus: "unverified",
+        label: "Community added",
+      };
+    case "owner_added":
+      return {
+        submissionSource: "owner",
+        claimed: false,
+        verificationStatus: "unverified",
+        label: "Owner added",
+      };
+    case "owner_claimed":
+      return {
+        submissionSource: "owner",
+        claimed: true,
+        verificationStatus: "claimed",
+        label: "Owner claimed",
+      };
+    case "admin_maintained":
+      return {
+        submissionSource: "admin",
+        claimed: false,
+        verificationStatus: "unverified",
+        label: "Admin maintained",
+      };
+    default:
+      return null;
+  }
 }
 
 export async function updateBusinessClaimRequestStatus(

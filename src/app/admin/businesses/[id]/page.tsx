@@ -4,6 +4,7 @@ import { AdminBusinessEditForm } from "@/components/admin/admin-business-edit-fo
 import { AdminBusinessMediaForm } from "@/components/admin/admin-business-media-form";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { AdminPrivateLinkControl } from "@/components/admin/admin-private-link-control";
+import { AdminBusinessSourceForm } from "@/components/admin/admin-business-source-form";
 import { AdminStatusControls } from "@/components/admin/admin-status-controls";
 import { ModerationSummary } from "@/components/admin/moderation-summary";
 import { requireAdminSession } from "@/lib/admin-session";
@@ -128,6 +129,7 @@ export default async function AdminBusinessPage({ params }: { params: Promise<{ 
           </div>
         </details>
         <AdminPrivateLinkControl id={business.id} kind="business" initialManageToken={business.manageToken} />
+        <AdminBusinessSourceForm businessId={business.id} submissionSource={business.submissionSource} claimed={business.claimed} />
         <AdminStatusControls businessId={business.id} initialStatus={business.publicationStatus} initialFeatured={business.featured} hasPendingRevision={Boolean(business.pendingRevision)} />
         <AdminBusinessEditForm business={business} />
         <AdminBusinessMediaForm businessId={business.id} portfolio={business.portfolio} />

@@ -153,7 +153,7 @@ Most mutations use server actions:
 
 ### Data Flow
 - Public business pages call `getPublishedBusinesses()` or `getPublishedBusinessBySlug()` in `src/lib/public-businesses.ts`.
-- Published business records show a source label: `Community added`, `Owner submitted`, `MakeSG added`, or `Owner claimed`. Existing listings default to `Community added` until an admin-approved claim marks them as owner claimed.
+- Published business records show a source label: `Community added`, `Owner added`, `Owner claimed`, or `Admin maintained`. Existing listings default to `Community added` until an admin-approved claim or direct admin update changes the status.
 - Public creative jobs call `getPublicCreativeJobs()` in `src/lib/creative-jobs.ts`.
 - Business onboarding can optionally request an AI-assisted Magic fill draft after a business name is typed. The Magic fill affordance is hidden when OpenAI is missing or the lightweight availability check fails, including exhausted API credits. When available, the draft uses OpenAI web search, fills blank form fields only, attempts to suggest one profile image from the business's own website, and leaves the final editable submission in the existing review flow.
 - Business onboarding inserts into Supabase and uploads portfolio media.
@@ -285,7 +285,7 @@ Future improvements:
 ### Business Claim Requests
 Status: Completed
 
-Description: Business owners or authorised representatives can request to claim an existing public business listing from the business profile. The request asks for name, role/connection, private email, optional phone, optional proof link, and a short explanation. Admin reviews claims from `/admin/claim-requests`; approving a claim marks the business as owner claimed and updates the listing source so public pages can show the clearer trust label. Existing listings default to community-added until claimed.
+Description: Business owners or authorised representatives can request to claim an existing public business listing from the business profile. The request asks for name, role/connection, private email, optional phone, optional proof link, and a short explanation. Admin reviews claims from `/admin/claim-requests`; approving a claim marks the business as owner claimed and updates the listing source so public pages can show the clearer trust label. Existing listings default to community-added until claimed or manually changed by admin.
 
 Relevant files:
 - `src/components/business/claim-business-panel.tsx`
@@ -433,12 +433,13 @@ Future improvements:
 ### Admin Business Moderation
 Status: Completed
 
-Description: Admin can review, approve, reject, feature/unfeature, unpublish, delete, directly edit business listings and portfolio media, and copy or create each listing's private manage link. New listings, auto-approved listings, and pending edits are visible in the queue, with pending/high-risk items prioritised. Records show plain-language review labels and automated triage risk, reason, and signals to streamline review while preserving admin override. Public change requests show requester context and supporting media beside the live listing edit forms, so an admin can apply useful corrections immediately. Rejected listings and rejected pending edits move out of the main queues into the admin trash bin for seven days before cleanup.
+Description: Admin can review, approve, reject, feature/unfeature, unpublish, delete, directly edit business listings and portfolio media, edit each listing's public source status, and copy or create each listing's private manage link. The source status can be set to Community added, Owner added, Owner claimed, or Admin maintained. New listings, auto-approved listings, and pending edits are visible in the queue, with pending/high-risk items prioritised. Records show plain-language review labels and automated triage risk, reason, and signals to streamline review while preserving admin override. Public change requests show requester context and supporting media beside the live listing edit forms, so an admin can apply useful corrections immediately. Rejected listings and rejected pending edits move out of the main queues into the admin trash bin for seven days before cleanup.
 
 Relevant files:
 - `src/app/admin/businesses/page.tsx`
 - `src/app/admin/businesses/[id]/page.tsx`
 - `src/components/admin/admin-status-controls.tsx`
+- `src/components/admin/admin-business-source-form.tsx`
 - `src/components/admin/admin-business-edit-form.tsx`
 - `src/components/admin/admin-business-media-form.tsx`
 - `src/app/admin/change-requests/page.tsx`
@@ -514,7 +515,7 @@ Canonical service categories used for businesses and creative job service select
 Original material taxonomy. It still exists in the schema but the current business onboarding UI removed the materials section.
 
 ### `businesses`
-Core business listings with owner, publication status, verification status, submission source, contact details, address, budget, lead time, capabilities, hero image, and automated moderation triage metadata. `submission_source` records whether a listing came from the community, an owner/authorised representative, or MakeSG; existing rows default to `community`. Rejected rows are treated as trash-bin items and are permanently deleted after the seven-day retention period.
+Core business listings with owner, publication status, verification status, submission source, contact details, address, budget, lead time, capabilities, hero image, and automated moderation triage metadata. `submission_source` records whether a listing came from the community, an owner/authorised representative, or MakeSG/admin maintenance; existing rows default to `community`. The `claimed` flag turns owner-added records into the public `Owner claimed` state. Rejected rows are treated as trash-bin items and are permanently deleted after the seven-day retention period.
 
 ### `business_services`
 Many-to-many join between businesses and services.
@@ -593,6 +594,7 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 ### Server Actions
 - `loginAdmin(formData)`: Validates admin credentials and sets the versioned admin session cookie.
 - `updateBusinessPublicationStatus(businessId, status)`: Admin moderation of business publication status.
+- `updateBusinessListingSourceStatus(businessId, sourceStatus)`: Admin update for public listing source/status labels: Community added, Owner added, Owner claimed, or Admin maintained.
 - `deleteBusinessEntry(businessId)`: Admin deletion of business listing.
 - `getAdminTrashItems({ purgeExpired })`: Admin helper that lists trash-bin items and optionally purges expired rows/media.
 - `requestBusinessChange(formData)`: Public business correction request saved for admin review, with optional photos/videos and per-file captions capped at 10MB combined.
@@ -648,6 +650,7 @@ Trash cleanup removes related files from `business-portfolios` and `creative-job
 - `AdminPrivateLinkControl`: Admin copy/open/create control for business and creative-job private manage links.
 - `ModerationSummary`: Shared admin triage panel showing automated decision, risk, reason, and signals.
 - `AdminStatusControls`: Business and recommendation moderation buttons, including persisted business feature/unfeature controls.
+- `AdminBusinessSourceForm`: Admin control for changing public business listing source/status independently from publication status.
 - `BusinessClaimRequestControls`: Admin controls for approving or rejecting owner-claim requests.
 - `BusinessChangeRequestControls`: Admin controls for marking change requests reviewed or dismissed.
 - `AdminBusinessEditForm`: Admin business listing editor used on business records and side-by-side change-request review.

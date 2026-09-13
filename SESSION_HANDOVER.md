@@ -6,7 +6,7 @@ Date: 2026-09-07
 
 Current session update: homepage directory highlights no longer favour recommended, featured, or recently updated businesses. The section now shows a random mix of up to six published listings on each refresh, and the copy now describes the behaviour as a rotating random sample from the live directory.
 
-Latest ownership update: MakeSG now distinguishes whether a business listing was community-added, owner-submitted, MakeSG-added, or owner-claimed. Business onboarding asks who is sharing the listing, public business cards/profiles show a compact source label and disclaimer copy, and business owners can submit claim requests from their profile. Admin now has a dedicated claim-request queue; approving a claim marks the listing as owner claimed.
+Latest ownership update: MakeSG now distinguishes whether a business listing is Community added, Owner added, Owner claimed, or Admin maintained. Business onboarding asks who is sharing the listing, public business cards/profiles show a compact source label and disclaimer copy, and business owners can submit claim requests from their profile. Admin now has a dedicated claim-request queue; approving a claim marks the listing as owner claimed. Admin can also manually edit the listing source/status from each business admin detail page.
 
 Magic fill update: business onboarding now has an AI-assisted Magic fill button after a business name is typed. It uses OpenAI web search to draft editable listing details, fills only blank fields, suggests services, and tries to attach one removable profile image from the business's own website. The button is hidden when OpenAI is unavailable or API credits are exhausted. Final submission still uses the normal MakeSG review path.
 
@@ -91,6 +91,7 @@ Admin session UX fix: admin-only links no longer prefetch, and login now writes 
 - [x] Added business listing source tracking for community, owner, and MakeSG-added records.
 - [x] Added public owner-claim requests from business profiles.
 - [x] Added an admin claim-request queue with approve/reject controls.
+- [x] Added admin control for manually setting a business listing source/status to Community added, Owner added, Owner claimed, or Admin maintained.
 - [x] Updated public copy across home, About, directory, footer, and onboarding to disclose how listings may be submitted and claimed.
 - [x] Added AI-assisted Magic fill to business onboarding with click-only use, editable draft fields, service suggestions, and one removable website-sourced profile image.
 - [x] Hid Magic fill when the deployed OpenAI availability check fails, including exhausted API credits.
@@ -142,7 +143,10 @@ Public tiny PNG route used only by the admin AI caption diagnostic. It gives Ope
 Reusable admin control for private manage links. It can copy an existing link, open it in a new tab, or create a missing manage token for older business and creative-job records before copying.
 
 ### `src/lib/business-source.ts`
-Shared helper for consistent business source labels and explanatory copy: `Community added`, `Owner submitted`, `MakeSG added`, and `Owner claimed`.
+Shared helper for consistent business source labels and explanatory copy: `Community added`, `Owner added`, `Admin maintained`, and `Owner claimed`.
+
+### `src/components/admin/admin-business-source-form.tsx`
+Admin control on business detail pages for changing the public listing source/status without changing whether the listing is published.
 
 ### `src/lib/business-claim-requests.ts`
 Admin data loader for owner-claim requests. It joins claim rows to business names and slugs so admin can review them with useful context.
@@ -231,7 +235,7 @@ Footer copy now includes a short disclaimer that listings may be shared by owner
 Admin home now includes claim requests in the review count and links to the dedicated claim-request queue.
 
 ### `src/app/admin/businesses/page.tsx`
-Admin business cards now include the listing-source label, making owner-submitted, community-added, and owner-claimed records easier to distinguish.
+Admin business cards now include the listing-source label, making owner-added, community-added, admin-maintained, and owner-claimed records easier to distinguish.
 
 ### `src/lib/public-businesses.ts`
 Public business loading now includes `submission_source` and maps older/missing values to `community`.
@@ -368,6 +372,7 @@ Added the 2026-08-29 changelog entry.
 - `requestBusinessChange(formData)` now accepts `changeRequestMedia` files and `changeRequestMediaCaptions`, validates type/size, uploads to Supabase Storage, and saves linked media rows.
 - `requestBusinessClaim(formData)` saves public owner-claim requests for admin review.
 - `updateBusinessClaimRequestStatus(requestId, status, adminNotes)` approves or rejects claim requests and marks the business owner-claimed on approval.
+- `updateBusinessListingSourceStatus(businessId, sourceStatus)` lets admin manually set whether a listing is Community added, Owner added, Owner claimed, or Admin maintained.
 - Admin change-request loading now includes public URLs for attached media.
 - `testOpenAiCaptionConnection()` exposes a safe admin-only OpenAI caption diagnostic from the dashboard.
 - `GET /api/ai-caption-test-image` serves the small PNG used by that diagnostic.
@@ -391,6 +396,7 @@ Added the 2026-08-29 changelog entry.
 - Public business cards and profiles now show compact listing-source labels.
 - Business profiles now include an owner-claim request panel.
 - Admin home and `/admin/claim-requests` now support claim request review.
+- Admin business detail pages now include an Edit listing status panel for the public source label.
 - Admin home now has a compact AI caption check card so deployment/key/model/API problems can be diagnosed without exposing secrets.
 - Business and creative-job admin queues/detail pages now show private manage-link controls.
 
